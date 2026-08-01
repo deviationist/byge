@@ -110,6 +110,34 @@ Thin compositions: `LocationsScreen`, `VerdictScreen`, `AddLocationScreen`,
 `AboutScreen` (now including Appearance — see `FEEDBACK-01.md` §5),
 `RadarMapScreen` (phase 2), `SettingsScreen` (phase 3 shell, not built).
 
+## Navigation: About has no real entry point
+
+We audited every nav handler in the comp against where it's actually invoked.
+Result:
+
+| handler | reachable from |
+|---|---|
+| `goSettings` | **once**, in About's footer: *"Version 1.0 · offline-capable · settings"* |
+| `goAbout` | **only** the attribution line: *"· NLOD 2.0 / CC BY 4.0 · about"* |
+
+So all secondary navigation hangs off attribution text, and Settings sits three
+hops deep behind two 9.5 px monospace links.
+
+**This breaks `FEEDBACK-01.md` §5.** We moved Appearance into About on the
+grounds that one control doesn't earn its own screen — but that assumed About was
+reachable. As drawn, the theme switcher is buried behind a legal footnote.
+Attribution is a legal obligation with a legal-sized affordance; it is not a
+navigation entry point, and it shouldn't be doing double duty as one.
+
+Please give **About a real entry point** — a `NavBar` action on the Locations
+screen is the natural home, since that's the app-level surface. Keep the footer
+link as well; attribution should be there regardless. About now holds Appearance,
+so it is a functional destination, not just a colophon.
+
+Settings stays out of the MVP entirely (§5). When it returns in Phase 3 it will
+need its own entry point too — probably from About, but as a proper row rather
+than a word in a version string.
+
 ## Splash screen
 
 Yes please — and it needs designing properly rather than falling out of the
