@@ -1,0 +1,71 @@
+/* byge design tokens (Uniwind = Tailwind for React Native).
+ *
+ * The precipitation ramp is the app's *semantic* colour — it carries intensity
+ * meaning, not decoration. Two named sets, one per theme, mapping one-to-one
+ * onto the six bands in lib/scale.ts. The band boundaries never change; only
+ * their presentation does.
+ *
+ * The light ramp is yr.no's own palette, fitted against 33 836 paired samples
+ * of their rendered tiles (see README "Intensity scale"), so anyone who knows
+ * the yr map reads ours for free.
+ *
+ * The dark ramp is NOT a tint of the light one. Light runs pale -> dark; on a
+ * dark background those pale bands would out-shout the heavy ones and invert
+ * the scale, so dark runs dim -> bright. Luminance rises with intensity in both.
+ * Ordering is the meaning; the hex values only carry it.
+ */
+@import "tailwindcss";
+
+@theme {
+  /* surfaces & ink */
+  --color-bg: #f6f4f0;
+  --color-surface: #ffffff;
+  --color-sunk: #efede8;
+  --color-ink: #15181b;
+  --color-ink2: rgba(21, 24, 27, 0.62);
+  --color-ink3: rgba(21, 24, 27, 0.4);
+  --color-line: rgba(21, 24, 27, 0.1);
+  --color-line2: rgba(21, 24, 27, 0.18);
+
+  /* observed dry — we looked, nothing is falling */
+  --color-dry: rgba(21, 24, 27, 0.07);
+
+  /* NOT observed — outside radar coverage. Never an intensity, never "dry".
+     Rendered with a hatch wherever it appears so it cannot be mistaken for a
+     band. See lib/scale.ts NO_DATA. */
+  --color-nodata: #ffffff;
+  --color-nodata-line: rgba(21, 24, 27, 0.22);
+
+  /* precipitation bands 1-6, ascending intensity */
+  --color-b1: #91e4ff;
+  --color-b2: #5ed7ff;
+  --color-b3: #00aaff;
+  --color-b4: #0080ff;
+  --color-b5: #0055ff;
+  --color-b6: #7a0087;
+  --color-onband: #ffffff;
+}
+
+.dark {
+  --color-bg: #0e1113;
+  --color-surface: #16191c;
+  --color-sunk: #1b1f22;
+  --color-ink: #eceef0;
+  --color-ink2: rgba(236, 238, 240, 0.6);
+  --color-ink3: rgba(236, 238, 240, 0.38);
+  --color-line: rgba(236, 238, 240, 0.12);
+  --color-line2: rgba(236, 238, 240, 0.2);
+
+  --color-dry: rgba(236, 238, 240, 0.07);
+  --color-nodata: #2a2e31;
+  --color-nodata-line: rgba(236, 238, 240, 0.28);
+
+  /* dim -> bright, so intensity still reads as "more" */
+  --color-b1: #1f4a5a;
+  --color-b2: #2a6b82;
+  --color-b3: #3a9bc4;
+  --color-b4: #55aef5;
+  --color-b5: #7ec0ff;
+  --color-b6: #c77bd6;
+  --color-onband: #0e1113;
+}
