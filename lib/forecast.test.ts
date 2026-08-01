@@ -28,8 +28,18 @@ const HORIZON = ((NFRAMES - 1) * STEP_S) / 60; // 115
 const WET = 1;
 const DRY = 0;
 
+type FrameOpts = {
+  rate?: number;
+  observed?: number;
+  /** mm/h at the coordinate itself; defaults to the disc rate (rain overhead). */
+  centre?: number[];
+  nearestKm?: number | null;
+};
+
 /** Synthetic frame series. `coverages` is one value per 5-minute step. */
-function frames(coverages: number[], rate = 2.0, observed = 1): Frame[] {
+function frames(coverages: number[], o: FrameOpts = {}): Frame[] {
+  const rate = o.rate ?? 2.0;
+  const observed = o.observed ?? 1;
   const t0 = Date.UTC(2026, 7, 1, 12, 0, 0);
   return coverages.map((cov, i) => ({
     time: new Date(t0 + i * STEP_S * 1000),
@@ -38,12 +48,13 @@ function frames(coverages: number[], rate = 2.0, observed = 1): Frame[] {
     meanRate: cov > 0 ? rate : 0,
     coverage: cov,
     observed,
+    centreRate: o.centre ? o.centre[i] : cov > 0 ? rate : 0,
+    nearestKm: o.nearestKm !== undefined ? o.nearestKm : cov > 0 ? 0 : null,
   }));
 }
 
-function v(coverages: number[], rate = 2.0, observed = 1) {
-  const fs = frames(coverages, rate, observed);
-  return verdictFrom(fs, 3, observed);
+function v(coverages: number[], o: FrameOpts = {}, radiusKm = 3) {
+  return verdictFrom(frames(coverages, o), 3, radiusKm);
 }
 
 const rep = (n: number, val: number) => Array.from({ length: n }, () => val);
@@ -221,7 +232,7 @@ suite("radar coverage", () => {
     // The most confident wrong answer this program could give. A location
     // outside coverage has no observation; saying "dry" claims we looked and
     // saw nothing falling, when in fact we cannot look at all.
-    const x = v(rep(NFRAMES, DRY), 2, 0);
+    const x = v(rep(NFRAMES, DRY), { observed: 0 });
     expect(isBlindVerdict(x)).toBe(true);
     const text = describe(x).toLowerCase();
     expect(text).toContain("no radar coverage");
@@ -230,13 +241,13 @@ suite("radar coverage", () => {
   });
 
   it("blind frames are neither wet nor dry", () => {
-    const fs = frames(rep(NFRAMES, WET), 2, 0);
+    const fs = frames(rep(NFRAMES, WET), { observed: 0 });
     expect(fs.some(isWet)).toBe(false);
     expect(spellsFrom(fs)).toEqual([]);
   });
 
   it("discloses partial coverage rather than silently shrinking the answer", () => {
-    const x = v(rep(NFRAMES, DRY), 2, 0.6);
+    const x = v(rep(NFRAMES, DRY), { observed: 0.6 });
     expect(isBlindVerdict(x)).toBe(false);
     expect(describe(x)).toContain("60%");
   });
@@ -303,5 +314,81 @@ suite("scale", () => {
     const rows = legend();
     expect(rows).toHaveLength(BANDS.length - 1);
     expect(rows[rows.length - 1].to).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Reconciled with the design system's foundation.js
+// ---------------------------------------------------------------------------
+
+suite("confidence boundary", () => {
+  it("moderate runs to 70 minutes, not 60", () => {
+    // Arbitrary either way, but it must be ONE number: the design fixtures
+    // render against 70, so a 60 here would label scenarios differently in the
+    // app than in the comps they were reviewed in.
+    const at70 = v([...rep(14, DRY), ...rep(NFRAMES - 14, WET)]);
+    expect(leadMin(at70)).toBe(70);
+    expect(confidenceOf(at70)).toBe("moderate");
+
+    const at75 = v([...rep(15, DRY), ...rep(NFRAMES - 15, WET)]);
+    expect(leadMin(at75)).toBe(75);
+    expect(confidenceOf(at75)).toBe("low");
+  });
+});
+
+suite("rain inside the circle but not on you", () => {
+  const wetEdge = () =>
+    v(rep(NFRAMES, 0.3), { centre: rep(NFRAMES, 0.01), nearestKm: 8 }, 15);
+
+  it("is still raining — the any-touch rule is unchanged", () => {
+    expect(wetEdge().rainingNow).toBe(true);
+  });
+
+  it("is flagged as edge-only when the coordinate itself is dry", () => {
+    const x = wetEdge();
+    expect(x.edgeOnly).toBe(true);
+    expect(x.centreRate).toBeLessThan(0.195);
+    expect(x.nearestKm).toBe(8);
+  });
+
+  it("says where the rain is instead of a bare 'Raining'", () => {
+    // "Raining." would be true and misleading with a 15 km radius: the wet
+    // cell is at the rim, not overhead.
+    const text = describe(wetEdge());
+    expect(text).toContain("Rain within 8 km");
+    expect(text).toContain("not on you yet");
+    // Not "the edge of your circle" — 8 km into a 15 km circle is not the edge,
+    // and the phrase would be wrong at most radii.
+    expect(text).not.toContain("edge of your");
+    expect(text).not.toMatch(/^Yes — raining now/m);
+  });
+
+  it("is NOT edge-only when the rain is actually overhead", () => {
+    const x = v(rep(NFRAMES, 0.9), {}, 15);
+    expect(x.rainingNow).toBe(true);
+    expect(x.edgeOnly).toBe(false);
+    expect(describe(x)).toContain("raining now");
+  });
+});
+
+suite("partial coverage", () => {
+  it("averages observed across the series rather than sampling frame 0", () => {
+    const fs = frames(rep(NFRAMES, DRY));
+    fs[0].observed = 1;
+    for (let i = 1; i < fs.length; i++) fs[i].observed = 0.5;
+    const x = verdictFrom(fs, 3);
+    expect(x.observed).toBeGreaterThan(0.5);
+    expect(x.observed).toBeLessThan(1);
+    expect(x.partial).toBe(true);
+  });
+
+  it("full coverage is not partial", () => {
+    expect(v(rep(NFRAMES, DRY)).partial).toBe(false);
+  });
+
+  it("blind is not partial — it is a different claim entirely", () => {
+    const x = v(rep(NFRAMES, DRY), { observed: 0 });
+    expect(x.partial).toBe(false);
+    expect(isBlindVerdict(x)).toBe(true);
   });
 });

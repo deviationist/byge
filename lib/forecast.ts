@@ -64,8 +64,24 @@ export type Verdict = {
   horizonMin: number;
   analysisAgeMin: number;
   frames: Frame[];
-  /** Fraction of the radius the radar can see. */
+  /** Fraction of the radius the radar can see, averaged over the series. */
   observed: number;
+  /** Part of the circle is outside the mosaic — the answer is drawn from less
+   *  than the user asked for, and we say so. */
+  partial: boolean;
+  /** mm/h at the coordinate itself, as opposed to anywhere in the circle. */
+  centreRate: number;
+  /**
+   * Raining inside the circle, but not on the coordinate.
+   *
+   * With the any-touch rule a wide radius reports rain when the wet edge is
+   * kilometres away. True, and useless on its own — this is what lets the
+   * headline say "Rain within 8 km" instead of a bare "Raining."
+   */
+  edgeOnly: boolean;
+  /** Distance to the nearest rain right now, km. null when the circle is dry. */
+  nearestKm: number | null;
+  radiusKm: number;
 };
 
 /** Outside radar coverage. Not dry — unobserved. Never conflate them. */
@@ -97,7 +113,10 @@ export function leadMin(v: Verdict): number {
 export function confidenceOf(v: Verdict): Confidence {
   const lead = leadMin(v);
   if (lead <= 30) return "high";
-  if (lead <= 60) return "moderate";
+  // 70, not 60. The boundary is arbitrary either way, but it has to be ONE
+  // number: the design fixtures render against 70, so a 60 here would label
+  // scenarios differently in the app than in the comps they were reviewed in.
+  if (lead <= 70) return "moderate";
   return "low";
 }
 
@@ -149,20 +168,35 @@ export function spellsFrom(frames: Frame[]): Spell[] {
 export function verdictFrom(
   frames: Frame[],
   analysisAgeMin: number,
-  observed = frames[0]?.observed ?? 1,
+  radiusKm = 3,
+  threshold = NOTICEABLE,
 ): Verdict {
   const spells = spellsFrom(frames);
   const current = spells.length && spells[0].startMin === 0 ? spells[0] : null;
   const next = spells.find((s) => s.startMin > 0) ?? null;
+  const rainingNow = current !== null;
+  // Averaged rather than sampled from frame 0. The coverage mask is static
+  // within one analysis, so this is equivalent in practice and robust if a
+  // radar drops out mid-series.
+  const observed = frames.length
+    ? frames.reduce((s, f) => s + f.observed, 0) / frames.length
+    : 0;
+  const f0 = frames[0];
+  const centreRate = f0?.centreRate ?? 0;
   return {
-    rainingNow: current !== null,
-    nowRate: current ? (frames[0]?.maxRate ?? 0) : 0,
+    rainingNow,
+    nowRate: rainingNow ? (f0?.maxRate ?? 0) : 0,
     current,
     next,
     horizonMin: frames.length ? frames[frames.length - 1].minutes : HORIZON_MIN,
     analysisAgeMin,
     frames,
     observed,
+    partial: observed > 0 && observed < 1,
+    centreRate,
+    edgeOnly: rainingNow && centreRate < threshold,
+    nearestKm: f0?.nearestKm ?? null,
+    radiusKm,
   };
 }
 
@@ -195,12 +229,17 @@ export async function verdict(
         analysisAgeMin: 0,
         frames: [],
         observed: 0,
+        partial: false,
+        centreRate: 0,
+        edgeOnly: false,
+        nearestKm: null,
+        radiusKm: opts.radiusKm ?? 3,
       };
     }
     throw e;
   }
   const ageMin = (Date.now() - p.analysis.time.getTime()) / 60000;
-  return verdictFrom(p.frames, ageMin, p.frames[0].observed);
+  return verdictFrom(p.frames, ageMin, p.radiusKm, threshold);
 }
 
 /** Plain-language answer. The UI should use the structured Verdict; this is for
@@ -220,7 +259,20 @@ export function describe(v: Verdict): string {
 
   if (v.rainingNow && v.current) {
     const s = v.current;
-    lines.push(`Yes — raining now: ${describeRate(v.nowRate)}.`);
+    if (v.edgeOnly) {
+      // A bare "Raining." would be true and misleading: the wet cell is inside
+      // the circle but not overhead.
+      //
+      // Don't call it "the edge of your circle" either — that is only true when
+      // the rain is actually near the rim. At 2 km inside a 20 km circle it is
+      // the same species of true-but-misleading sentence we are trying to
+      // avoid. State the distance, which is right at every radius.
+      const km = v.nearestKm === null ? v.radiusKm : Math.round(v.nearestKm);
+      lines.push(`Rain within ${km} km — not on you yet.`);
+      lines.push(`Nothing is falling at your coordinate; the nearest cell is ${km} km off.`);
+    } else {
+      lines.push(`Yes — raining now: ${describeRate(v.nowRate)}.`);
+    }
     if (isOpenEnded(s)) {
       lines.push(`Still raining ${v.horizonMin} min from now — no end within the forecast.`);
     } else {

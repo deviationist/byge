@@ -28,6 +28,17 @@ export type Frame = {
   coverage: number;
   /** Fraction of the disc the radar can actually see. */
   observed: number;
+  /**
+   * mm/h at the single cell containing the coordinate.
+   *
+   * Tracked separately from the disc so we can tell "raining on you" from
+   * "raining somewhere inside your circle". With the any-touch rule a 15 km
+   * radius reports rain when the wet edge is 12 km away, which is true and
+   * useless without this distinction.
+   */
+  centreRate: number;
+  /** Distance to the nearest wet cell, km. null when nothing in the disc is wet. */
+  nearestKm: number | null;
 };
 
 /** No radar data here at all — we cannot say wet, and we cannot say dry. */
@@ -93,6 +104,8 @@ export async function probe(lat: number, lon: number, opts: ProbeOptions = {}): 
     }
   }
 
+  const centreIdx = (row - r0) * w + (col - c0);
+
   const frames: Frame[] = [];
   for (let t = 0; t < NFRAMES; t++) {
     const base = t * h * w;
@@ -100,6 +113,7 @@ export async function probe(lat: number, lon: number, opts: ProbeOptions = {}): 
     let wet = 0;
     let max = 0;
     let wetSum = 0;
+    let nearestSq = Number.POSITIVE_INFINITY;
     for (let k = 0; k < h * w; k++) {
       if (!inDisc[k]) continue;
       const v = cube.values[base + k];
@@ -109,8 +123,13 @@ export async function probe(lat: number, lon: number, opts: ProbeOptions = {}): 
       if (v >= threshold) {
         wet++;
         wetSum += v;
+        const dy = r0 + Math.floor(k / w) - row;
+        const dx = c0 + (k % w) - col;
+        const d2 = dy * dy + dx * dx;
+        if (d2 < nearestSq) nearestSq = d2;
       }
     }
+    const centre = cube.values[base + centreIdx];
     frames.push({
       time: times[t],
       minutes: (t * STEP_S) / 60,
@@ -118,6 +137,9 @@ export async function probe(lat: number, lon: number, opts: ProbeOptions = {}): 
       meanRate: wet ? wetSum / wet : 0,
       coverage: seen ? wet / seen : 0,
       observed: discCells ? seen / discCells : 0,
+      // 1 km grid, so cell distance is km directly.
+      centreRate: centre < FILL_THRESHOLD ? centre : 0,
+      nearestKm: Number.isFinite(nearestSq) ? Math.sqrt(nearestSq) : null,
     });
   }
 
