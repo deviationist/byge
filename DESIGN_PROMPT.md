@@ -148,7 +148,21 @@ Don't build these, and don't leave placeholders for them:
 
 ## Technical constraints
 
-- **React PWA**, installable, mobile-first. Phone in hand is the primary case.
+- **React PWA**, installable, and genuinely usable on **phone, tablet and
+  desktop**. Phone is the primary case — that's where "should I cycle home now"
+  gets asked — but the other two are real targets, not afterthoughts.
+
+  Responsive here means the layout *changes*, not that it stretches. Specifically:
+
+  | viewport | shape |
+  |---|---|
+  | phone | single column. The saved-locations list and the detail view are separate screens. |
+  | tablet | two-pane — list beside detail, both visible at once. No navigation needed to compare places. |
+  | desktop | same two-pane, but **constrain the reading measure**. A verdict sentence set across 1400 px is unreadable; cap the text column and let the extra width go to whitespace or the timeline, not the prose. |
+
+  The headline verdict stays typographically dominant at every size. Don't let
+  the desktop layout promote the timeline or the location list into the focal
+  point just because there's room for them.
 - **No backend.** MET Norway's endpoints send `Access-Control-Allow-Origin: *`,
   so the browser fetches them directly. Static hosting.
 - **Stale-while-revalidate.** A cold fetch of 5 locations takes ~1.7 s. Render
