@@ -110,6 +110,33 @@ Thin compositions: `LocationsScreen`, `VerdictScreen`, `AddLocationScreen`,
 `AboutScreen` (now including Appearance — see `FEEDBACK-01.md` §5),
 `RadarMapScreen` (phase 2), `SettingsScreen` (phase 3 shell, not built).
 
+## Splash screen
+
+Yes please — and it needs designing properly rather than falling out of the
+manifest, because iOS shows a **white flash** without `apple-touch-startup-image`
+and that is the first thing anyone sees after installing.
+
+Deliver:
+
+- **The splash artwork itself** — mark on `background_color`, one composition
+  that scales, in **light and dark**. iOS picks by media query, so both are real
+  deliverables, not a tint of one.
+- **The iOS `apple-touch-startup-image` set.** You showed one media query
+  (430×932 @3×) and noted "one per device class". We need the actual set — the
+  current iPhone sizes at minimum, each in both schemes. Generated from one
+  template is fine; the template is the design.
+- **Android/PWA**: what shows is `background_color` plus the icon, so those two
+  must agree with the splash composition rather than being picked separately.
+
+**The constraint that should shape it:** byge promises an answer in under a
+second, and the app renders a cached verdict immediately on open. So the splash
+must feel like a *doorway, not a wait* — the shortest possible held frame, no
+animation that has to finish, no progress indicator, and never splash → spinner →
+content. Splash straight into a rendered verdict.
+
+That argues for something very quiet: the mark, centred, on the theme
+background, and gone. If it looks like a brand moment it is already too long.
+
 ## One thing you can now design that you couldn't before
 
 `RadarMap` needs to show **where radar cannot see**. We established that MET's
