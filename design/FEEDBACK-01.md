@@ -282,7 +282,13 @@ as debug output. It's also the first thing on the screen, which inverts its
 importance: it explains the list before the user has seen the list.
 
 Make it a **collapsed disclosure beneath the locations list** — a labelled row
-(*"What do the markers mean?"*) that expands in place and remembers its state.
+that expands in place and remembers its state.
+
+Avoid "marker" in the copy: once `MapField` and `RadarMap` exist it will mean
+map pin. Our suggestion is **"Reading the list"** — it names what the disclosure
+explains rather than the glyph, so it survives the swatch being redrawn. Keep
+`Swatch` for the list glyph and `Marker` for map pins throughout, in code and in
+copy.
 
 Collapsed rather than always-visible because nothing in the app is explained
 *only* by the legend: `PrecipitationLevelCard` shows swatch + label + feels-like

@@ -79,7 +79,7 @@ isolation and in both themes.
 | `PrecipitationTimeline` | the scrub control — **same component, expanded density**, 40 frames, interactive, drives the map. Build `PrecipitationGraph` first and let this extend it; do not write two. |
 | `PrecipitationLevelCard` | the intensity badge — swatch + label + "feels like" + rate. |
 | `PrecipitationConfidence` | the three bars + "high confidence · reading now". |
-| `PrecipitationLegend` | collapsed disclosure below the locations list — swatch states + intensity ramp + what "not observed" means. Safe to collapse because nothing is explained *only* here; every swatch is word-labelled where it appears. In position, not a corner icon. |
+| `PrecipitationLegend` | collapsed disclosure below the locations list — swatch states + intensity ramp + what "not observed" means. Safe to collapse because nothing is explained *only* here; every swatch is word-labelled where it appears. In position, not a corner icon; labelled "Reading the list" — avoid "marker", which means map pin once `MapField`/`RadarMap` exist. |
 | `LocationStatusText` | **the headline.** Owns the open-ended treatment: grammar swap, dotted underline on the bound, superscript `→`, and the footnote. This is the most important component in the app — the honesty lives here. |
 
 ### Location
