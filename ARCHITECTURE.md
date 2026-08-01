@@ -97,6 +97,7 @@ isolation and in both themes.
 
 | component | notes |
 |---|---|
+| `RefreshControl` | manual update — pull-to-refresh **plus** a focusable button, since pull-to-refresh is unreachable by keyboard. Owns the three outcomes below. |
 | `StaleBanner` | cached verdict + age. |
 | `CoverageNotice` | **no coverage** and **partially observed** — see below. |
 | `EmptyState` | no locations saved. The actual first impression. |
@@ -109,6 +110,35 @@ isolation and in both themes.
 
 `Screen` (padding + the 620px measure cap + safe areas), `TwoPane` (list beside
 detail on tablet/desktop), `Section`.
+
+## Refresh
+
+Two triggers, one path: a **5-minute auto-refresh** while the app is foregrounded,
+and a **manual trigger** the user can pull or click. Both go through
+`useRefresh()`, so there is one implementation and one set of outcomes.
+
+The subtlety is that a manual refresh usually finds nothing. Analyses publish
+every 5 minutes with **0–11 minutes of jitter**, so a user tapping refresh will
+frequently get the file they already have. That is not a failure and must not be
+dressed as a spinner that resolves into no visible change — which reads as
+broken and trains people to distrust the button.
+
+Three outcomes, all designed:
+
+| outcome | behaviour |
+|---|---|
+| **newer analysis** | verdict updates in place, age resets. No layout jump. |
+| **already latest** | say so plainly — *"Already the latest — radar 3 min old"*. Brief, self-dismissing. |
+| **failed** | keep the existing verdict, note the refresh failed. This is `ErrorState`'s inline form, distinct from `StaleBanner`, which means offline-with-cache. |
+
+Resolution is cheap: the newest filename is a deterministic 5-minute mark, and
+probing one costs ~25 ms with a clean 404 before publication. So "is there
+anything new" is answerable **before** fetching any data — check first, and only
+pay the ~1.3 s subset fetch when the answer is yes.
+
+Because a verdict degrades rather than expires — an analysis from 10 minutes ago
+still answers "is it raining now" via its T+10 frame — a failed refresh is never
+a dead end. Always index by **valid time**, never by frame 0.
 
 ## Data layer (`lib/`)
 
