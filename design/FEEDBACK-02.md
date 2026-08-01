@@ -254,3 +254,54 @@ asserts the deviation explicitly so it stays visible rather than becoming
 folklore, and the monotonic test is scoped to bands 1–5 until you resolve it.
 Either brighten band 6, or tell us the hue shift is deliberate and sufficient
 and we'll encode that instead.
+
+## Missing entirely: editing and deleting a location
+
+A saved location can be **picked, and nothing else**. We traced every handler in
+the comp — `pick`, `goList`, `goAbout`, `goVerdict`, `toggleTheme`,
+`toggleStale`, `dismissInstall`. There is no delete, no edit, no rename. (The
+only `edit` matches in the file are `"editor":"enum"` in the harness props
+schema.)
+
+This is more than a missing convenience, because several values are **write-once
+at add time**:
+
+- **Radius** is per-location and only set while adding. Without edit, the control
+  we specified in `FEEDBACK-01.md` §4.3 can never be changed after saving —
+  someone who picks 3 km for a cabin and later wants 15 km has to delete and
+  recreate, except they can't delete either.
+- **Coordinates** come from a map pan. A pin dropped one valley over is
+  permanent.
+- **The name** is typed once. A typo is permanent.
+
+And with no delete, the list only grows. Your own scenario set has six places
+including a Svalbard no-coverage demo — exactly the kind of entry someone would
+want to remove.
+
+### Where it should live
+
+**Not swipe-to-delete.** It's the RN convention, but it is keyboard-unreachable,
+awkward for screen readers, and meaningless in the two-pane desktop layout we
+asked for. It can exist as an accelerator, never as the only route.
+
+Put **Edit** and **Remove** on the **verdict screen** — it is already the
+per-location surface, it is reachable on every viewport, and it is where someone
+is standing when they think "actually, this radius is wrong".
+
+### Please design
+
+1. **Edit** — reuse `AddLocationScreen` in an edit mode. Same form, same map,
+   same radius control, prefilled. **One component, two modes**, like
+   `PrecipitationGraph`/`PrecipitationTimeline` and `LocationCard`/map popup. The
+   title and the primary button change; nothing else should.
+2. **Remove**, with confirmation. Deletion is unrecoverable — there is no
+   account, no sync, no undo beyond what you build.
+3. **Where you land afterwards.** On phone, back to the list. **On two-pane this
+   needs a real answer**: the detail pane was showing the thing you just deleted.
+   Select the neighbour? Fall back to the empty state? This is the kind of gap
+   the harness hides, because it has no notion of a list mutating.
+4. **The empty state after deleting the last location** — distinct in tone from
+   the first-run empty state. One is "welcome", the other is "you just cleared
+   this out". Same component, probably different copy.
+
+Still out of scope, as before: reordering, grouping, folders. Flat list.
