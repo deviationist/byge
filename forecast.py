@@ -25,8 +25,19 @@ WET = scale.NOTICEABLE
 # A dry gap shorter than this is drizzle flicker, not the end of the rain.
 BRIDGE_MIN = 10
 
-# Fraction of the disc that must be wet before we call it rain at the point.
-COVER = 0.25
+
+def is_wet(f: radar.Frame) -> bool:
+    """Any rain touching the radius counts as rain at that location.
+
+    The radius is the area the user cares about, so one wet cell inside it is
+    rain there. This also keeps the control monotonic: widening the radius is
+    always *more* sensitive, never less. The earlier rule (">= 25 % of the disc
+    wet") inverted itself -- with rain falling on you, widening the radius
+    diluted the fraction and flipped the verdict to dry.
+
+    A blind frame is neither wet nor dry, and must never be reported as dry.
+    """
+    return not f.blind and f.coverage > 0
 
 
 def intensity(rate: float) -> str:
@@ -60,24 +71,40 @@ class Verdict:
     horizon_min: int
     analysis_age_min: float
     frames: list[radar.Frame]
+    observed: float = 1.0    # fraction of the radius the radar can see
+
+    @property
+    def blind(self) -> bool:
+        """Outside radar coverage. Not dry -- unobserved. Never conflate them."""
+        return self.observed == 0.0
 
     @property
     def lead_min(self) -> int:
-        """How far out the *predicted* event sits — what confidence should key off.
+        """How far out the *predicted* part of the claim sits.
 
         Not zero just because it is raining now: "stops in 100 min" is a
         100-minute-lead claim and deserves to be labelled as one.
+
+        Open-ended and no-rain verdicts have no predicted moment at all -- what
+        they assert is an *observation* -- so they report 0 and let `confidence`
+        treat them as certain. Their forecast half is hedged in the prose
+        instead ("no end in sight", "that far out is indicative only").
         """
         if self.raining_now:
             s = self.current
-            return self.horizon_min if s.open_ended else s.end_min
+            return 0 if s.open_ended else s.end_min
         if self.next is not None:
             return self.next.start_min
-        return self.horizon_min
+        return 0
 
     @property
     def confidence(self) -> str:
-        """Advection nowcasts decay with lead time; say how much to trust this."""
+        """How much to trust this.
+
+        Observations are certain; only forecast leads decay, and advection
+        nowcasts decay fast. So "it is raining on you" is high confidence even
+        when we cannot see the end -- labelling that `low` would be absurd.
+        """
         lead = self.lead_min
         if lead <= 30:
             return "high"
@@ -87,7 +114,7 @@ class Verdict:
 
 
 def _spells(frames: list[radar.Frame]) -> list[Spell]:
-    wet = [f.coverage >= COVER for f in frames]
+    wet = [is_wet(f) for f in frames]
     step = frames[1].minutes - frames[0].minutes if len(frames) > 1 else 5
 
     # Bridge short dry gaps so drizzle flicker doesn't split one spell in two.
@@ -134,7 +161,15 @@ def verdict(lat: float, lon: float, radius_km: float = 3.0,
     """Answer the three questions for one location."""
     from datetime import datetime, timezone
 
-    p = radar.probe(lat, lon, radius_km=radius_km, threshold=threshold)
+    try:
+        p = radar.probe(lat, lon, radius_km=radius_km, threshold=threshold)
+    except ValueError:
+        # Outside the Nordic grid entirely. That is a coverage answer, not an
+        # error -- the caller asked a fair question about a real place.
+        return Verdict(raining_now=False, now_rate=0.0, current=None, next=None,
+                       horizon_min=(radar.NFRAMES - 1) * radar.STEP_S // 60,
+                       analysis_age_min=0.0, frames=[], observed=0.0)
+
     sp = _spells(p.frames)
     horizon = p.frames[-1].minutes
 
@@ -150,12 +185,21 @@ def verdict(lat: float, lon: float, radius_km: float = 3.0,
         horizon_min=horizon,
         analysis_age_min=age,
         frames=p.frames,
+        observed=p.frames[0].observed,
     )
 
 
 def describe(v: Verdict) -> str:
     """Plain-language answer -- the string a PWA would show."""
     lines: list[str] = []
+
+    if v.blind:
+        # Not dry. Unobserved. Saying "dry" here would be the most confident
+        # wrong answer this program is capable of producing.
+        lines.append("No radar coverage here — we cannot see this place.")
+        lines.append("That is not the same as dry: we have no observation at all, "
+                     "so byge makes no claim either way.")
+        return "\n".join(lines)
 
     if v.raining_now:
         s = v.current
@@ -166,15 +210,22 @@ def describe(v: Verdict) -> str:
             )
         else:
             lines.append(f"Stops in about {s.end_min} min.")
+            if v.next is not None:
+                # Dropping the second spell turns "clears at 6, more at 6:30"
+                # into "clears at 6" -- true, and the wrong thing to plan around.
+                n = v.next
+                tail = ("and does not clear again within the forecast"
+                        if n.open_ended
+                        else f"lasting about {n.duration_min(v.horizon_min)} min")
+                lines.append(f"Then more from about {n.start_min} min — {tail}.")
     else:
         if v.next is None:
             # "Dry for the next 115 min" is really two claims of very different
-            # strength. Don't let the weak tail discredit the solid near term.
+            # strength. The near term is observed; the tail is extrapolation.
+            # Say both rather than averaging them into one flat sentence.
             lines.append("No — dry now, and nothing approaching.")
             lines.append(f"The next ~30 min are a confident call; radar sees no rain "
                          f"through {v.horizon_min} min, but that far out is indicative only.")
-            lines.append(f"Radar {v.analysis_age_min:.0f} min old.")
-            return "\n".join(lines)
         else:
             s = v.next
             lines.append(f"No — dry now, but rain arrives in about {s.start_min} min "
@@ -187,6 +238,10 @@ def describe(v: Verdict) -> str:
             else:
                 lines.append(f"It should last about {s.duration_min(v.horizon_min)} min, "
                              f"clearing around {s.end_min} min from now.")
+
+    if v.observed < 1.0:
+        lines.append(f"Radar sees only {v.observed:.0%} of your area — the rest is "
+                     f"outside coverage and not included either way.")
 
     lines.append(f"Confidence {v.confidence} · radar {v.analysis_age_min:.0f} min old.")
     return "\n".join(lines)

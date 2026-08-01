@@ -101,7 +101,13 @@ class Frame:
     minutes: int
     max_rate: float      # mm/h, strongest cell within radius
     mean_rate: float     # mm/h, averaged over wet cells only
-    coverage: float      # fraction of the disc with rate >= threshold
+    coverage: float      # fraction of the OBSERVED disc with rate >= threshold
+    observed: float = 1.0   # fraction of the disc the radar can actually see
+
+    @property
+    def blind(self) -> bool:
+        """No radar data here at all -- we cannot say wet, and we cannot say dry."""
+        return self.observed == 0.0
 
 
 @dataclass
@@ -151,14 +157,22 @@ def probe(lat: float, lon: float, radius_km: float = 10.0,
 
     frames: list[Frame] = []
     for i in range(n):
-        vals = np.where(disc, cube[i], np.nan)
-        wet = vals >= threshold
+        # _FillValue cells are places the radar mosaic cannot see. They are NOT
+        # dry. Counting them in the denominator would dilute real rain, and
+        # counting a fully-blind disc as 0% coverage would report "dry" for a
+        # location we have no observation of at all -- the exact failure this
+        # project exists to avoid.
+        seen = disc & np.isfinite(cube[i])
+        nseen = int(seen.sum())
+        vals = np.where(seen, cube[i], np.nan)
+        wet = np.where(seen, cube[i] >= threshold, False)
         frames.append(Frame(
             time=datetime.fromtimestamp(int(times[i]), timezone.utc),
             minutes=int((times[i] - times[0]) // 60),
-            max_rate=float(np.nanmax(vals)) if np.any(~np.isnan(vals)) else 0.0,
+            max_rate=float(np.nanmax(vals)) if nseen else 0.0,
             mean_rate=float(np.nanmean(vals[wet])) if wet.any() else 0.0,
-            coverage=float(wet.sum()) / ncell if ncell else 0.0,
+            coverage=float(wet.sum()) / nseen if nseen else 0.0,
+            observed=nseen / ncell if ncell else 0.0,
         ))
 
     bearing, speed = _drift(base, row, col, times)
