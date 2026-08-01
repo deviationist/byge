@@ -134,17 +134,59 @@ parallel and render as a list, each showing its own verdict.
 - Adding a location is manual entry (search or coordinates) for now.
 - No reordering, grouping, or folders. Keep it flat.
 
-## Explicitly out of scope
+## Scope — design the whole app, we ship the MVP
 
-Don't build these, and don't leave placeholders for them:
+**Design all three phases.** We will build only the MVP, extracting its
+components from your full design. This is deliberate: designing the MVP in
+isolation and bolting features on later produces two incompatible time
+components and a palette applied three different ways.
 
-- **No radar map.** The point of byge is not having to read one.
-- **No push notifications.** Deliberate — it would require a backend.
-- **No live geolocation.** Manually saved locations only. (A "use my position"
-  button is a likely later addition, so don't structure the code to make it
-  impossible — just don't build it now.)
-- No accounts, no settings screen, no onboarding flow, no dark/light toggle
-  (follow the system).
+Read **`GUI_PLAN.md`** for the full component inventory and phasing. The short
+version:
+
+| phase | features |
+|---|---|
+| **MVP** | verdict · saved locations · manual entry · compact timeline · stale/offline |
+| **2** | map view with radar overlay · time scrubber over the full 200-min window · basemap switching (terrain/street/satellite/hybrid) |
+| **3** | live geolocation · push notifications |
+
+**The map is a confirmation layer, never the answer.** byge exists because
+yr.no's map makes you guess whether that blue blob is heading your way. If a user
+must open the map to learn whether it will rain, the design has failed. The map
+is a drill-down for seeing *why* — never the landing view, never the default tab,
+never the largest element on the verdict screen.
+
+Three couplings that are the whole reason we're designing ahead:
+
+1. **`TimelineStrip` and `TimeScrubber` are one component, two densities** —
+   compact and non-interactive in MVP, scrubbable and driving the map in phase 2.
+2. **A `LocationCard` is also the map marker popup** — one representation, two
+   placements.
+3. **One palette source** feeds the intensity badge, the timeline, and the map
+   legend. Three implementations is how the map ends up disagreeing with the
+   headline.
+
+For the MVP extraction to be clean:
+
+- No MVP component may depend on a phase 2/3 component. The verdict screen must
+  render as visually complete with no map present — not with a map-shaped hole.
+- `TimelineStrip` must read as finished in MVP, not as a disabled scrubber.
+- Phase 3 entry points should be **absent from the MVP, not disabled**. Design
+  them in the full comp; the MVP build simply omits them. No greyed-out "use my
+  location", no dead notification toggle.
+
+Still out entirely: accounts, onboarding flow, dark/light toggle (follow the
+system).
+
+## Legal constraints
+
+- **Never use "Yr" in the app name and never use the Yr logo** — both are MET
+  trademarks. The app is `byge`. Reusing the colour palette is fine (the data is
+  CC BY 4.0), but nothing may imply endorsement by Yr or NRK.
+- **Attribution to MET Norway (CC BY 4.0, with a link) is required** and needs a
+  real home in the design — a footer or about sheet, not buried.
+- **Coordinates are capped at 4 decimals** (5+ returns HTTP 403), which affects
+  the add-location flow.
 
 ## Technical constraints
 
