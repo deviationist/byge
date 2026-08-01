@@ -281,10 +281,19 @@ worth keeping — but as a line of 8.5px all-caps monospace above the list it re
 as debug output. It's also the first thing on the screen, which inverts its
 importance: it explains the list before the user has seen the list.
 
-Make it a **proper legend beneath the locations list**, where someone looks only
-once they've wondered what a swatch means. Give it room — the three swatch states
-drawn at real size with sentence-case labels, rather than compressed into a caps
-string.
+Make it a **collapsed disclosure beneath the locations list** — a labelled row
+(*"What do the markers mean?"*) that expands in place and remembers its state.
+
+Collapsed rather than always-visible because nothing in the app is explained
+*only* by the legend: `PrecipitationLevelCard` shows swatch + label + feels-like
++ rate together, and list rows carry status text in words beside the swatch. The
+colours and shapes are scanning aids, never the sole carrier. That makes the
+legend one-time orientation, and one-time things can be collapsed.
+
+But **a disclosure in position, not an icon in a corner.** A labelled row where
+the legend would be is discoverable; a "?" in the nav bar is hidden, and nobody
+taps it. Expanded, give it room — the three swatch states at real size with
+sentence-case labels, not a caps string.
 
 Consider folding the intensity ramp into the same legend, so there's one place
 that explains the visual language rather than a swatch key on the list and a
