@@ -34,6 +34,21 @@ BANDS: tuple[Band, ...] = (
     Band(6, 23.700, (122, 0, 135),  "#7A0087", "torrential",     "seek shelter"),
 )
 
+# The exact RGB triples yr.no renders, ascending by intensity. Used to decode
+# their tiles, and pinned so that a silent palette change on their side fails a
+# test rather than quietly invalidating the fitted boundaries above.
+PALETTE: tuple[tuple[int, int, int], ...] = tuple(b.rgb for b in BANDS)
+
+# yr renders "outside radar coverage" as white -- deliberately distinct from the
+# black used for "dry, and we can see that it is dry". Verified: white pixels
+# coincide with _FillValue in our own grid 97 % of the time, the remainder being
+# subpixel misalignment along the coverage boundary.
+#
+# Never fold this into PALETTE. Treating no-data as an intensity would render
+# "we cannot see here" as "it is dry here", which is precisely the kind of
+# confident-but-wrong answer this project exists to avoid.
+NO_DATA: tuple[int, int, int] = (255, 255, 255)
+
 # Rate at or above which we consider it "raining on you" for verdict purposes.
 # Band 3 is the first level a person actually notices; bands 1-2 are radar
 # picking up moisture you would not call rain.

@@ -122,6 +122,11 @@ Everything here was measured against the live service, not assumed.
   60°N, ≈1.5 km². Our grid is 1.0 km, so we work at finer resolution than the map.
 - **yr's own wet threshold is ~0.02–0.03 mm/h**, well below anything a person
   would call rain.
+- **yr's tiles distinguish no-data from dry.** White `(255,255,255)` means
+  *outside radar coverage*; black means *dry, and we can see that it's dry*.
+  White coincides with `_FillValue` in our grid 97 % of the time. Kept as
+  `scale.NO_DATA`, deliberately outside `PALETTE` — rendering "we cannot see
+  here" as "it is dry here" is the exact failure mode this project avoids.
 - **CORS is open** (`Access-Control-Allow-Origin: *`) on both `thredds.met.no`
   and `api.met.no` — a browser can fetch the data directly, so no backend is
   required.
@@ -157,11 +162,34 @@ instantly, and refresh in place. The app never needs a blocking spinner.
 imagery. Showing the map would be nice, but the point of `byge` is to not have to
 read one.
 
+## Tests
+
+```bash
+.venv/bin/python -m pytest                     # everything (67 tests)
+.venv/bin/python -m pytest -m "not network"    # pure logic, milliseconds
+```
+
+Three suites:
+
+- **`test_forecast.py`** — pure logic, no network. Guards the honesty invariants:
+  an open-ended spell must never report a duration it cannot see, and confidence
+  must track the claim being made rather than the current moment.
+- **`test_source.py`** — contract tests against MET's THREDDS. The grid constants
+  in `radar.py` are *pinned* so a probe is one request instead of four; these
+  tests are what stop the pinned values drifting from reality unnoticed.
+- **`test_tiles.py`** — contract tests against `tiles.yr.no`, which we depend on
+  for the phase-2 map overlay despite it being undocumented. Turns an unmonitored
+  dependency into a monitored one.
+
+The network tests hit live services deliberately. **A failure there is
+information, not flake.**
+
 ## Status
 
-Python prototype — the data and decision layers work end to end. The GUI (React
-PWA) is not built yet. See `AGENTS.md` for working conventions and the known
-rough edges.
+Python prototype — the data and decision layers work end to end, with tests. The
+GUI (React PWA) is not built yet: `GUI_PLAN.md` plans the full app and
+`DESIGN_PROMPT.md` is the brief for it. See `AGENTS.md` for working conventions
+and the known rough edges.
 
 ## Attribution
 

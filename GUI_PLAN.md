@@ -94,33 +94,60 @@ components.
    Three independent implementations is how the map ends up disagreeing with the
    headline.
 
-## Radar overlay — three options
+## Radar overlay — decided: yr's tiles
 
-Phase 2 needs precipitation rendered on a map. Ranked by robustness:
+**Decision: use `tiles.yr.no` directly, and monitor it with tests.**
+
+The alternatives were considered and set aside:
 
 **A. Render our own canvas overlay from the NetCDF.** We already fetch the
-gridded field. Extend the subset from a 3 km disc to a viewport-sized box, apply
-the palette client-side, draw to canvas, and reproject onto the map. *Pros:* no
-third-party dependency, full control, exact agreement with the headline verdict
-since it's literally the same numbers. *Cons:* more bandwidth (a viewport box is
-much larger than a disc), and reprojection work (LCC → Web Mercator).
-**Recommended** — it's the only option where map and verdict cannot disagree.
-
-**B. Use yr's tiles (`tiles.yr.no`).** Ready-made, 5-minute cadence, both
-observations and nowcast, CORS open. *Pros:* trivial to implement, looks exactly
-like yr. *Cons:* **undocumented infrastructure** — no robots.txt, not mentioned
-in MET's ToS. It's NRK's internal CDN for yr.no, and can change or start blocking
-without notice. Also z0–6 only, so it blurs when overzoomed (which is why the
-squares are visible). Acceptable for a prototype; a fragile production dependency.
+gridded field, so we could subset a viewport-sized box, apply the palette
+client-side, and reproject LCC → Web Mercator ourselves. Strictly the most robust
+— no third-party dependency, and map and verdict could never disagree. Rejected
+for now on cost: far more bandwidth than a 3 km disc, plus real reprojection work.
 
 **C. MET's radar image API** (`api.met.no/weatherapi/radar/2.0`). Documented and
-covered by the ToS. *Cons:* whole-area rendered PNGs with **no georeferencing
-metadata** and no tile scheme — awkward to place on a slippy map. Not really
-built for this.
+covered by the ToS, but it serves whole-area rendered PNGs with **no
+georeferencing metadata** and no tile scheme. Not built for a slippy map.
 
-Design should not assume which one wins — the overlay is a raster layer either
-way, and the visual result is similar. But **the legend must be driven by our
-palette constants**, not by whatever colours arrive in a tile.
+### The risk, and how it's handled
+
+`tiles.yr.no` is **undocumented infrastructure** — no robots.txt, absent from
+MET's terms. It's NRK's internal CDN for yr.no and could change or start blocking
+without notice. It's also z0–6 only, so it blurs when overzoomed (which is why
+the squares are visible on yr's own map).
+
+Rather than avoid the dependency, we **monitor** it. `tests/test_tiles.py` is a
+contract suite that fails loudly if the service moves: availability, manifest
+shape, 5-minute cadence, CORS, zoom ceiling, and — most importantly — two
+semantic checks that availability testing would miss:
+
+- **`test_palette_unchanged`** — the fitted boundaries in `scale.py` describe
+  *these exact colours*. A silent repalette would leave every availability test
+  green while our intensity labels quietly went wrong.
+- **`test_tiles_still_agree_with_our_grid`** — the rendered tiles must still
+  match the NetCDF field we read directly (>85 % wet/dry agreement). Catches yr
+  switching product or thresholds underneath us.
+
+If those go red, fall back to option A.
+
+### No-data is not dry
+
+Decoding yr's tiles requires one distinction the palette alone doesn't give you:
+
+- **black `(0,0,0)`** — dry, *and we can see that it's dry*
+- **white `(255,255,255)`** — **outside radar coverage**, we cannot see at all
+
+Verified: white pixels coincide with `_FillValue` in our own grid 97 % of the
+time. This is `scale.NO_DATA`, deliberately kept out of `PALETTE`.
+
+It matters for the UI too: the map must render no-coverage visibly differently
+from dry. Painting unobserved ocean the same as observed-dry land is exactly the
+confident-but-wrong answer byge exists to avoid, and it's the visual counterpart
+of the `NoCoverage` state in the component inventory.
+
+**The legend must be driven by our palette constants**, not by whatever colours
+arrive in a tile.
 
 ## Basemap
 
