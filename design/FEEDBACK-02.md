@@ -211,3 +211,46 @@ ragged — it follows individual radar ranges, not a tidy polygon.
 So the hatched no-data fill on `RadarMap` is real and available, and the same
 mask lets `MapField` warn at *add* time rather than after saving. Worth designing
 both: a location placed outside coverage should be catchable before it's saved.
+
+## Late finding: the dark ramp inverts at the top
+
+While porting the palette we measured relative luminance across both ramps.
+The dark set climbs cleanly — and then dips at the last band:
+
+```
+band  label            light    lum     dark     lum
+  1   trace           #91E4FF  0.833   #1F4A5A  0.259
+  2   drizzle         #5ED7FF  0.754   #2A6B82  0.372
+  3   light rain      #00AAFF  0.549   #3A9BC4  0.539
+  4   moderate rain   #0080FF  0.431   #55AEF5  0.628
+  5   heavy rain      #0055FF  0.311   #7EC0FF  0.716
+  6   torrential      #7A0087  0.140   #C77BD6  0.571   <- dips 0.144
+
+dark deltas:  +0.113  +0.167  +0.090  +0.087  -0.144
+```
+
+So **torrential renders dimmer than heavy rain in dark mode** — the same
+inversion the dark ramp exists to prevent, just at the top of the scale rather
+than the bottom, and on the one band where being noticed matters most.
+
+The light ramp does not have this problem: it stays strictly monotonic all the
+way down to 0.140, because darker means more intense there and the purple is
+genuinely the darkest thing on the scale.
+
+Both palettes shift hue to purple at band 6 (yr's own light value is `#7A0087`),
+which is a legitimate second signal. But in dark mode the rule you set was that
+luminance rises with intensity, and `#C77BD6` doesn't clear the bright blue
+beneath it.
+
+Two candidates that keep the purple hue (~288°) and clear band 5:
+
+| hex | luminance | margin over heavy rain |
+|---|---|---|
+| `#E0AEEA` | 0.741 | +0.025 |
+| `#E8BCF4` | 0.790 | +0.074 |
+
+We have **not** changed it — it's your palette. But `lib/tokens.test.ts` now
+asserts the deviation explicitly so it stays visible rather than becoming
+folklore, and the monotonic test is scoped to bands 1–5 until you resolve it.
+Either brighten band 6, or tell us the hue shift is deliberate and sufficient
+and we'll encode that instead.

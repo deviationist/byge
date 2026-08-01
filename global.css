@@ -16,7 +16,20 @@
  */
 @import "tailwindcss";
 
-@theme {
+/* `static` is load-bearing, not a style choice.
+ *
+ * A plain `@theme` block only emits the variables that generated utilities
+ * happen to reference, so Tailwind tree-shakes any band no screen uses yet.
+ * The `.dark` block below is plain CSS and is emitted verbatim regardless —
+ * which produced a build where every `--color-b*` existed ONLY in its dark
+ * form. Light mode had dark overrides for variables that were never defined:
+ * correct in dark, silently broken in light, and only for the colours that
+ * carry meaning.
+ *
+ * `static` emits the whole palette unconditionally. The band colours are also
+ * read from JS (lib/scale.ts drives canvas and SVG fills), so usage cannot be
+ * inferred from class names anyway. */
+@theme static {
   /* surfaces & ink */
   --color-bg: #f6f4f0;
   --color-surface: #ffffff;
