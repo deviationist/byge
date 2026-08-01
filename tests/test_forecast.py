@@ -92,6 +92,73 @@ def test_describe_says_at_least_for_open_ended_spells():
     assert "isn't visible" in text or "not visible" in text
 
 
+def test_unobserved_is_never_reported_as_dry():
+    """The most confident wrong answer this program could give.
+
+    A location outside radar coverage has no observation. Saying "dry" there
+    claims we looked and saw nothing falling, when in fact we cannot look at
+    all. Before this was fixed, a fully-blind disc reported the exact same
+    sentence as genuinely-dry Oslo.
+    """
+    fs = frames([DRY] * radar.NFRAMES)
+    for f in fs:
+        f.observed = 0.0
+    v = forecast.Verdict(raining_now=False, now_rate=0.0, current=None, next=None,
+                         horizon_min=HORIZON, analysis_age_min=3.0, frames=fs,
+                         observed=0.0)
+    assert v.blind
+    text = forecast.describe(v)
+    assert "no radar coverage" in text.lower()
+    assert "not the same as dry" in text.lower()
+    assert "nothing approaching" not in text.lower()
+
+
+def test_blind_frames_are_neither_wet_nor_dry():
+    fs = frames([WET] * radar.NFRAMES)
+    for f in fs:
+        f.observed = 0.0
+    assert not any(forecast.is_wet(f) for f in fs)
+    assert forecast._spells(fs) == []
+
+
+def test_partial_coverage_is_disclosed():
+    """Half a circle outside the mosaic must not silently shrink the answer."""
+    fs = frames([DRY] * radar.NFRAMES)
+    for f in fs:
+        f.observed = 0.6
+    v = forecast.Verdict(raining_now=False, now_rate=0.0, current=None, next=None,
+                         horizon_min=HORIZON, analysis_age_min=3.0, frames=fs,
+                         observed=0.6)
+    assert not v.blind
+    assert "60%" in forecast.describe(v)
+
+
+# --------------------------------------------------------------------------
+# Second spell -- rain that stops and comes back
+# --------------------------------------------------------------------------
+
+def test_second_spell_is_reported_when_already_raining():
+    """"Clears at 6" is true and the wrong thing to plan around if more follows."""
+    v = verdict_from([WET] * 4 + [DRY] * 6 + [WET] * 6 + [DRY] * 8)
+    assert v.raining_now
+    assert v.current.end_min == 20
+    assert v.next is not None and v.next.start_min == 50
+    text = forecast.describe(v)
+    assert "Stops in about 20 min" in text
+    assert "Then more from about 50 min" in text
+
+
+def test_second_spell_open_ended_is_flagged_as_such():
+    v = verdict_from([WET] * 4 + [DRY] * 6 + [WET] * 14)
+    assert v.next.open_ended
+    assert "does not clear again" in forecast.describe(v)
+
+
+def test_no_second_spell_sentence_when_there_is_none():
+    v = verdict_from([WET] * 4 + [DRY] * 20)
+    assert "Then more" not in forecast.describe(v)
+
+
 def test_describe_never_claims_a_duration_it_cannot_see():
     """Guards against a regression where the horizon leaks out as a fact."""
     v = verdict_from([WET] * radar.NFRAMES)
@@ -126,6 +193,26 @@ def test_lead_time_for_raining_now_uses_the_end_not_zero():
     assert v.raining_now
     assert v.lead_min == 105
     assert v.confidence == "low"
+
+
+def test_open_ended_spell_is_high_confidence():
+    """"It is raining on you" is an observation, and observations are certain.
+
+    Only the *end* is unknown, and that is hedged in the prose rather than by
+    discrediting the whole verdict. Labelling this `low` would be absurd.
+    """
+    v = verdict_from([WET] * radar.NFRAMES)
+    assert v.current.open_ended
+    assert v.lead_min == 0
+    assert v.confidence == "high"
+
+
+def test_nothing_approaching_is_high_confidence():
+    """The field being clear right now is observed, not predicted."""
+    v = verdict_from([DRY] * radar.NFRAMES)
+    assert v.confidence == "high"
+    # ...but the far end of "nothing for 115 min" still has to be hedged.
+    assert "indicative only" in forecast.describe(v)
 
 
 def test_short_spell_while_raining_is_high_confidence():
@@ -176,15 +263,27 @@ def test_long_dry_gap_splits_into_two_spells():
     assert v.next.start_min == 45
 
 
-def test_coverage_below_threshold_is_not_rain():
-    """A few wet cells in a 3 km disc is not rain falling on you."""
-    v = verdict_from([forecast.COVER / 2] * radar.NFRAMES)
-    assert not v.raining_now
+def test_any_rain_touching_the_radius_counts():
+    """One wet cell inside the circle is rain at that location.
 
-
-def test_coverage_at_threshold_counts():
-    v = verdict_from([forecast.COVER] * radar.NFRAMES)
+    The radius is the area the user cares about. An earlier rule (">= 25 % of
+    the disc") inverted itself: with rain falling on you, widening the radius
+    diluted the fraction and flipped the verdict to dry.
+    """
+    v = verdict_from([0.02] * radar.NFRAMES)   # 2 % of the disc wet
     assert v.raining_now
+
+
+def test_widening_the_radius_never_turns_rain_into_dry():
+    """Monotonicity: a wider circle can only ever see more rain, never less."""
+    tiny = verdict_from([0.02] * radar.NFRAMES)
+    broad = verdict_from([0.9] * radar.NFRAMES)
+    assert tiny.raining_now and broad.raining_now
+
+
+def test_zero_coverage_is_dry():
+    v = verdict_from([0.0] * radar.NFRAMES)
+    assert not v.raining_now
 
 
 def test_dry_now_then_rain_populates_next_not_current():

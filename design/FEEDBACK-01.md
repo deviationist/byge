@@ -184,21 +184,45 @@ Rain is falling on this person. Widening their radius tells them it's dry. That'
 because "raining" currently means *≥25 % of the disc is wet*, and a bigger disc
 dilutes the same patch. The control would invert its own meaning.
 
-**The fix — two radii, one visible.** We're restructuring the model so that:
+**The rule we've decided on: if any rain touches the radius, it's raining for
+that location.** One wet cell anywhere inside the circle counts. The 25 %
+coverage gate goes away.
 
-- **"Is it raining on me"** is answered by a **fixed inner core of ~2 km**, which
-  is roughly the limit of radar positional accuracy anyway. It does not change
-  when the user changes their radius.
-- **The user's radius is a watch area** — "the place I care about", a garden or a
-  whole valley. It drives *approach*: how early we see a band coming, and how far
-  out "nothing approaching" is claiming.
+This is simple, it matches what someone means when they draw a circle round their
+place, and it makes the control monotonic — wider is always *more* sensitive,
+never less. Verified at the same coordinate:
 
-So a bigger radius makes byge **see further ahead**, never less certain about
-right now. That matches what someone means when they drag it wider.
+```
+ radius   coverage   OLD (≥25%)          NEW (any touch)
+   3 km     100%     raining, ends +25   raining, ends +35
+  10 km      43%     raining, ends +40   raining, no end in sight
+  15 km      22%     DRY                 raining, no end in sight
+  25 km      11%     DRY                 raining, no end in sight
+```
 
-For the design this means the circle on the map wants a legible two-part
-reading — a small solid centre (what's falling on you) inside a larger soft ring
-(what we're watching). Worth exploring whether both are drawn or only the outer.
+**One consequence you should design around.** Because any single wet cell counts,
+wide radii saturate: at 10 km and above this location becomes *"raining, no end
+in sight"* for the whole horizon. In Norway, "some rain somewhere within 15 km in
+the next two hours" is very nearly always true. The answer stops discriminating.
+
+Two things follow:
+
+1. **The 3 km default is load-bearing.** It's what keeps the verdict about *you*.
+   The wide end of the control should feel like a deliberate choice — "watch this
+   whole valley" — not a neutral slider position.
+2. **Worth distinguishing where the rain is.** The boolean stays as decided, but
+   the headline can still tell the difference between rain on the centre cell and
+   rain only clipping the edge — *"Raining."* versus *"Rain within 8 km."* Same
+   rule, more useful sentence. We'd like your take on whether that earns its
+   complexity, or whether one flat "Raining." is better.
+
+`coverage` remains in the data (fraction of the circle that's wet) and is now
+purely expressive rather than a gate — it's the natural thing for the timeline
+strip's bar heights to encode, since it says how much of *your* place is under
+rain. See §7, which currently double-encodes rate instead.
+
+For the map, the circle is a single ring at the chosen radius. No inner core
+needed under this rule.
 
 **Numbers for the control:**
 
@@ -249,7 +273,49 @@ screen marked `PHASE 3`, while being MVP itself.
 `System` still needs a designed selected-state — in the prototype it silently
 resolves to `light`, so we can't see what following the system looks like.
 
-## 6. States you haven't designed
+## 6. The swatch key needs to become a real legend
+
+`FILLED = RAINING NOW · OUTLINE = ON THE WAY · HATCHED = NOT OBSERVED` is doing
+useful work — the swatch language is genuinely good, and non-colour encoding is
+worth keeping — but as a line of 8.5px all-caps monospace above the list it reads
+as debug output. It's also the first thing on the screen, which inverts its
+importance: it explains the list before the user has seen the list.
+
+Make it a **proper legend beneath the locations list**, where someone looks only
+once they've wondered what a swatch means. Give it room — the three swatch states
+drawn at real size with sentence-case labels, rather than compressed into a caps
+string.
+
+Consider folding the intensity ramp into the same legend, so there's one place
+that explains the visual language rather than a swatch key on the list and a
+colour ramp buried in the map. That legend is also the natural home for a plain
+sentence about what "not observed" means, which currently only appears if you
+happen to open the Svalbard state.
+
+On the verdict screen it shouldn't appear at all — there's one swatch there and
+the badge already labels it in words.
+
+## 7. Manual refresh
+
+Add a user-triggered update. Auto-refresh on a 5-minute cadence is right, but
+someone standing under an awning watching the sky wants to force it.
+
+- **Pull-to-refresh** on phone, plus a tappable affordance for desktop and for
+  accessibility — pull-to-refresh alone is not reachable by keyboard.
+- Design the **in-flight** state. A cold fetch is ~1.3 s, so it's visible.
+  It should feel like a refresh of live content, not a page load — the existing
+  verdict stays on screen and updates in place.
+- **Design the "nothing new" outcome, and be honest about it.** Analyses publish
+  every 5 minutes with 0–11 minutes of lag, so a manual refresh will often find
+  *the same file it already has*. Do not fake a change. Something like
+  *"Already the latest — radar 3 min old"* is the correct answer and needs a
+  designed state, otherwise it will get implemented as a spinner that resolves
+  into no visible change and reads as broken.
+- Refresh failure while a cached verdict exists is the **error-vs-offline**
+  distinction from §8 — the old verdict stays, with a note that the refresh
+  failed.
+
+## 8. States you haven't designed
 
 The component inventory listed these; they aren't in the file:
 
@@ -302,12 +368,65 @@ something else. Our preference is the former — but they have to agree.
   states and check contrast on the pale light-mode bands, which are the weakest
   point.
 
+## 9. No-coverage detection — we had the bug you designed against
+
+You asked the right question, so here's the honest answer: **we were not
+detecting it.** Your state 6 was designed against a model that couldn't produce
+it.
+
+`_FillValue` cells — places the radar mosaic cannot see — were being counted as
+*not wet*, which is to say, as dry. A location in the North Sea with **49 of 49
+cells unobserved** returned:
+
+```
+"No — dry now, and nothing approaching."
+```
+
+Character-for-character identical to Oslo, which genuinely is dry and observed.
+The most confident wrong answer the program was capable of producing, and it was
+in the layer enforcing the principle everywhere else.
+
+**Fixed.** There are now three coverage states, and the design needs the third:
+
+| state | meaning | designed? |
+|---|---|---|
+| `observed = 1.0` | radar sees the whole circle | yes |
+| `observed = 0.0` | **blind** — no observation at all | yes, your state 6 |
+| `0 < observed < 1` | **partially seen** — part of the circle is off the mosaic | **no** |
+
+The partial case is real and reachable: coastal and border locations with a wide
+radius will straddle the mosaic edge. It matters because the answer is drawn from
+less than the user asked for. We now say so —
+
+> *"Radar sees only 60 % of your area — the rest is outside coverage and not
+> included either way."*
+
+— but it needs a designed treatment. Our suggestion: the radius circle on the map
+renders the unobserved arc in the hatched no-data fill, so the shortfall is
+visible in the same visual language as state 6 rather than only stated in words.
+
+Two smaller notes:
+
+- **Coordinates outside the Nordic grid entirely** (Svalbard, your state 6) used
+  to raise an exception. It now returns a proper no-coverage verdict — a fair
+  question about a real place deserves an answer, not a crash.
+- **Confidence is not shown for blind locations**, which your design already gets
+  right. Keep that.
+
 ## What we're changing on our side
 
 So you're not designing against a moving target:
 
-- `confidence` moves to the observation-vs-forecast rule in §1.
-- `describe()` gains the second-spell sentence from §3 — it currently drops
-  `next` entirely when it's already raining, which is the same bug.
-- Nothing else. The `Verdict` / `Spell` shapes in `README.md` are unchanged, and
-  `scale.py`'s boundaries stay as fitted.
+All of this is **already done and pushed** — 76 tests passing — so you're not
+designing against a moving target:
+
+- `confidence` now follows the observation-vs-forecast rule in §1. Open-ended and
+  no-rain verdicts report `lead_min = 0` and read as `high`.
+- `describe()` reports the **second spell** (§3). It previously dropped `next`
+  entirely once it was already raining.
+- The wet rule is **any rain touching the radius** (§4.3). `COVER` is gone.
+- `Frame` gains `observed`; `Verdict` gains `observed` and `blind` (§9).
+  Unobserved cells no longer count as dry.
+
+Unchanged: the `Verdict` / `Spell` shapes in `README.md`, and `scale.py`'s fitted
+boundaries.
