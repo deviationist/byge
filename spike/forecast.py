@@ -108,7 +108,7 @@ class Verdict:
         lead = self.lead_min
         if lead <= 30:
             return "high"
-        if lead <= 60:
+        if lead <= 70:
             return "moderate"
         return "low"
 
