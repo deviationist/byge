@@ -175,16 +175,114 @@ For the MVP extraction to be clean:
   them in the full comp; the MVP build simply omits them. No greyed-out "use my
   location", no dead notification toggle.
 
-Still out entirely: accounts, onboarding flow, dark/light toggle (follow the
-system).
+Still out entirely: accounts, onboarding flow.
+
+## Dark and light mode
+
+**Both themes are first-class.** Not a filter applied to one — design each
+properly. Default to following the system (`prefers-color-scheme`), with a
+manual override available in the MVP. Keep the override small and out of the
+way; it is not a feature to show off.
+
+**yr has no dark palette to copy.** Their site darkens its chrome, but the
+precipitation tiles are server-rendered PNGs with a single palette and their tile
+server offers only one basemap style (`basic` — `dark`/`night` 404). So they
+sidestepped this rather than solving it, and we are on our own.
+
+A knock-on for phase 2: if the map renders yr's tiles, **the map stays light even
+in dark mode**. Design around that deliberately — a light map panel inside a dark
+app needs framing, not an accident.
+
+The hard part is the palette. **The precipitation blues are the app's semantic
+colour** — they carry intensity meaning and they were fitted against yr's light
+map. In dark mode they must keep:
+
+- **Perceived intensity ordering.** Light rain must still read as lighter than
+  heavy rain. The faintest bands (`#91E4FF`, `#5ED7FF`) are pale-on-white by
+  design; on a dark background they can appear *brighter* than the mid bands and
+  invert the scale. Solve this deliberately rather than letting the hex values
+  ride.
+- **Distinguishability between adjacent bands**, especially bands 1–3 which sit
+  close together.
+- **Recognisability.** The point of borrowing yr's palette is that their users
+  read ours for free, so the dark variant should still feel like the same scale,
+  not a different one.
+
+If dark mode needs adjusted hex values, that is fine and expected — but they must
+map one-to-one onto the six bands, stay ordered, and be defined as a *second
+named set* rather than computed at render time. The band boundaries in `scale.py`
+never change; only their presentation does.
+
+Also theme-dependent:
+
+- **No-data vs dry.** In light mode yr uses white for no-coverage and black for
+  dry. Both need dark-mode equivalents that stay clearly distinct from each other
+  *and* from the precipitation bands.
+- **`theme_color`** in the manifest, and the `<meta name="theme-color">` tags,
+  need a variant per scheme so the browser chrome matches.
+- Test the verdict screen in both themes at every viewport. The headline is
+  typographic, so contrast on the sentence matters more than anywhere else.
+
+## PWA deliverables
+
+The app must be genuinely installable, not merely responsive. Produce everything
+required:
+
+**Icon set.** Design the byge mark first — it should work at 16 px. The name
+means *a passing shower*, so there is an obvious visual idea (a shower cell, a
+band of rain moving through) but don't feel bound to a raincloud cliché; a
+distinctive abstract mark would age better. Deliver:
+
+| asset | size | notes |
+|---|---|---|
+| `icon-192.png` | 192×192 | standard |
+| `icon-512.png` | 512×512 | standard |
+| `icon-maskable-192.png` | 192×192 | **safe zone**: keep the mark inside the central 80 % circle |
+| `icon-maskable-512.png` | 512×512 | same |
+| `apple-touch-icon.png` | 180×180 | iOS home screen, no transparency, no rounding (iOS masks it) |
+| `favicon.svg` + `favicon.ico` | — | 32 and 16 px legible |
+| monochrome variant | 512×512 | for OS themed-icon treatments |
+
+Maskable icons are the one most often got wrong: Android crops them to arbitrary
+shapes, so anything near the edge is lost. Design the maskable variant separately
+rather than padding the standard one and hoping.
+
+**Manifest** (`manifest.webmanifest`): `name` ("byge"), `short_name` ("byge"),
+`description`, `start_url`, `scope`, `display: standalone`, `background_color`,
+`theme_color`, `orientation: portrait-primary` (phone) with sensible desktop
+behaviour, `categories: ["weather", "utilities"]`, and the full `icons` array
+with correct `purpose` values (`any` vs `maskable`).
+
+**iOS specifics**, since iOS Safari ignores much of the manifest:
+`apple-mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style`,
+`apple-mobile-web-app-title`, and **`apple-touch-startup-image` splash screens**.
+iOS needs one per device resolution and shows a white flash without them — a
+generated set from a single template is fine, but the template needs designing.
+
+**Install experience.** An install prompt/affordance that is present but not
+nagging. It should never cover the verdict.
+
+**Service worker**, for the stale-while-revalidate behaviour described under
+Technical constraints — cache the shell, cache the last verdict per location,
+render instantly on open, refresh in place.
+
+**Offline state.** Installed apps get opened on the train. Show the last known
+verdict with its age, clearly marked stale — never an error page, never an empty
+screen. An old forecast is still a useful forecast.
 
 ## Legal constraints
 
 - **Never use "Yr" in the app name and never use the Yr logo** — both are MET
-  trademarks. The app is `byge`. Reusing the colour palette is fine (the data is
-  CC BY 4.0), but nothing may imply endorsement by Yr or NRK.
-- **Attribution to MET Norway (CC BY 4.0, with a link) is required** and needs a
-  real home in the design — a footer or about sheet, not buried.
+  trademarks. The app is `byge`. Nothing may imply endorsement by Yr or NRK.
+- **Attribution is required and needs a real home** in the design — a footer or
+  about sheet, not buried. The data is **NLOD 2.0 + CC BY 4.0**, and the credit
+  wording MET asks for is *"Data from MET Norway"* or *"Based on data from MET
+  Norway"*, ideally linked.
+- Reusing the precipitation palette is fine — the underlying data is CC BY 4.0
+  and there is no public yr brand manual restricting it.
+- **Yr's weather symbols are CC BY 4.0** ("© 2015 by Yr/NRK") and could legally
+  be used. We don't want them — byge is not a weather app and symbols would pull
+  it toward one — but the option exists if a location card ever needs an icon.
 - **Coordinates are capped at 4 decimals** (5+ returns HTTP 403), which affects
   the add-location flow.
 
