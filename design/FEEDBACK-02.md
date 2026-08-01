@@ -138,6 +138,38 @@ Settings stays out of the MVP entirely (§5). When it returns in Phase 3 it will
 need its own entry point too — probably from About, but as a proper row rather
 than a word in a version string.
 
+### Please answer this for every screen: what taps get you here from a cold start?
+
+**The harness hides this class of bug.** Every screen has a button in the toolbar,
+so all seven render perfectly in isolation and nothing *looks* unreachable. We
+only found the orphans by tracing `onClick` handlers through the template. A
+reviewer clicking around the harness would never notice, because the harness is
+precisely the thing that bypasses navigation.
+
+So with the revision, include a short reachability table — one row per screen,
+the literal tap path from a cold app open:
+
+```
+Locations      (launch)
+Verdict        Locations → tap a location card
+Add            Locations → "+ Add a place"
+About          Locations → ???            ← currently only a footer link
+Settings       About → ???                ← phase 3, currently a word in a version string
+Map            Verdict → "See why — radar map"
+```
+
+Any row you can't fill in with a real, sized, visible affordance is a screen that
+doesn't exist for the user. Two rules for filling them:
+
+- **An affordance sized for legal text is not navigation.** If the only route to
+  a screen is 9.5 px monospace inside a footer, it isn't reachable.
+- **Every screen needs a way back**, and the back target should be where you came
+  from, not a fixed home. Verdict reached from the map should return to the map.
+
+Worth doing for the states too, not just the screens — `EmptyState`, `ErrorState`
+and `CoverageNotice` each need a plausible route in, or they'll be designed and
+never seen.
+
 ## Splash screen
 
 Yes please — and it needs designing properly rather than falling out of the
