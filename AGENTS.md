@@ -77,7 +77,34 @@ Listed honestly rather than hidden:
    constants (`STEM`, `STEP_S`, `NFRAMES`, `MAX_LOOKBACK`) are in place but the
    function was not switched over.
 5. **No multi-location helper yet.** See the parallelism note above.
-6. **No tests.**
+
+## Tests
+
+```bash
+.venv/bin/python -m pytest                     # all 67
+.venv/bin/python -m pytest -m "not network"    # pure logic only, ~0.3 s
+```
+
+`test_forecast.py` is offline and fast; `test_source.py` and `test_tiles.py` hit
+live services **on purpose**. A network-test failure is a real signal that a
+dependency moved — don't mark them flaky and move on.
+
+Two of them are load-bearing in a way that isn't obvious:
+
+- **`test_palette_unchanged`** and **`test_tiles_still_agree_with_our_grid`**
+  catch yr changing the *meaning* of their tiles, not just their availability. A
+  silent repalette or threshold change would leave every other test green while
+  invalidating the fitted boundaries in `scale.py`.
+- **`test_grid_origin_and_spacing`** asserts `DY < 0` explicitly. The descending
+  `Yc` axis fails silently by mirroring the field, so it gets its own assertion.
+
+If you change anything in `scale.py`'s boundaries, **refit** against yr's tiles —
+don't hand-adjust. The method is in the tile-comparison section above.
+
+## Not yet done
+
+- No CI. The network tests are written to run in one, but nothing runs them.
+- No JS/TS port of the data layer — the PWA needs one, including `_ascii`.
 
 ## Setup
 
