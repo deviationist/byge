@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { RefreshControl, pullToRefreshProps, refreshMessage } from "./RefreshControl";
+import { pullToRefreshProps, RefreshControl, refreshMessage } from "./RefreshControl";
 
 const noop = () => {};
 
@@ -82,9 +82,14 @@ describe("RefreshControl — affordances", () => {
 });
 
 describe("RefreshControl — outcomes", () => {
-  it("shows nothing when idle, so the control is not noise", () => {
+  it("shows no outcome when idle, so the control is not noise", () => {
+    // Asserts the invariant rather than the exact string: the button also
+    // carries an off-screen hint for assistive tech (react-native-web drops
+    // accessibilityHint entirely, so it has to be a real node), which is not
+    // visible noise and should not fail this.
     const { container } = render(<RefreshControl status="idle" onRefresh={noop} />);
-    expect(container.textContent).toBe("Refresh");
+    expect(container.textContent).toContain("Refresh");
+    expect(container.textContent).not.toMatch(/Already the latest|Updated|couldn't|could not/i);
   });
 
   it("says so when there was nothing new", () => {

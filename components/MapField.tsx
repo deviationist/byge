@@ -184,7 +184,7 @@ export function MapField({
           variant="secondary"
           disabled={status === "locating"}
           onPress={locate}
-          accessibilityHint="Centres the map on your device. You still confirm the place."
+          hint="Centres the map on your device. You still confirm the place."
         />
       </View>
 

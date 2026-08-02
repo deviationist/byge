@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { type Verdict, isBlindVerdict } from "../lib/forecast";
+import { isBlindVerdict, type Verdict } from "../lib/forecast";
 import { NFRAMES } from "../lib/grid";
 import { CoverageNotice, coverageFormOf, observedPercent } from "./CoverageNotice";
 
