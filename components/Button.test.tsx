@@ -76,6 +76,8 @@ describe("Button hints", () => {
 
   it("adds no describedby when there is no hint", () => {
     render(<Button label="Save" />);
-    expect(screen.getByRole("button", { name: "Save" })).not.toHaveAttribute("aria-describedby");
+    expect(screen.getByRole("button", { name: "Save" })).not.toHaveAttribute(
+      "aria-describedby",
+    );
   });
 });
