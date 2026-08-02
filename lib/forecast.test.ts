@@ -1,6 +1,4 @@
-import { describe as suite, expect, it } from "vitest";
-import { NFRAMES, STEP_S } from "./grid";
-import type { Frame } from "./radar";
+import { expect, it, describe as suite } from "vitest";
 import {
   BRIDGE_MIN,
   confidenceOf,
@@ -13,7 +11,9 @@ import {
   spellsFrom,
   verdictFrom,
 } from "./forecast";
-import { BANDS, NOTICEABLE, bandOf, legend } from "./scale";
+import { NFRAMES, STEP_S } from "./grid";
+import type { Frame } from "./radar";
+import { BANDS, bandOf, legend, NOTICEABLE } from "./scale";
 
 /**
  * Ported from the Python spike's tests/test_forecast.py. These guard the
@@ -337,8 +337,7 @@ suite("confidence boundary", () => {
 });
 
 suite("rain inside the circle but not on you", () => {
-  const wetEdge = () =>
-    v(rep(NFRAMES, 0.3), { centre: rep(NFRAMES, 0.01), nearestKm: 8 }, 15);
+  const wetEdge = () => v(rep(NFRAMES, 0.3), { centre: rep(NFRAMES, 0.01), nearestKm: 8 }, 15);
 
   it("is still raining — the any-touch rule is unchanged", () => {
     expect(wetEdge().rainingNow).toBe(true);

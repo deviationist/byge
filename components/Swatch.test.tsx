@@ -1,7 +1,7 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { NFRAMES } from "../lib/grid";
 import type { Verdict } from "../lib/forecast";
+import { NFRAMES } from "../lib/grid";
 import { BANDS, NOTICEABLE } from "../lib/scale";
 import { Swatch, swatchModeOf, swatchRateOf } from "./Swatch";
 
@@ -119,7 +119,9 @@ describe("Swatch rendering", () => {
   });
 
   it("scales the ring with the swatch so it stays visible when small", () => {
-    const { container: small } = render(<Swatch mode="later" rate={1} size={11} theme="light" />);
+    const { container: small } = render(
+      <Swatch mode="later" rate={1} size={11} theme="light" />,
+    );
     const { container: big } = render(<Swatch mode="later" rate={1} size={24} theme="light" />);
     const w = (c: Element) =>
       Number.parseFloat((c.firstElementChild as HTMLElement).style.borderTopWidth);

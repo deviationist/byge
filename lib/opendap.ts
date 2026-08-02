@@ -79,7 +79,9 @@ export function parseAscii(body: string): Map<string, Variable> {
     if (!m) continue;
 
     const qualified = m[1];
-    const name = qualified.includes(".") ? qualified.slice(qualified.lastIndexOf(".") + 1) : qualified;
+    const name = qualified.includes(".")
+      ? qualified.slice(qualified.lastIndexOf(".") + 1)
+      : qualified;
     const dims = [...m[2].matchAll(/\[(\d+)\]/g)].map((d) => Number(d[1]));
     const total = dims.reduce((a, b) => a * b, 1);
 
@@ -189,14 +191,20 @@ export async function latestAnalysis(signal?: AbortSignal): Promise<Analysis> {
  * lets a manual refresh report "already the latest" instantly instead of
  * spinning through a full subset fetch to discover nothing changed.
  */
-export async function hasNewerThan(stamp: string, signal?: AbortSignal): Promise<Analysis | null> {
+export async function hasNewerThan(
+  stamp: string,
+  signal?: AbortSignal,
+): Promise<Analysis | null> {
   const latest = await latestAnalysis(signal);
   return latest.stamp > stamp ? latest : null;
 }
 
 /** Frame valid times, derived from the stamp — no request needed. */
 export function frameTimes(a: Analysis): Date[] {
-  return Array.from({ length: NFRAMES }, (_, i) => new Date(a.time.getTime() + i * STEP_S * 1000));
+  return Array.from(
+    { length: NFRAMES },
+    (_, i) => new Date(a.time.getTime() + i * STEP_S * 1000),
+  );
 }
 
 /** Clamp a cell window to the grid. */

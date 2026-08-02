@@ -1,15 +1,15 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from "vitest";
 import {
+  clampRadius,
   DEFAULT_RADIUS_KM,
+  loadLocations,
   MAX_RADIUS_KM,
   MIN_RADIUS_KM,
-  clampRadius,
-  loadLocations,
   newId,
   normalise,
-  saveLocations,
   type SavedLocation,
+  saveLocations,
 } from "./storage";
 
 const loc = (over: Partial<SavedLocation> = {}): SavedLocation => ({

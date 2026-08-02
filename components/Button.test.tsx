@@ -27,7 +27,6 @@ describe("Button", () => {
     expect(Number.parseFloat(el.style.minHeight)).toBeGreaterThanOrEqual(MIN_TARGET);
   });
 
-
   it("exposes disabled state to assistive tech", () => {
     render(<Button label="Save" disabled />);
     expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();

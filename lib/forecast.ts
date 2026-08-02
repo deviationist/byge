@@ -13,9 +13,9 @@
  * makes you guess. Every temptation to round off uncertainty makes it worse.
  */
 
-import { HORIZON_MIN, type Frame, isBlind, probe } from "./radar";
-import { NOTICEABLE, bandOf, describeRate } from "./scale";
 import { OutsideGridError } from "./grid";
+import { type Frame, HORIZON_MIN, isBlind, probe } from "./radar";
+import { bandOf, describeRate, NOTICEABLE } from "./scale";
 
 /** A dry gap shorter than this is drizzle flicker, not the end of the rain. */
 export const BRIDGE_MIN = 10;
@@ -100,7 +100,8 @@ export function isBlindVerdict(v: Verdict): boolean {
  * forecast half is hedged in the prose instead.
  */
 export function leadMin(v: Verdict): number {
-  if (v.rainingNow && v.current) return isOpenEnded(v.current) ? 0 : (v.current.endMin as number);
+  if (v.rainingNow && v.current)
+    return isOpenEnded(v.current) ? 0 : (v.current.endMin as number);
   if (v.next) return v.next.startMin;
   return 0;
 }
@@ -315,8 +316,6 @@ export function describe(v: Verdict): string {
       `Radar sees only ${Math.round(v.observed * 100)}% of your area — the rest is outside coverage and not included either way.`,
     );
   }
-  lines.push(
-    `Confidence ${confidenceOf(v)} · radar ${Math.round(v.analysisAgeMin)} min old.`,
-  );
+  lines.push(`Confidence ${confidenceOf(v)} · radar ${Math.round(v.analysisAgeMin)} min old.`);
   return lines.join("\n");
 }

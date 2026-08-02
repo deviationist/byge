@@ -1,6 +1,5 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { NX, NY } from "./grid";
 import {
   type CoverageMask,
   deserialiseMask,
@@ -9,6 +8,7 @@ import {
   observedFraction,
   serialiseMask,
 } from "./coverage";
+import { NX, NY } from "./grid";
 
 function build(stride: number, fill: (x: number, y: number) => boolean): CoverageMask {
   const height = Math.ceil(NY / stride);

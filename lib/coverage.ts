@@ -22,8 +22,8 @@
  * cache for hours.
  */
 
-import { DX, DY, NX, NY, X0, Y0, unproject } from "./grid";
-import { FILL_THRESHOLD, type Analysis, fetchVars, latestAnalysis } from "./opendap";
+import { DX, DY, NX, NY, unproject, X0, Y0 } from "./grid";
+import { type Analysis, FILL_THRESHOLD, fetchVars, latestAnalysis } from "./opendap";
 
 export type CoverageMask = {
   /** Grid cells per mask cell — 10 means one sample every 10 km. */

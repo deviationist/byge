@@ -19,8 +19,7 @@ export function useVerdict(loc: SavedLocation | undefined) {
   return useQuery({
     queryKey: loc ? verdictKey(loc) : ["verdict", "none"],
     enabled: !!loc,
-    queryFn: ({ signal }) =>
-      verdict(loc!.lat, loc!.lon, { radiusKm: loc!.radiusKm, signal }),
+    queryFn: ({ signal }) => verdict(loc!.lat, loc!.lon, { radiusKm: loc!.radiusKm, signal }),
     // Render the cached answer instantly, refresh underneath.
     staleTime: FIVE_MIN,
     refetchInterval: FIVE_MIN,

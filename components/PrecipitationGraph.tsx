@@ -3,6 +3,7 @@ import { Pressable, Text, View } from "react-native";
 import { isWet } from "../lib/forecast";
 import { type Frame, isBlind } from "../lib/radar";
 import { BANDS, bandOf, colorOf, describeRate, NOTICEABLE } from "../lib/scale";
+import { HATCH, MONO } from "../theme/tokens";
 import type { Theme } from "../theme/useTheme";
 
 /**
@@ -68,11 +69,8 @@ export function barHeight(rate: number): number {
  * everywhere it appears or it stops being a language and becomes a decoration.
  * `PrecipitationGraph.test.tsx` asserts the two strings still match.
  */
-const HATCH =
-  "repeating-linear-gradient(45deg,rgba(128,128,128,.42) 0 1.5px,transparent 1.5px 5px)";
 
 /** No `--font-mono` token exists yet; these micro-labels want one. */
-const MONO = "ui-monospace, SFMono-Regular, Menlo, monospace";
 
 const DENSITY = {
   compact: { stripHeight: 46, gap: 2, minBar: 3 },

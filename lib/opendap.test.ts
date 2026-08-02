@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
+import { NFRAMES, NX, NY } from "./grid";
 import {
-  OpenDapError,
   analysisFor,
   candidateStamps,
   clampWindow,
   frameTimes,
+  OpenDapError,
   parseAscii,
 } from "./opendap";
-import { NFRAMES, NX, NY } from "./grid";
 
 /** A verbatim capture of a real thredds.met.no `.ascii` response. */
 const REAL = `Dataset {

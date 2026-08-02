@@ -2,6 +2,7 @@ import { Text, View } from "react-native";
 import type { Verdict } from "../lib/forecast";
 import { isBlindVerdict } from "../lib/forecast";
 import { bandOf, NOTICEABLE } from "../lib/scale";
+import { MONO } from "../theme/tokens";
 import type { Theme } from "../theme/useTheme";
 import { Swatch, swatchModeOf, swatchRateOf } from "./Swatch";
 
@@ -105,7 +106,7 @@ export function PrecipitationLevelCard({ verdict, theme }: PrecipitationLevelCar
 
       <Text
         style={{
-          fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+          fontFamily: MONO,
           fontSize: 11,
           color: "var(--color-ink3)",
           marginLeft: 4,
