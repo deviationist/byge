@@ -30,7 +30,7 @@ export const BANDS: readonly Band[] = [
   { index: 3, floor: 0.195, light: "#00AAFF", dark: "#3A9BC4", label: "light rain", feelsLike: "umbrella optional" },
   { index: 4, floor: 1.0, light: "#0080FF", dark: "#55AEF5", label: "moderate rain", feelsLike: "you'll want a jacket" },
   { index: 5, floor: 5.7, light: "#0055FF", dark: "#7EC0FF", label: "heavy rain", feelsLike: "soaked in minutes" },
-  { index: 6, floor: 23.7, light: "#7A0087", dark: "#C77BD6", label: "torrential", feelsLike: "seek shelter" },
+  { index: 6, floor: 23.7, light: "#7A0087", dark: "#E8BCF4", label: "torrential", feelsLike: "seek shelter" },
 ] as const;
 
 /**
