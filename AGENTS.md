@@ -54,6 +54,34 @@ These cost real time to discover. Don't rediscover them.
 - Thresholds and band boundaries live in `scale.py`. They were **fitted against
   33 836 samples**, not chosen. If you change them, refit — don't guess.
 
+## App-layer gotchas
+
+Found while building; each fails silently rather than erroring.
+
+- **Tailwind v4 `@theme` tree-shakes.** It only emits variables that generated
+  utilities reference, so unused precipitation bands vanish from the light
+  palette while the plain-CSS `.dark` block survives — leaving dark overrides
+  for variables with no light definition. `global.css` uses **`@theme static`**
+  for this reason, and the band colours are read from JS anyway (canvas, SVG),
+  so no class-name scan could find them. `lib/tokens.test.ts` guards it.
+- **`react-native-web` expands border shorthands to longhands** (`borderTopColor`,
+  not `borderColor`) and normalises `transparent` to `rgba(0, 0, 0, 0)`. Test
+  assertions must target what it emits.
+- **jsdom rewrites `import.meta.url` to an http URL**, so `fileURLToPath` throws.
+  Files that read from disk need a `// @vitest-environment node` directive.
+- **`app/+html.tsx` only applies to `output: "static"`.** We ship
+  `output: "single"` (SPA), where Expo owns the template — PWA head tags are
+  injected by `scripts/postexport.mjs`, run from `bun run build:web`.
+- **Expo emits no web manifest.** Ours is `public/manifest.webmanifest`, copied
+  verbatim into `dist/`.
+- **The `dark` class must land on the document root** or Uniwind's entire dark
+  palette silently does nothing. `theme/ThemeProvider.tsx` owns that, and a test
+  asserts it.
+- **Metro blocks `*.test.*`** from the module graph. expo-router builds its route
+  table from a `require.context` over `app/` whose regex does not exclude tests,
+  so a colocated test would be pulled in as a route, drag `vitest` into the web
+  bundle, and 500 the PWA.
+
 ## Known rough edges
 
 Listed honestly rather than hidden:
