@@ -16,3 +16,6 @@ web-build/
 test-results/
 playwright-report/
 .DS_Store
+
+# agent worktrees
+.claude/worktrees/
