@@ -58,10 +58,9 @@
   --color-b6: #7a0087;
   --color-onband: #ffffff;
 
-  /* Destructive actions. Outlined rather than filled wherever it is used —
-     deletion here is unrecoverable, so the affordance should not invite a
-     careless tap. */
-  --color-danger: #B3261E;
+  /* Scrim behind ConfirmSheet. No alarm colour anywhere in byge: the blues are
+     data, so a lone red would read as an error rather than a choice. */
+  --color-scrim: rgba(21, 24, 27, 0.34);
 }
 
 .dark {
@@ -86,5 +85,5 @@
   --color-b5: #7ec0ff;
   --color-b6: #e8bcf4;
   --color-onband: #0e1113;
-  --color-danger: #F2B8B5;
+  --color-scrim: rgba(0, 0, 0, 0.58);
 }

@@ -27,14 +27,6 @@ describe("Button", () => {
     expect(Number.parseFloat(el.style.minHeight)).toBeGreaterThanOrEqual(MIN_TARGET);
   });
 
-  it("draws destructive as an outline, never a filled block", () => {
-    // A filled red button is easy to hit by accident, and deletion is
-    // unrecoverable — no account, no sync, no undo.
-    render(<Button label="Remove" variant="destructive" />);
-    const el = screen.getByRole("button", { name: "Remove" });
-    expect(el.style.backgroundColor).toBe("rgba(0, 0, 0, 0)");
-    expect(el.style.borderTopColor).toContain("--color-danger");
-  });
 
   it("exposes disabled state to assistive tech", () => {
     render(<Button label="Save" disabled />);
