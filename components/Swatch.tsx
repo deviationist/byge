@@ -1,0 +1,95 @@
+import { View } from "react-native";
+import { type Theme } from "../theme/useTheme";
+import { NOTICEABLE, bandOf, colorOf } from "../lib/scale";
+import type { Verdict } from "../lib/forecast";
+
+/**
+ * The list glyph.
+ *
+ * THREE SHAPES, so intensity is never carried by colour alone:
+ *
+ *   filled   raining on you now
+ *   outline  a spell on the way, drawn in its own band colour
+ *   hatched  not observed — outside radar coverage
+ *   faint    observed dry
+ *
+ * The hatch matters more than it looks: "we cannot see here" must never read as
+ * "it is dry here", and a colour-blind reader has to get that distinction too.
+ *
+ * "Marker" is reserved for map pins. This is a swatch.
+ */
+export type SwatchMode = "now" | "later" | "dry" | "blind";
+
+export type SwatchProps = {
+  mode: SwatchMode;
+  /** mm/h — picks the band colour for `now` and `later`. */
+  rate?: number;
+  size?: number;
+  theme: Theme;
+};
+
+const HATCH =
+  "repeating-linear-gradient(45deg,rgba(128,128,128,.42) 0 1.5px,transparent 1.5px 5px)";
+
+const TITLES: Record<SwatchMode, string> = {
+  now: "raining now",
+  later: "rain on the way",
+  dry: "observed dry",
+  blind: "not observed",
+};
+
+/** Which shape a verdict should show in a list. */
+export function swatchModeOf(v: Pick<Verdict, "observed" | "rainingNow" | "frames">): SwatchMode {
+  if (v.observed === 0) return "blind";
+  if (v.rainingNow) return "now";
+  const peak = v.frames.reduce((m, f) => Math.max(m, f.maxRate), 0);
+  return peak >= NOTICEABLE ? "later" : "dry";
+}
+
+/** Peak rate across the series — what `later` should be coloured by. */
+export function swatchRateOf(v: Pick<Verdict, "rainingNow" | "nowRate" | "frames">): number {
+  if (v.rainingNow) return v.nowRate;
+  return v.frames.reduce((m, f) => Math.max(m, f.maxRate), 0);
+}
+
+export function Swatch({ mode, rate = 0, size = 13, theme }: SwatchProps) {
+  const color = colorOf(bandOf(rate), theme);
+  const radius = Math.max(2, Math.round(size * 0.24));
+
+  const shape = {
+    now: {
+      backgroundColor: color,
+      borderWidth: 1,
+      borderColor: "var(--color-line2)",
+    },
+    later: {
+      backgroundColor: "transparent",
+      // Scales with size so the ring stays legible at 11px and at 24px.
+      borderWidth: Math.max(2, Math.round(size * 0.2)),
+      borderColor: color,
+    },
+    dry: {
+      backgroundColor: "var(--color-dry)",
+      borderWidth: 1,
+      borderColor: "var(--color-line2)",
+    },
+    blind: {
+      backgroundColor: "var(--color-nodata)",
+      borderWidth: 1,
+      borderColor: "var(--color-nodata-line)",
+    },
+  }[mode];
+
+  return (
+    <View
+      accessibilityLabel={TITLES[mode]}
+      // biome-ignore lint/a11y/useSemanticElements: RN View, not DOM
+      role="img"
+      style={[
+        { width: size, height: size, borderRadius: radius, flexShrink: 0 },
+        shape,
+        mode === "blind" ? ({ backgroundImage: HATCH } as object) : null,
+      ]}
+    />
+  );
+}

@@ -1,5 +1,9 @@
+// @vitest-environment node
+//
+// Reads global.css off disk. Under jsdom `import.meta.url` is rewritten to an
+// http URL and fileURLToPath rejects it, so this file opts back into node.
 import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { BANDS } from "./scale";
 
@@ -16,7 +20,7 @@ import { BANDS } from "./scale";
  * Source-level rather than build-level so it runs in milliseconds and catches
  * the likeliest regression: adding a band to scale.ts and forgetting the CSS.
  */
-const css = readFileSync(fileURLToPath(new URL("../global.css", import.meta.url)), "utf8");
+const css = readFileSync(join(process.cwd(), "global.css"), "utf8");
 
 function varsIn(selector: "theme" | "dark"): Map<string, string> {
   const re = selector === "theme" ? /@theme[^{]*\{([\s\S]*?)\n\}/ : /\.dark\s*\{([\s\S]*?)\n\}/;
@@ -95,33 +99,17 @@ describe("dark ramp inverts luminance", () => {
     expect(d[0]).toBeLessThan(d[d.length - 1]);
   });
 
-  it("dark ramp climbs monotonically through heavy rain", () => {
-    const d = BANDS.filter((b) => b.index > 0 && b.index <= 5).map((b) => lum(b.dark));
+  it("dark ramp is monotonic across ALL SIX bands", () => {
+    // Band 6 was #C77BD6 (lum 0.571) and DIPPED 0.144 below heavy rain, which
+    // reintroduced at the top of the scale exactly the inversion the dark ramp
+    // exists to prevent. Design resolved it to #E8BCF4 (0.790, +0.074 over
+    // band 5), keeping the ~288 deg purple as a categorical second signal.
+    //
+    // Hue is never the only signal: it is the one a colour-blind reader may
+    // not receive, on the band where being noticed matters most.
+    const d = BANDS.filter((b) => b.index > 0).map((b) => lum(b.dark));
     for (let i = 1; i < d.length; i++) {
       expect(d[i]).toBeGreaterThan(d[i - 1]);
     }
-  });
-
-  it("KNOWN DEVIATION: torrential dips below heavy rain in dark mode", () => {
-    // Measured: b1..b5 climb +0.113, +0.167, +0.090, +0.087 — then b6 DROPS
-    // 0.144. So the single most severe band renders dimmer than the one below
-    // it, which is the same inversion the dark ramp exists to prevent, just at
-    // the top of the scale instead of the bottom.
-    //
-    // Both palettes shift hue to purple at b6 (yr's own light value is
-    // #7A0087). In light mode that still works, because darker means more
-    // intense and the light ramp stays monotonic all the way down to 0.140. In
-    // dark mode "brighter means more intense", and #C77BD6 does not clear the
-    // bright blue below it.
-    //
-    // NOT silently corrected here — it is Design's palette. Raised in
-    // design/FEEDBACK-02.md; candidate values that keep the purple hue and
-    // clear b5 are #E0AEEA (+0.025) and #E8BCF4 (+0.074).
-    //
-    // This test asserts the deviation so it stays visible. When Design resolves
-    // it, delete this and extend the monotonic test above to all six bands.
-    const heavy = lum(BANDS[5].dark);
-    const torrential = lum(BANDS[6].dark);
-    expect(torrential).toBeLessThan(heavy);
   });
 });

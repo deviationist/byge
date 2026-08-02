@@ -57,6 +57,11 @@
   --color-b5: #0055ff;
   --color-b6: #7a0087;
   --color-onband: #ffffff;
+
+  /* Destructive actions. Outlined rather than filled wherever it is used —
+     deletion here is unrecoverable, so the affordance should not invite a
+     careless tap. */
+  --color-danger: #B3261E;
 }
 
 .dark {
@@ -79,6 +84,7 @@
   --color-b3: #3a9bc4;
   --color-b4: #55aef5;
   --color-b5: #7ec0ff;
-  --color-b6: #c77bd6;
+  --color-b6: #e8bcf4;
   --color-onband: #0e1113;
+  --color-danger: #F2B8B5;
 }

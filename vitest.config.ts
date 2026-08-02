@@ -1,11 +1,22 @@
+import { dirname } from "node:path";
+import { createRequire } from "node:module";
+import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 
-// The data layer in lib/ is pure TypeScript with no React, so it runs in plain
-// node. Component tests will need jsdom plus a react-native -> react-native-web
-// alias; add that when the first component lands, not before.
+const require = createRequire(import.meta.url);
+// Pin react-native-web to one copy. Two copies mean two Reacts, and the hook
+// dispatcher nulls the moment a View mounts.
+const rnw = dirname(require.resolve("react-native-web/package.json"));
+
 export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: [{ find: /^react-native$/, replacement: rnw }],
+  },
   test: {
-    include: ["lib/**/*.test.ts", "screens/**/*.test.ts", "components/**/*.test.ts"],
-    environment: "node",
+    include: ["{lib,components,layouts,screens,theme}/**/*.test.{ts,tsx}"],
+    environment: "jsdom",
+    globals: true,
+    setupFiles: ["./vitest.setup.ts"],
   },
 });
