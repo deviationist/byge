@@ -105,7 +105,7 @@ export function RefreshControl({
         variant="secondary"
         onPress={onRefresh}
         disabled={status === "refreshing"}
-        accessibilityHint="Check MET Norway for a newer radar analysis"
+        hint="Check MET Norway for a newer radar analysis"
       />
 
       {/* A live region, so the outcome reaches a screen reader too. Pressing a

@@ -22,11 +22,30 @@ export type ButtonProps = {
   disabled?: boolean;
   /** Fill the width of its container — used for the primary action in forms. */
   block?: boolean;
-  accessibilityHint?: string;
+  /**
+   * Extra context for assistive tech, e.g. "cannot be undone".
+   *
+   * NOT passed as `accessibilityHint`: that prop does not exist in
+   * react-native-web's implementation at all (grep its dist — zero hits), so it
+   * type-checks, looks wired, and reaches nobody. It is rendered as an
+   * off-screen node and referenced by `aria-describedby` instead.
+   */
+  hint?: string;
   children?: ReactNode;
 };
 
 const MIN_TARGET = 44;
+
+/** Available to assistive tech, absent from the visual layout. */
+const OFFSCREEN = {
+  position: "absolute",
+  width: 1,
+  height: 1,
+  overflow: "hidden",
+  opacity: 0,
+} as const;
+
+let hintSeq = 0;
 
 export function Button({
   label,
@@ -34,8 +53,9 @@ export function Button({
   variant = "primary",
   disabled = false,
   block = false,
-  accessibilityHint,
+  hint,
 }: ButtonProps) {
+  const hintId = hint ? `byge-btn-hint-${++hintSeq}` : undefined;
   const palette = {
     primary: { bg: "var(--color-ink)", fg: "var(--color-bg)", border: "var(--color-ink)" },
     secondary: { bg: "transparent", fg: "var(--color-ink)", border: "var(--color-line2)" },
@@ -46,7 +66,7 @@ export function Button({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
-      accessibilityHint={accessibilityHint}
+      aria-describedby={hintId}
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
@@ -66,6 +86,11 @@ export function Button({
       ]}
     >
       <Text style={{ color: palette.fg, fontSize: 15, fontWeight: "500" }}>{label}</Text>
+      {hint ? (
+        <Text nativeID={hintId} style={OFFSCREEN}>
+          {hint}
+        </Text>
+      ) : null}
     </Pressable>
   );
 }
