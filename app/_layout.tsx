@@ -2,9 +2,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { useState } from "react";
 import "../global.css";
+import { useServiceWorker } from "../hooks/useServiceWorker";
 import { ThemeProvider } from "../theme/ThemeProvider";
 
 export default function RootLayout() {
+  useServiceWorker();
+
   // One client for the app's lifetime. Created in state rather than at module
   // scope so a fast refresh doesn't strand the old cache.
   const [client] = useState(
