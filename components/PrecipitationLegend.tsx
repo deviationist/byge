@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { bandOf, colorOf, legend } from "../lib/scale";
+import { MONO } from "../theme/tokens";
 import type { Theme } from "../theme/useTheme";
 import { Swatch, type SwatchMode } from "./Swatch";
 
@@ -27,8 +28,6 @@ export type PrecipitationLegendProps = {
   /** So a screen can remember the state without this owning storage. */
   onToggle?: (open: boolean) => void;
 };
-
-const MONO = "ui-monospace, SFMono-Regular, Menlo, monospace";
 
 /** The three shapes. `dry` lives in the ramp below, where the absence belongs. */
 const STATES: { mode: SwatchMode; rate: number; label: string; body: string }[] = [

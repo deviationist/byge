@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   DEFAULT_RADIUS_KM,
-  type SavedLocation,
   loadLocations,
   newId,
   normalise,
+  type SavedLocation,
   saveLocations,
 } from "../lib/storage";
 

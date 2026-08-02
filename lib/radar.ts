@@ -6,11 +6,11 @@
  * latency (~1.3 s) rather than transfer, so radius costs bytes, not seconds.
  */
 
-import { HORIZON_MIN, NFRAMES, STEP_S, cellOf } from "./grid";
+import { cellOf, HORIZON_MIN, NFRAMES, STEP_S } from "./grid";
 import {
   type Analysis,
-  FILL_THRESHOLD,
   clampWindow,
+  FILL_THRESHOLD,
   fetchVars,
   frameTimes,
   latestAnalysis,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DY, NX, NY, OutsideGridError, cellOf, clampCoord, project, unproject } from "./grid";
+import { cellOf, clampCoord, DY, NX, NY, OutsideGridError, project, unproject } from "./grid";
 
 /**
  * Reference values generated with pyproj against the dataset's own proj4 string
@@ -10,12 +10,44 @@ import { DY, NX, NY, OutsideGridError, cellOf, clampCoord, project, unproject } 
  * throw, it just returns the weather from somewhere else.
  */
 const REF = [
-  { name: "Oslo", lat: 59.911, lon: 10.75, x: -237085.427, y: -335805.949, row: 1461, col: 559 },
+  {
+    name: "Oslo",
+    lat: 59.911,
+    lon: 10.75,
+    x: -237085.427,
+    y: -335805.949,
+    row: 1461,
+    col: 559,
+  },
   { name: "Trondelag", lat: 63.6, lon: 9.9, x: -251899.648, y: 76712.513, row: 1048, col: 544 },
-  { name: "Bergen", lat: 60.39, lon: 5.32, x: -530354.515, y: -250323.396, row: 1375, col: 266 },
+  {
+    name: "Bergen",
+    lat: 60.39,
+    lon: 5.32,
+    x: -530354.515,
+    y: -250323.396,
+    row: 1375,
+    col: 266,
+  },
   { name: "Tromso", lat: 69.65, lon: 18.96, x: 154163.064, y: 745971.317, row: 379, col: 950 },
-  { name: "Copenhagen", lat: 55.68, lon: 12.57, x: -153470.943, y: -813147.88, row: 1938, col: 643 },
-  { name: "Helsinki", lat: 60.17, lon: 24.94, x: 548257.921, y: -272348.151, row: 1397, col: 1344 },
+  {
+    name: "Copenhagen",
+    lat: 55.68,
+    lon: 12.57,
+    x: -153470.943,
+    y: -813147.88,
+    row: 1938,
+    col: 643,
+  },
+  {
+    name: "Helsinki",
+    lat: 60.17,
+    lon: 24.94,
+    x: 548257.921,
+    y: -272348.151,
+    row: 1397,
+    col: 1344,
+  },
   { name: "Kiruna", lat: 67.85, lon: 20.22, x: 219439.174, y: 548882.014, row: 576, col: 1015 },
   { name: "SW", lat: 58.0, lon: 5.0, x: -588998.955, y: -510763.953, row: 1636, col: 207 },
   { name: "NE", lat: 71.0, lon: 28.0, x: 472552.44, y: 940635.238, row: 184, col: 1269 },

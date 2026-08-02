@@ -6,6 +6,7 @@ import {
   leadMin,
   type Verdict,
 } from "../lib/forecast";
+import { MONO } from "../theme/tokens";
 import type { Theme } from "../theme/useTheme";
 
 /**
@@ -68,7 +69,7 @@ export function PrecipitationConfidence({ verdict }: PrecipitationConfidenceProp
       </View>
       <Text
         style={{
-          fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+          fontFamily: MONO,
           fontSize: 10,
           letterSpacing: 0.3,
           color: "var(--color-ink2)",

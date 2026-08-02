@@ -1,7 +1,8 @@
 import { View } from "react-native";
-import { type Theme } from "../theme/useTheme";
-import { NOTICEABLE, bandOf, colorOf } from "../lib/scale";
 import type { Verdict } from "../lib/forecast";
+import { bandOf, colorOf, NOTICEABLE } from "../lib/scale";
+import { HATCH } from "../theme/tokens";
+import type { Theme } from "../theme/useTheme";
 
 /**
  * The list glyph.
@@ -28,9 +29,6 @@ export type SwatchProps = {
   theme: Theme;
 };
 
-const HATCH =
-  "repeating-linear-gradient(45deg,rgba(128,128,128,.42) 0 1.5px,transparent 1.5px 5px)";
-
 const TITLES: Record<SwatchMode, string> = {
   now: "raining now",
   later: "rain on the way",
@@ -39,7 +37,9 @@ const TITLES: Record<SwatchMode, string> = {
 };
 
 /** Which shape a verdict should show in a list. */
-export function swatchModeOf(v: Pick<Verdict, "observed" | "rainingNow" | "frames">): SwatchMode {
+export function swatchModeOf(
+  v: Pick<Verdict, "observed" | "rainingNow" | "frames">,
+): SwatchMode {
   if (v.observed === 0) return "blind";
   if (v.rainingNow) return "now";
   const peak = v.frames.reduce((m, f) => Math.max(m, f.maxRate), 0);

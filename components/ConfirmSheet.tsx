@@ -94,7 +94,9 @@ export function ConfirmSheet({
             {title}
           </Text>
 
-          <Text style={{ fontSize: 13.5, lineHeight: 22, color: "var(--color-ink2)" }}>{body}</Text>
+          <Text style={{ fontSize: 13.5, lineHeight: 22, color: "var(--color-ink2)" }}>
+            {body}
+          </Text>
 
           {detail ? (
             <Text

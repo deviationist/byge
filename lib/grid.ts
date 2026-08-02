@@ -43,8 +43,8 @@ const RAD = Math.PI / 180;
 // Tangent-case LCC constants, precomputed once.
 const phi0 = PROJ.lat0 * RAD;
 const n = Math.sin(phi0);
-const F = (Math.cos(phi0) * Math.pow(Math.tan(Math.PI / 4 + phi0 / 2), n)) / n;
-const rho0 = (PROJ.R * F) / Math.pow(Math.tan(Math.PI / 4 + phi0 / 2), n);
+const F = (Math.cos(phi0) * Math.tan(Math.PI / 4 + phi0 / 2) ** n) / n;
+const rho0 = (PROJ.R * F) / Math.tan(Math.PI / 4 + phi0 / 2) ** n;
 
 export type XY = { x: number; y: number };
 export type Cell = { row: number; col: number };
@@ -52,7 +52,7 @@ export type Cell = { row: number; col: number };
 /** lat/lon (degrees) -> projection metres. */
 export function project(lat: number, lon: number): XY {
   const phi = lat * RAD;
-  const rho = (PROJ.R * F) / Math.pow(Math.tan(Math.PI / 4 + phi / 2), n);
+  const rho = (PROJ.R * F) / Math.tan(Math.PI / 4 + phi / 2) ** n;
   // Normalise the meridian difference into (-180, 180] before scaling by n,
   // otherwise a longitude wrap puts the point on the far side of the cone.
   let dl = lon - PROJ.lon0;
@@ -67,7 +67,7 @@ export function unproject(x: number, y: number): { lat: number; lon: number } {
   const dy = rho0 - y;
   const rho = Math.sign(n) * Math.hypot(x, dy);
   const theta = Math.atan2(x, dy);
-  const lat = (2 * Math.atan(Math.pow((PROJ.R * F) / rho, 1 / n)) - Math.PI / 2) / RAD;
+  const lat = (2 * Math.atan(((PROJ.R * F) / rho) ** (1 / n)) - Math.PI / 2) / RAD;
   const lon = theta / n / RAD + PROJ.lon0;
   return { lat, lon };
 }
