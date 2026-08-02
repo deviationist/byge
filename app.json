@@ -7,10 +7,21 @@
     "orientation": "default",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "description": "Do I need a jacket, and for how long?",
+    "primaryColor": "#0B2A3A",
     "web": {
       "bundler": "metro",
       "output": "single",
-      "favicon": "./assets/favicon.png"
+      "name": "byge",
+      "shortName": "byge",
+      "lang": "en",
+      "scope": "/",
+      "startUrl": "/?source=pwa",
+      "themeColor": "#F6F4F0",
+      "backgroundColor": "#F6F4F0",
+      "display": "standalone",
+      "orientation": "any",
+      "description": "Do I need a jacket, and for how long? Rain verdicts from MET Norway's radar nowcast."
     },
     "plugins": ["expo-router"],
     "experiments": { "typedRoutes": true }

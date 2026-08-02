@@ -14,7 +14,7 @@ export default defineConfig({
     alias: [{ find: /^react-native$/, replacement: rnw }],
   },
   test: {
-    include: ["{lib,components,layouts,screens,hooks,theme,app}/**/*.test.{ts,tsx}"],
+    include: ["{lib,components,layouts,screens,hooks,theme,app,scripts}/**/*.test.{ts,tsx}"],
     environment: "jsdom",
     globals: true,
     setupFiles: ["./vitest.setup.ts"],
