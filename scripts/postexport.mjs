@@ -23,6 +23,8 @@ const HEAD = `
     <meta name="color-scheme" content="light dark" />
     <!-- iOS Safari ignores most of the web manifest; without these an installed
          PWA opens as a plain tab. -->
+    <!-- Chrome deprecated the apple- prefix; iOS still needs it. Both. -->
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="byge" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
