@@ -61,3 +61,21 @@ describe("NavBar", () => {
     expect(screen.getByTestId("more")).toBeTruthy();
   });
 });
+
+describe("Button hints", () => {
+  it("renders the hint where assistive tech can reach it", () => {
+    // `accessibilityHint` does not exist in react-native-web's implementation
+    // (zero hits in its dist), so passing it type-checks, looks wired, and
+    // reaches nobody. Same shape as a log-parsing jail that can never fire.
+    render(<Button label="Remove Cabin" hint="This cannot be undone" />);
+    const btn = screen.getByRole("button", { name: "Remove Cabin" });
+    const id = btn.getAttribute("aria-describedby");
+    expect(id).toBeTruthy();
+    expect(document.getElementById(id!)?.textContent).toBe("This cannot be undone");
+  });
+
+  it("adds no describedby when there is no hint", () => {
+    render(<Button label="Save" />);
+    expect(screen.getByRole("button", { name: "Save" })).not.toHaveAttribute("aria-describedby");
+  });
+});
