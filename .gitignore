@@ -19,3 +19,4 @@ playwright-report/
 
 # agent worktrees
 .claude/worktrees/
+bun.lock
