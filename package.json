@@ -2,6 +2,7 @@
   "name": "byge",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@11.1.2",
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",

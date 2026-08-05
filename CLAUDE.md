@@ -1,106 +1,59 @@
+# CLAUDE.md
 
-Default to using Bun instead of Node.js.
+byge is an **Expo Router PWA** — React Native Web, web-first, no native build.
+Metro bundles it; there is no vite, no webpack, and no Bun runtime anywhere in
+the tree.
 
-- Use `bun <file>` instead of `node <file>` or `ts-node <file>`
-- Use `bun test` instead of `jest` or `vitest`
-- Use `bun build <file.html|file.ts|file.css>` instead of `webpack` or `esbuild`
-- Use `bun install` instead of `npm install` or `yarn install` or `pnpm install`
-- Use `bun run <script>` instead of `npm run <script>` or `yarn run <script>` or `pnpm run <script>`
-- Use `bunx <package> <command>` instead of `npx <package> <command>`
-- Bun automatically loads .env, so don't use dotenv.
+`AGENTS.md` is the working reference: data-source gotchas, conventions, app-layer
+gotchas, and the test philosophy. `README.md` has the data model and
+`ARCHITECTURE.md` the module map. This file covers only the toolchain.
 
-## APIs
+## Toolchain
 
-- `Bun.serve()` supports WebSockets, HTTPS, and routes. Don't use `express`.
-- `bun:sqlite` for SQLite. Don't use `better-sqlite3`.
-- `Bun.redis` for Redis. Don't use `ioredis`.
-- `Bun.sql` for Postgres. Don't use `pg` or `postgres.js`.
-- `WebSocket` is built-in. Don't use `ws`.
-- Prefer `Bun.file` over `node:fs`'s readFile/writeFile
-- Bun.$`ls` instead of execa.
+| | |
+|---|---|
+| Package manager | **pnpm**, pinned via `packageManager` in `package.json` |
+| Bundler / dev server | Metro, through Expo (`metro.config.cjs`) |
+| Tests | **vitest** + jsdom + Testing Library |
+| Lint / format | biome |
+| Styling | uniwind (Tailwind for RN), Metro plugin only, no Babel |
 
-## Testing
-
-Use `bun test` to run tests.
-
-```ts#index.test.ts
-import { test, expect } from "bun:test";
-
-test("hello world", () => {
-  expect(1).toBe(1);
-});
+```bash
+pnpm install
+pnpm run web        # expo start --web  → dev server on :8081
+pnpm start          # expo start        → chooser: w/i/a, QR for Expo Go
+pnpm test           # vitest run
+pnpm run typecheck  # tsc --noEmit
+pnpm run lint       # biome lint .
+pnpm run build:web  # expo export -p web && node scripts/postexport.mjs
 ```
 
-## Frontend
+**Do not use Bun here.** It was the original scaffold's installer and `bun.lock`
+was removed on 2026-08-05. Nothing uses Bun's runtime — no `Bun.serve`, no
+`bun:sqlite`, no `bun test` — and swapping the installer means re-validating
+Metro, Expo and the PWA export against a different `node_modules` layout for no
+functional gain. pnpm's strict symlinked layout works with RN 0.85 unmodified:
+no `.npmrc`, no `node-linker=hoisted`, no resolver workaround.
 
-Use HTML imports with `Bun.serve()`. Don't use `vite`. HTML imports fully support React, CSS, Tailwind.
+## Toolchain gotchas
 
-Server:
-
-```ts#index.ts
-import index from "./index.html"
-
-Bun.serve({
-  routes: {
-    "/": index,
-    "/api/users/:id": {
-      GET: (req) => {
-        return new Response(JSON.stringify({ id: req.params.id }));
-      },
-    },
-  },
-  // optional websocket support
-  websocket: {
-    open: (ws) => {
-      ws.send("Hello, world!");
-    },
-    message: (ws, message) => {
-      ws.send(message);
-    },
-    close: (ws) => {
-      // handle close
-    }
-  },
-  development: {
-    hmr: true,
-    console: true,
-  }
-})
-```
-
-HTML files can import .tsx, .jsx or .js files directly and Bun's bundler will transpile & bundle automatically. `<link>` tags can point to stylesheets and Bun's CSS bundler will bundle.
-
-```html#index.html
-<html>
-  <body>
-    <h1>Hello, world!</h1>
-    <script type="module" src="./frontend.tsx"></script>
-  </body>
-</html>
-```
-
-With the following `frontend.tsx`:
-
-```tsx#frontend.tsx
-import React from "react";
-import { createRoot } from "react-dom/client";
-
-// import .css files directly and it works
-import './index.css';
-
-const root = createRoot(document.body);
-
-export default function Frontend() {
-  return <h1>Hello, world!</h1>;
-}
-
-root.render(<Frontend />);
-```
-
-Then, run index.ts
-
-```sh
-bun --hot ./index.ts
-```
-
-For more information, read the Bun API docs in `node_modules/bun-types/docs/**.mdx`.
+- **pnpm blocks postinstall scripts by default.** A dependency that needs one is
+  allowlisted in `pnpm-workspace.yaml` under `allowBuilds`. `esbuild` is there
+  because vite/vitest need it to link its platform binary; without it 
+  `pnpm install` warns `ERR_PNPM_IGNORED_BUILDS` and esbuild is silently unbuilt.
+- **Node 25 ships broken `localStorage`/`sessionStorage` globals.** They throw on
+  every method call unless `--localstorage-file` names a real path, and vitest's
+  jsdom environment will not override an existing global. `vitest.setup.ts`
+  borrows a real Storage pair off a throwaway jsdom window. Do not remove it, and
+  note `window === globalThis` under vitest, so there is nothing to recover from
+  `window`.
+- **`metro.config.cjs` blocks colocated tests from the bundle.** expo-router
+  builds its route table from a `require.context` over `app/` whose regex does
+  not exclude `*.test.*`, so a colocated test becomes a "route" and drags vitest
+  into the web bundle. Vitest runs them directly; Metro must never see them.
+- **`expo export` rewrites `expo-env.d.ts` and appends to `.gitignore`.** It
+  discards the hand-written `declare module "*.css";`. Harmless — `uniwind/types`
+  covers it — but it dirties the tree on every build.
+- **`build:web` is two steps.** `app.json` sets `web.output: "single"` (SPA), so
+  Expo owns the HTML template and `+html.tsx` never runs; the PWA head tags are
+  injected afterwards by `scripts/postexport.mjs`.

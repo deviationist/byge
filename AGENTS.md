@@ -71,7 +71,7 @@ Found while building; each fails silently rather than erroring.
   Files that read from disk need a `// @vitest-environment node` directive.
 - **`app/+html.tsx` only applies to `output: "static"`.** We ship
   `output: "single"` (SPA), where Expo owns the template — PWA head tags are
-  injected by `scripts/postexport.mjs`, run from `bun run build:web`.
+  injected by `scripts/postexport.mjs`, run from `pnpm run build:web`.
 - **Expo emits no web manifest.** Ours is `public/manifest.webmanifest`, copied
   verbatim into `dist/`.
 - **The `dark` class must land on the document root** or Uniwind's entire dark

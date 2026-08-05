@@ -6,7 +6,7 @@
  * cannot express have to be injected after export. Keeping this as an explicit
  * build step is better than a `+html.tsx` that looks live but never runs.
  *
- * Run by `bun run build:web`.
+ * Run by `pnpm run build:web`.
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
