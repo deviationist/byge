@@ -113,7 +113,6 @@ const LABEL: TextStyle = {
   fontSize: 9.5,
   letterSpacing: 0.5,
   textTransform: "uppercase",
-  color: "var(--color-ink3)",
 };
 
 export function SegmentedControl<T extends string>({
@@ -147,7 +146,7 @@ export function SegmentedControl<T extends string>({
   return (
     <View style={{ gap: 9 }}>
       {labelHidden ? null : (
-        <Text nativeID={labelId} style={LABEL}>
+        <Text nativeID={labelId} className="text-ink3" style={LABEL}>
           {label}
         </Text>
       )}
@@ -179,6 +178,7 @@ export function SegmentedControl<T extends string>({
                   if (move(e.key, i)) e.preventDefault();
                 },
               })}
+              className={on ? "bg-ink border-ink" : "bg-transparent border-line2"}
               style={({ pressed }) => ({
                 minHeight: MIN_TARGET,
                 minWidth: MIN_TARGET,
@@ -189,24 +189,19 @@ export function SegmentedControl<T extends string>({
                 paddingHorizontal: 14,
                 borderRadius: 8,
                 borderWidth: 1,
-                backgroundColor: on ? "var(--color-ink)" : "transparent",
-                borderColor: on ? "var(--color-ink)" : "var(--color-line2)",
                 opacity: pressed ? 0.7 : 1,
               })}
             >
               {/* Shape, not just fill. aria-hidden because aria-checked has
                   already told assistive tech what this glyph is for. */}
               {on ? (
-                <Text aria-hidden style={{ fontSize: 11, color: "var(--color-bg)" }}>
+                <Text aria-hidden className="text-bg" style={{ fontSize: 11 }}>
                   ✓
                 </Text>
               ) : null}
               <Text
-                style={{
-                  fontSize: 12.5,
-                  fontWeight: on ? "500" : "400",
-                  color: on ? "var(--color-bg)" : "var(--color-ink2)",
-                }}
+                className={on ? "text-bg" : "text-ink2"}
+                style={{ fontSize: 12.5, fontWeight: on ? "500" : "400" }}
               >
                 {option.label}
               </Text>

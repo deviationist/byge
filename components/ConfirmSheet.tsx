@@ -69,9 +69,9 @@ export function ConfirmSheet({
       <Pressable
         accessibilityLabel="Dismiss"
         onPress={onCancel}
+        className="bg-scrim"
         style={{
           flex: 1,
-          backgroundColor: "var(--color-scrim)",
           alignItems: "center",
           justifyContent: "center",
           padding: 20,
@@ -82,39 +82,33 @@ export function ConfirmSheet({
           accessibilityRole="alert"
           accessibilityLabel={title}
           onPress={() => {}}
+          className="bg-surface border-line2"
           style={{
             width: "100%",
             maxWidth: 400,
-            backgroundColor: "var(--color-surface)",
             borderWidth: 1,
-            borderColor: "var(--color-line2)",
             borderRadius: 16,
             padding: 22,
             gap: 16,
           }}
         >
           <Text
-            style={{
-              fontSize: 26,
-              lineHeight: 30,
-              letterSpacing: -0.3,
-              color: "var(--color-ink)",
-            }}
+            className="text-ink"
+            style={{ fontSize: 26, lineHeight: 30, letterSpacing: -0.3 }}
           >
             {title}
           </Text>
 
-          <Text style={{ fontSize: 13.5, lineHeight: 22, color: "var(--color-ink2)" }}>
+          <Text className="text-ink2" style={{ fontSize: 13.5, lineHeight: 22 }}>
             {body}
           </Text>
 
           {detail ? (
             <Text
+              className="text-ink3 bg-sunk"
               style={{
                 fontSize: 10.5,
                 lineHeight: 18,
-                color: "var(--color-ink3)",
-                backgroundColor: "var(--color-sunk)",
                 borderRadius: 9,
                 paddingVertical: 11,
                 paddingHorizontal: 13,
