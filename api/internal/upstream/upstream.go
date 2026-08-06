@@ -17,20 +17,70 @@ import (
 // arbitrary URLs is an open relay someone else will find and use — and it would
 // be doing so under our identifying User-Agent, making MET's rate limits our
 // problem and our reputation the collateral.
-var Allowed = []string{
+// Source is one allowlisted upstream.
+//
+// `Capped` records whether the OPeNDAP magnitude cap governs it, and that flag
+// is load-bearing in BOTH directions. The cap refuses a constraint expression
+// with no index brackets, because against thredds that means "send the entire
+// grid" — 347 MB uncompressed. Against any other upstream the same rule is
+// nonsense: `?lat=59.9&lon=10.7` has no brackets and is a perfectly ordinary
+// request, so an uncapped source must be exempt or it can never be called at
+// all.
+type Source struct {
+	Prefix string
+	Capped bool
+}
+
+// Allowed is the complete set of upstream prefixes this service will forward
+// to. An allowlist rather than a pattern, because a proxy that will fetch
+// arbitrary URLs is an open relay someone else will find and use — and it would
+// be doing so under our identifying User-Agent, making MET's rate limits our
+// problem and our reputation the collateral.
+var Allowed = []Source{
 	// The gridded radar nowcast. This is the source product the yr tiles are
 	// rendered from — continuous mm/h plus _FillValue for "no radar here" —
 	// and it is the only place the disc model can come from at full precision.
-	"https://thredds.met.no/thredds/dodsC/radarnowcasting/",
+	{Prefix: "https://thredds.met.no/thredds/dodsC/radarnowcasting/", Capped: true},
 	// The point nowcast. Already CORS-enabled and reachable from a browser,
 	// but routed through here too so every MET request carries the same
 	// identifying agent and benefits from the same cache.
-	"https://api.met.no/weatherapi/nowcast/",
+	{Prefix: "https://api.met.no/weatherapi/nowcast/"},
+	// Reverse geocoding, for the "Grünerløkka, Oslo" line under a place name.
+	//
+	// NOT here for CORS — Nominatim allows browser calls. It is here for the two
+	// things a browser cannot do. Their usage policy requires a User-Agent that
+	// identifies the application, and User-Agent is a forbidden header in fetch,
+	// so a direct browser call could not comply even in principle. And the
+	// policy asks for aggressive caching, which is trivially correct here: the
+	// place name of a fixed coordinate does not change, so a cached hit stays
+	// valid and every repeat lookup we serve is one they never see.
+	//
+	// The prefix stops at /reverse. Their search and lookup endpoints are the
+	// ones the policy singles out as expensive, and we have no use for either.
+	{Prefix: "https://nominatim.openstreetmap.org/reverse"},
 }
 
+// Capped reports whether the OPeNDAP magnitude cap applies to this target.
+// Unknown URLs return true: an unrecognised target should get MORE scrutiny,
+// not less, and it is about to be refused by the allowlist anyway.
+func Capped(raw string) bool {
+	for _, src := range Allowed {
+		if strings.HasPrefix(raw, src.Prefix) {
+			return src.Capped
+		}
+	}
+	return true
+}
+
+// Permitted reports whether a target is on the allowlist. Exported so the
+// handler can refuse an unknown host BEFORE the magnitude cap parses it —
+// otherwise an off-allowlist URL is answered with a parser complaint about its
+// query string, which is both the wrong reason and a hint about what we parse.
+func Permitted(raw string) bool { return permitted(raw) }
+
 func permitted(raw string) bool {
-	for _, prefix := range Allowed {
-		if strings.HasPrefix(raw, prefix) {
+	for _, src := range Allowed {
+		if strings.HasPrefix(raw, src.Prefix) {
 			return true
 		}
 	}

@@ -56,5 +56,22 @@ export const MONO = '"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monos
  */
 export const BG = { light: "#f6f4f0", dark: "#0e1113" } as const;
 
+/**
+ * Placeholder ink, as a real value.
+ *
+ * `placeholderTextColor` is a prop, not a style, so it cannot take a Uniwind
+ * class — and left unset, react-native-web falls back to the browser's default,
+ * which on this surface renders close enough to full-strength ink that a
+ * placeholder reads as a value somebody already typed. That is the worst thing
+ * a placeholder can do: it makes an empty required field look complete.
+ *
+ * Matches --color-ink3, the same weight used for every other "this is not
+ * content" mark in the app.
+ */
+export const PLACEHOLDER = {
+  light: "rgba(21, 24, 27, 0.4)",
+  dark: "rgba(236, 238, 240, 0.38)",
+} as const;
+
 export const DISPLAY = 'Newsreader, Georgia, "Times New Roman", serif';
 export const BODY = '"IBM Plex Sans", system-ui, -apple-system, sans-serif';

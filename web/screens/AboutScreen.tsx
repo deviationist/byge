@@ -5,6 +5,7 @@ import { Attribution } from "../components/Attribution";
 import { BrandMark } from "../components/BrandMark";
 import { NavBar } from "../components/NavBar";
 import { SegmentedControl } from "../components/SegmentedControl";
+import { useBack } from "../hooks/useBack";
 import { Screen } from "../layouts/Screen";
 import { Section } from "../layouts/Section";
 import { useThemeContext } from "../theme/ThemeProvider";
@@ -26,6 +27,7 @@ const THEME_OPTIONS = [
  */
 export function AboutScreen() {
   const router = useRouter();
+  const goBack = useBack("/");
   const { t } = useTranslation();
   const { choice, choose } = useThemeContext();
 
@@ -38,7 +40,7 @@ export function AboutScreen() {
 
   return (
     <Screen>
-      <NavBar onBack={() => router.back()} backLabel={t("nav.backToPlaces")}>
+      <NavBar onBack={goBack} backLabel={t("nav.backToPlaces")}>
         <View />
       </NavBar>
 

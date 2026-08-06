@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { Attribution } from "./Attribution";
 
@@ -53,7 +53,18 @@ describe("Attribution", () => {
   });
 
   it("marks the links up as links", () => {
+    // Five: MET, NLOD and CC BY for the radar; OpenStreetMap and ODbL for the
+    // place names. Both licences require the source to be reachable, not merely
+    // named, so every one of these has to be a real anchor.
     const { container } = render(<Attribution />);
-    expect(container.querySelectorAll("a").length).toBe(3);
+    expect(container.querySelectorAll("a").length).toBe(5);
+  });
+
+  it("credits OpenStreetMap separately from MET", () => {
+    // ODbL travels with the data, and running the two together would imply MET
+    // supplied the place names. Two sentences, two sources.
+    render(<Attribution />);
+    expect(screen.getByText("OpenStreetMap")).toBeInTheDocument();
+    expect(screen.getByText("ODbL 1.0")).toBeInTheDocument();
   });
 });

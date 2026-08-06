@@ -53,7 +53,7 @@ export const API_BASE = process.env.EXPO_PUBLIC_API_BASE ?? "https://byge-api.ic
  * is not the same as being able to consume it, and the real bound on volume is
  * the per-IP rate limit behind it.
  */
-const CLIENT_KEY = process.env.EXPO_PUBLIC_CLIENT_KEY ?? "";
+export const CLIENT_KEY = process.env.EXPO_PUBLIC_CLIENT_KEY ?? "";
 
 /** Wrap an upstream URL for the proxy's `/fetch` route. */
 export function viaProxy(url: string): string {

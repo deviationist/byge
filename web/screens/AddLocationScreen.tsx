@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 import { Button } from "../components/Button";
@@ -8,9 +8,11 @@ import { MapField } from "../components/MapField";
 import { NavBar } from "../components/NavBar";
 import { RadiusField } from "../components/RadiusField";
 import { TextField } from "../components/TextField";
+import { useBack } from "../hooks/useBack";
 import { useLocations } from "../hooks/useLocations";
 import { Screen } from "../layouts/Screen";
 import { Section } from "../layouts/Section";
+import { reverseGeocode } from "../lib/geocode";
 import { clampCoord } from "../lib/grid";
 import { DEFAULT_RADIUS_KM } from "../lib/storage";
 import { toast } from "../lib/toast";
@@ -29,6 +31,7 @@ const DEFAULT_CENTRE = { lat: 59.9273, lon: 10.7607 };
  */
 export function AddLocationScreen() {
   const router = useRouter();
+  const goBack = useBack("/");
   const { t } = useTranslation();
   const theme = useResolvedTheme();
   const { id } = useLocalSearchParams<{ id?: string }>();
@@ -47,9 +50,34 @@ export function AddLocationScreen() {
 
   const canSave = name.trim().length > 0;
 
+  // The "Grünerløkka, Oslo" line, resolved from wherever the pin currently is.
+  //
+  // Undefined until it resolves and undefined FOREVER when it does not — out at
+  // sea, over the border, offline, or simply not in OSM. The save path stores
+  // whatever it holds at that moment, including nothing, and a place with no
+  // context line is a perfectly ordinary place. It is never worth blocking Save
+  // on, and never worth a spinner: the answer byge exists to give does not
+  // depend on it.
+  const [place, setPlace] = useState(existing?.place);
+
+  useEffect(() => {
+    const ac = new AbortController();
+    // Debounced, because `centre` changes on every frame of a drag and each
+    // change is a request we would be asking someone else to serve.
+    const timer = setTimeout(() => {
+      void reverseGeocode(centre.lat, centre.lon, { signal: ac.signal }).then((found) =>
+        setPlace(found ?? undefined),
+      );
+    }, 600);
+    return () => {
+      clearTimeout(timer);
+      ac.abort();
+    };
+  }, [centre.lat, centre.lon]);
+
   function save() {
     if (!canSave) return;
-    const payload = { name, lat: centre.lat, lon: centre.lon, radiusKm };
+    const payload = { name, lat: centre.lat, lon: centre.lon, radiusKm, place };
     if (editing && existing) {
       update(existing.id, payload);
       // An edit lands on that place's VERDICT, not the list — an edit changes
@@ -104,7 +132,7 @@ export function AddLocationScreen() {
 
   return (
     <Screen>
-      <NavBar onBack={() => router.back()} backLabel="Back">
+      <NavBar onBack={goBack} backLabel="Back">
         <View />
       </NavBar>
 
@@ -123,6 +151,7 @@ export function AddLocationScreen() {
 
       <Section title={t("add.nameIt")}>
         <TextField
+          theme={theme}
           label={t("add.nameLabel")}
           value={name}
           onChangeText={setName}
@@ -137,6 +166,15 @@ export function AddLocationScreen() {
           onPress={save}
           disabled={!canSave}
         />
+        {/*
+          Cancel is not the back caret in the bar, and both belong here. The
+          caret is navigation — it means "I am done looking". Cancel is an
+          answer to the form — it means "discard what I typed". They happen to
+          go to the same place today, but a person who has half-filled a form
+          looks for the second one, next to Save, and the bar is nowhere near
+          the decision.
+        */}
+        <Button label={t("add.cancel")} variant="ghost" onPress={goBack} />
         {editing ? (
           <Button
             label={t("add.remove")}

@@ -30,6 +30,8 @@ import { ExternalLink } from "./ExternalLink";
 const MET = "https://www.met.no/";
 const NLOD = "https://data.norge.no/nlod/en/2.0";
 const CC_BY = "https://creativecommons.org/licenses/by/4.0/";
+const OSM = "https://www.openstreetmap.org/copyright";
+const ODBL = "https://opendatacommons.org/licenses/odbl/1-0/";
 
 export type AttributionProps = {
   /** Renders the About line beneath the licence text. Omitted on screens that already have a route to it. */
@@ -65,6 +67,25 @@ export function Attribution({ onAbout }: AttributionProps = {}) {
         /{" "}
         <ExternalLink href={CC_BY} className="text-ink3" style={link}>
           {t("attribution.ccBy")}
+        </ExternalLink>
+      </Text>
+
+      {/*
+        A second source means a second obligation, and ODbL requires the
+        attribution to travel with the data — so it is stated wherever MET's is,
+        not hidden on the About screen. Its own sentence rather than a fourth
+        item appended to MET's: the two datasets are not co-authors of one
+        thing, and running them together would imply MET supplied the place
+        names.
+      */}
+      <Text className="text-ink3" style={base}>
+        {t("attribution.places")}{" "}
+        <ExternalLink href={OSM} className="text-ink3" style={link}>
+          {t("attribution.osm")}
+        </ExternalLink>{" "}
+        ·{" "}
+        <ExternalLink href={ODBL} className="text-ink3" style={link}>
+          {t("attribution.odbl")}
         </ExternalLink>
       </Text>
 
