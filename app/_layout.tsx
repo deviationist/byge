@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { useState } from "react";
 import "../global.css";
+import "../i18n";
 import { useServiceWorker } from "../hooks/useServiceWorker";
 import { ThemeProvider, useResolvedTheme } from "../theme/ThemeProvider";
 import { BG } from "../theme/tokens";

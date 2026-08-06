@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { useEffect, useRef } from "react";
 import { Modal, Platform, Pressable, Text, View } from "react-native";
 import { Button } from "./Button";
@@ -34,7 +35,7 @@ export function ConfirmSheet({
   body,
   detail,
   confirmLabel,
-  cancelLabel = "Keep it",
+  cancelLabel = i18next.t("confirm.keep"),
   onConfirm,
   onCancel,
 }: ConfirmSheetProps) {
@@ -67,7 +68,7 @@ export function ConfirmSheet({
     <Modal transparent visible animationType="fade" onRequestClose={onCancel}>
       {/* Tapping the scrim cancels — the safe outcome, never the destructive one. */}
       <Pressable
-        accessibilityLabel="Dismiss"
+        accessibilityLabel={i18next.t("confirm.dismiss")}
         onPress={onCancel}
         className="bg-scrim"
         style={{
@@ -135,13 +136,16 @@ export function ConfirmSheet({
 
 /** Copy for removing a saved place. Kept here so every caller says the same thing. */
 export function removeLocationCopy(name: string, detail?: string) {
+  // Reads from the i18next singleton rather than a hook: this is a plain
+  // function called from two screens' render paths, and making it a hook would
+  // force both callers to restructure for no gain. The language only changes
+  // via a state update that re-renders those screens anyway.
+  const t = i18next.t.bind(i18next);
   return {
-    title: `Remove ${name}?`,
-    body:
-      "This deletes the place and its saved answer from this device. " +
-      "There is no account and no sync, so it cannot be brought back.",
+    title: t("confirm.removeTitle", { name }),
+    body: t("confirm.removeBody"),
     detail,
-    confirmLabel: `Remove ${name}`,
-    cancelLabel: "Keep it",
+    confirmLabel: t("confirm.removeConfirm", { name }),
+    cancelLabel: t("confirm.keep"),
   };
 }

@@ -1,5 +1,9 @@
 import { JSDOM } from "jsdom";
 import "@testing-library/jest-dom/vitest";
+// Real copy in tests, not raw keys. Assertions here are about what a person
+// reads — "names the data source", "never says 403" — so a suite running
+// against `empty.firstRun.body` would be asserting nothing at all.
+import "./i18n";
 
 // Node 25 ships `localStorage`/`sessionStorage` as globals (`--webstorage`, on
 // by default), and they throw on every method call unless `--localstorage-file`
