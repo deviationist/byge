@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200;0,6..72,300;0,6..72,400&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="foundation.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root, [data-theme="light"] { --bg:#F6F4F0; --surface:#FFF; --sunk:#EFEDE8; --ink:#15181B; --ink2:rgba(21,24,27,.62); --ink3:rgba(21,24,27,.40); --line:rgba(21,24,27,.10); --line2:rgba(21,24,27,.18); --dry:rgba(21,24,27,.07); --nodata:#FFF; --nodata-line:rgba(21,24,27,.28); }
+  [data-theme="dark"] { --bg:#0E1113; --surface:#16191C; --sunk:#1B1F22; --ink:#ECEEF0; --ink2:rgba(236,238,240,.60); --ink3:rgba(236,238,240,.38); --line:rgba(236,238,240,.12); --line2:rgba(236,238,240,.20); --dry:rgba(236,238,240,.07); --nodata:#2A2E31; --nodata-line:rgba(236,238,240,.30); }
+  @keyframes byge-settle { from { opacity: 0; transform: translateY(-4px) } to { opacity: 1; transform: none } }
+</style>
+</helmet>
+<div data-theme="{{ theme }}" style="width:100%;min-height:100%;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif;padding:{{ pad }};display:flex;flex-direction:column;gap:{{ gap }}px">
+
+  <dc-import name="NavBar" variant="brand" subtitle="{{ subtitle }}" actions="{{ actions }}" theme="{{ theme }}" hint-size="100%,52px"></dc-import>
+
+  <sc-if value="{{ empty }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:18px 0 30px">
+      <dc-import name="EmptyState" reason="{{ emptyReason }}" lastRemoved="{{ lastRemoved }}" onAdd="{{ onAdd }}" theme="{{ theme }}" hint-size="100%,380px"></dc-import>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasPlaces }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;flex-direction:column;gap:{{ gap }}px">
+      <sc-if value="{{ stale }}" hint-placeholder-val="{{ false }}">
+        <dc-import name="StaleBanner" mode="offline" ageMin="{{ ageMin }}" theme="{{ theme }}" hint-size="100%,74px"></dc-import>
+      </sc-if>
+
+      <sc-if value="{{ hasNotice }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;gap:11px;align-items:center;border:1px solid var(--line);background:var(--sunk);border-radius:11px;padding:12px 14px;animation:byge-settle 200ms ease">
+          <span style="flex:none;width:6px;height:6px;border-radius:50%;background:var(--ink3)"></span>
+          <span style="font-size:12.5px;line-height:1.45;color:var(--ink2)">{{ notice }}</span>
+        </div>
+      </sc-if>
+
+      <div style="display:flex;flex-direction:column;gap:9px">
+        <sc-for list="{{ places }}" as="p" hint-placeholder-count="6">
+          <dc-import name="LocationCard" scenario="{{ p.key }}" selected="{{ p.selected }}" onPick="{{ p.onPick }}" theme="{{ theme }}" hint-size="100%,64px"></dc-import>
+        </sc-for>
+        <button onClick="{{ onAdd }}" style="cursor:pointer;text-align:left;font:inherit;font-size:14px;color:var(--ink2);border:1px dashed var(--line2);background:transparent;border-radius:12px;padding:0 17px;min-height:56px;display:flex;align-items:center;gap:10px" style-hover="color:var(--ink);border-color:var(--ink3)"><span style="font-family:'IBM Plex Mono',monospace;font-size:15px">+</span> Add a place</button>
+      </div>
+
+      <dc-import name="PrecipitationLegend" theme="{{ theme }}" hint-size="100%,50px"></dc-import>
+
+      <sc-if value="{{ showRadarLink }}" hint-placeholder-val="{{ false }}">
+        <button onClick="{{ onRadar }}" title="Open the radar map — a reading, with no place attached" style="cursor:pointer;font:inherit;text-align:left;background:transparent;border:none;border-top:1px solid var(--line);border-radius:0;padding:15px 2px 2px;min-height:44px;display:flex;align-items:baseline;gap:10px;color:var(--ink2)" style-hover="color:var(--ink)" style-focus="outline:2px solid var(--ink);outline-offset:2px">
+          <span style="font-size:13.5px;text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:3px">Radar map</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.5;color:var(--ink3)">look at the weather, no place attached</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink3);margin-left:auto">→</span>
+        </button>
+      </sc-if>
+
+      <sc-if value="{{ showInstall }}" hint-placeholder-val="{{ false }}">
+        <dc-import name="InstallPrompt" platform="{{ platform }}" theme="{{ theme }}" hint-size="100%,90px"></dc-import>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <div style="margin-top:auto;padding-top:22px">
+    <dc-import name="Attribution" long="{{ true }}" theme="{{ theme }}" hint-size="100%,36px"></dc-import>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:800},&quot;empty&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;emptyReason&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;firstRun&quot;,&quot;cleared&quot;],&quot;default&quot;:&quot;firstRun&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;lastRemoved&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;notice&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;stale&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;device&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;phone&quot;,&quot;tablet&quot;,&quot;desktop&quot;],&quot;default&quot;:&quot;phone&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;insetTop&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:0,&quot;min&quot;:0,&quot;max&quot;:80,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Safe area&quot;},&quot;selected&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;s1&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;showRadarLink&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;showInstall&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;platform&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;ios&quot;,&quot;android&quot;],&quot;default&quot;:&quot;ios&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;''|'light'|'dark'&quot;},&quot;places&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;string[]&quot;},&quot;onOpen&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(key:string)=&gt;void&quot;},&quot;onAdd&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;onRadar&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;actions&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;any[]&quot;}}">
+// LocationsScreen — the app-level surface, so About lives in ITS nav bar as a
+// real 44 px action. Attribution stays in the footer as a legal line, and is no
+// longer doing double duty as navigation.
+//
+// Scannability is the whole job: one glance answers "which of my places is wet
+// right now" — filled swatch = now, outline = on the way, hatched = unobserved.
+// The legend that explains that sits BELOW the list, collapsed.
+//
+// After a mutation the list is what changed, so the confirmation belongs here,
+// not on the screen you left: a quiet line above the list naming what happened
+// ("Removed Cabin.", "Saved Home."). It states the outcome and offers no undo,
+// because there is none — the confirmation happened before the deletion.
+class Component extends DCLogic {
+  componentDidMount() { if (!window.BYGE) this._t = setInterval(() => { if (window.BYGE) { clearInterval(this._t); this.forceUpdate(); } }, 40); }
+  componentWillUnmount() { clearInterval(this._t); }
+  // The general radar map's ONLY entry point on this screen, and deliberately a
+  // line of text below the legend — the same weight as "See why — radar map →" on
+  // the verdict. Not a tab, not a card, not an icon in the bar: a map that gets
+  // promoted becomes the front door, and byge's answer is a sentence. It sits
+  // under the places, so the places are still what this screen is about.
+  renderVals() {
+    const B = window.BYGE, theme = this.props.theme ?? '';
+    const dev = this.props.device ?? 'phone', phone = dev === 'phone';
+    const keys = this.props.places ?? (B ? B.LIST : []);
+    const empty = (this.props.empty ?? false) || keys.length === 0;
+    const stale = this.props.stale ?? false;
+    const selected = this.props.selected ?? 's1';
+    const n = keys.length;
+    const count = ['no places', 'one place', 'two places', 'three places', 'four places', 'five places', 'six places'][n] || (n + ' places');
+    return {
+      theme, empty, hasPlaces: !empty, stale, ageMin: 34,
+      emptyReason: this.props.emptyReason ?? 'firstRun',
+      lastRemoved: this.props.lastRemoved ?? '',
+      // env(safe-area-inset-top) in the build: the background fills the screen,
+      // the content starts below the status bar.
+      pad: ((phone ? 14 : 26) + (this.props.insetTop ?? 0)) + 'px 22px ' + (phone ? '18px' : '20px'),
+      gap: phone ? 18 : 16,
+      subtitle: empty ? 'no places yet' : count + (stale ? ' · last updated 34 min ago · offline' : ' · updated just now'),
+      actions: this.props.actions ?? [],
+      notice: this.props.notice ?? '', hasNotice: !!(this.props.notice ?? ''),
+      places: keys.map(k => ({ key: k, selected: k === selected, onPick: () => { if (this.props.onOpen) this.props.onOpen(k); } })),
+      onAdd: this.props.onAdd,
+      showRadarLink: (this.props.showRadarLink ?? true) && !empty,
+      onRadar: this.props.onRadar,
+      showInstall: (this.props.showInstall ?? true) && !empty,
+      platform: this.props.platform ?? 'ios'
+    };
+  }
+}
+
+</script>
+</body>
+</html>

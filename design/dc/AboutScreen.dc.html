@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200;0,6..72,300;0,6..72,400&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root, [data-theme="light"] { --bg:#F6F4F0; --surface:#FFF; --sunk:#EFEDE8; --ink:#15181B; --ink2:rgba(21,24,27,.62); --ink3:rgba(21,24,27,.40); --line:rgba(21,24,27,.10); --line2:rgba(21,24,27,.18); }
+  [data-theme="dark"] { --bg:#0E1113; --surface:#16191C; --sunk:#1B1F22; --ink:#ECEEF0; --ink2:rgba(236,238,240,.60); --ink3:rgba(236,238,240,.38); --line:rgba(236,238,240,.12); --line2:rgba(236,238,240,.20); }
+  a.byge-link { color: var(--ink); border-bottom: 1px solid var(--line2); text-decoration: none; }
+  a.byge-link:hover { opacity: .7; }
+</style>
+</helmet>
+<div data-theme="{{ theme }}" style="width:100%;min-height:100%;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif;padding:{{ pad }}">
+  <div style="width:100%;max-width:{{ measure }};margin:0 auto;display:flex;flex-direction:column;gap:26px">
+
+    <dc-import name="NavBar" title="About byge" onBack="{{ onBack }}" backTitle="{{ backTitle }}" theme="{{ theme }}" hint-size="100%,52px"></dc-import>
+
+    <div style="display:flex;align-items:center;gap:16px">
+      <dc-import name="BrandMark" size="{{ markSize }}" variant="standard" hint-size="52px,52px"></dc-import>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;line-height:1.7;color:var(--ink3)">byge <span style="color:var(--ink2)">/ˈbyːɡə/</span><br>Norwegian: a passing shower.</span>
+    </div>
+
+    <p style="margin:0;font-family:Newsreader,serif;font-weight:300;font-size:20px;line-height:1.5;max-width:38ch">byge reads MET Norway’s radar for your exact coordinate and tells you whether it is raining, and for how long. Nothing else.</p>
+
+    <div style="border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px">
+      <span style="font-size:14px;font-weight:500">Appearance</span>
+      <dc-import name="SegmentedControl" options="{{ themeOptions }}" value="{{ themeChoice }}" onChange="{{ onTheme }}" caption="{{ themeCaption }}" theme="{{ theme }}" hint-size="280px,60px"></dc-import>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:14px;font-size:13.5px;line-height:1.65;color:var(--ink2);max-width:52ch">
+      <div><strong style="color:var(--ink);font-weight:500">Data from MET Norway.</strong> The radar nowcast (<span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px">yrwms-nordic</span>), licensed <a class="byge-link" href="https://data.norge.no/nlod/en/2.0" target="_blank">NLOD 2.0</a> and <a class="byge-link" href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC BY 4.0</a>. byge is not affiliated with, or endorsed by, MET Norway or NRK.</div>
+      <div><strong style="color:var(--ink);font-weight:500">It is radar, not a weather model.</strong> byge sees the rain that exists right now and slides it forward along its measured motion. Nothing is invented, and nothing grows or dies — which is why a 20-minute prediction is strong and a 100-minute one is weak. The confidence marker says which you are looking at.</div>
+      <div><strong style="color:var(--ink);font-weight:500">The horizon is 115 minutes.</strong> When rain is still falling at the horizon, byge gives you a lower bound and says so. It will never round an unknown into a number.</div>
+      <div><strong style="color:var(--ink);font-weight:500">Where radar cannot see, byge says nothing.</strong> Unobserved is not dry. Coverage is the Nordic mosaic — 34 radars across Norway, Sweden and Finland — and its edge is ragged.</div>
+      <div><strong style="color:var(--ink);font-weight:500">It works offline.</strong> The last answer for each place is kept, with its age. An old forecast is still a useful forecast, as long as you know it is old.</div>
+    </div>
+
+    <div style="border-top:1px solid var(--line);padding-top:16px;display:flex;flex-direction:column;gap:10px">
+      <dc-import name="Attribution" long="{{ true }}" size="{{ attSize }}" theme="{{ theme }}" hint-size="100%,36px"></dc-import>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink3);line-height:1.7">Version 1.0 · installable · offline-capable<sc-if value="{{ showSettings }}" hint-placeholder-val="{{ false }}"><br><span onClick="{{ onSettings }}" style="cursor:pointer;color:var(--ink2);border-bottom:1px solid var(--line2)">Position &amp; notifications</span> <span style="color:var(--ink3)">— phase 3</span></sc-if></span>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:860},&quot;device&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;phone&quot;,&quot;tablet&quot;,&quot;desktop&quot;],&quot;default&quot;:&quot;phone&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;insetTop&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:0,&quot;min&quot;:0,&quot;max&quot;:80,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Safe area&quot;},&quot;themeChoice&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;,&quot;system&quot;],&quot;default&quot;:&quot;system&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;systemIsDark&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;showSettings&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;''|'light'|'dark'&quot;},&quot;onBack&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;onTheme&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(k:string)=&gt;void&quot;},&quot;onSettings&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;}}">
+// AboutScreen — a functional destination, not a colophon: Appearance lives here
+// (one control does not earn its own screen), and it is reached from a real
+// 44 px action in the Locations nav bar. Attribution is also here in full, and
+// still on every screen, because it is an obligation rather than a page.
+class Component extends DCLogic {
+  renderVals() {
+    const theme = this.props.theme ?? '';
+    const dev = this.props.device ?? 'phone', phone = dev === 'phone';
+    const choice = this.props.themeChoice ?? 'system';
+    const resolved = this.props.systemIsDark ? 'dark' : 'light';
+    return {
+      theme, markSize: 52, attSize: 10.5,
+      pad: ((phone ? 14 : dev === 'tablet' ? 30 : 48) + (this.props.insetTop ?? 0)) + 'px ' +
+           (phone ? '22px 30px' : dev === 'tablet' ? '40px 34px' : '64px 44px'),
+      measure: phone ? '100%' : '620px',
+      themeChoice: choice,
+      themeOptions: [
+        { key: 'light', label: 'Light' }, { key: 'dark', label: 'Dark' },
+        { key: 'system', label: 'System', title: 'Follow the device setting' }
+      ],
+      themeCaption: choice === 'system'
+        ? 'Following your device — currently ' + resolved + '. It will change with it, including on a schedule.'
+        : 'Fixed to ' + choice + ', whatever the device does.',
+      onTheme: this.props.onTheme,
+      onBack: this.props.onBack, backTitle: this.props.backTitle ?? 'Back to places',
+      showSettings: this.props.showSettings ?? false,
+      onSettings: this.props.onSettings
+    };
+  }
+}
+
+</script>
+</body>
+</html>

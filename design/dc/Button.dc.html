@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root, [data-theme="light"] { --bg:#F6F4F0; --surface:#FFF; --ink:#15181B; --ink2:rgba(21,24,27,.62); --line2:rgba(21,24,27,.18); }
+  [data-theme="dark"] { --bg:#0E1113; --surface:#16191C; --ink:#ECEEF0; --ink2:rgba(236,238,240,.60); --line2:rgba(236,238,240,.20); }
+</style>
+</helmet>
+<button data-theme="{{ theme }}" onClick="{{ onPress }}" disabled="{{ disabled }}" style="cursor:{{ cursor }};font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14.5px;font-weight:{{ weight }};min-height:48px;padding:0 {{ padX }}px;border-radius:11px;border:1px solid {{ border }};background:{{ background }};color:{{ color }};opacity:{{ opacity }};width:{{ width }};display:inline-flex;align-items:center;justify-content:center;gap:9px" style-hover="filter:brightness(1.06)" style-focus="outline:2px solid var(--ink);outline-offset:2px">{{ label }}</button>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:260,&quot;height&quot;:80},&quot;label&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Save place&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;kind&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;primary&quot;,&quot;secondary&quot;,&quot;ghost&quot;],&quot;default&quot;:&quot;primary&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;full&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;disabled&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;''|'light'|'dark'&quot;},&quot;onPress&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;}}">
+// Button — primary / secondary / ghost. 48 px minimum height everywhere: this is
+// tapped with a thumb, in the rain, one-handed. Focus is a visible ring, not a
+// colour shift, so it survives both themes and colour-blind readers.
+class Component extends DCLogic {
+  renderVals() {
+    const kind = this.props.kind ?? 'primary';
+    const disabled = this.props.disabled ?? false;
+    const styles = {
+      primary: { background: 'var(--ink)', color: 'var(--bg)', border: 'var(--ink)', weight: 500 },
+      secondary: { background: 'transparent', color: 'var(--ink)', border: 'var(--line2)', weight: 400 },
+      ghost: { background: 'transparent', color: 'var(--ink2)', border: 'transparent', weight: 400 }
+    };
+    return Object.assign({
+      theme: this.props.theme ?? '', label: this.props.label ?? 'Save place',
+      padX: kind === 'ghost' ? 12 : 22, width: this.props.full ? '100%' : 'auto',
+      disabled, cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.45 : 1,
+      onPress: disabled ? undefined : this.props.onPress
+    }, styles[kind]);
+  }
+}
+
+</script>
+</body>
+</html>

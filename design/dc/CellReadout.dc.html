@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200;0,6..72,300;0,6..72,400&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="foundation.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root, [data-theme="light"] { --bg:#F6F4F0; --surface:#FFF; --sunk:#EFEDE8; --ink:#15181B; --ink2:rgba(21,24,27,.62); --ink3:rgba(21,24,27,.40); --line:rgba(21,24,27,.10); --line2:rgba(21,24,27,.18); --nodata:#FFF; }
+  [data-theme="dark"] { --bg:#0E1113; --surface:#16191C; --sunk:#1B1F22; --ink:#ECEEF0; --ink2:rgba(236,238,240,.60); --ink3:rgba(236,238,240,.38); --line:rgba(236,238,240,.12); --line2:rgba(236,238,240,.20); --nodata:#2A2E31; }
+  @keyframes byge-readout { from { opacity: 0; transform: translateY(4px) } to { opacity: 1; transform: none } }
+</style>
+</helmet>
+<div data-theme="{{ theme }}" style="width:{{ width }}px;max-width:100%;position:relative;animation:byge-readout 140ms cubic-bezier(.2,.7,.3,1)">
+
+  <div style="border:1px solid var(--line2);border-radius:13px;background:var(--surface);box-shadow:0 0 0 2px var(--bg),0 14px 34px -14px rgba(0,0,0,.4);overflow:hidden">
+
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:14px 14px 12px">
+      <span style="flex:none;width:26px;height:26px;border-radius:5px;background:{{ swatchBg }};background-image:{{ swatchHatch }};background-size:5px 5px;border:1px solid {{ swatchBorder }};margin-top:2px"></span>
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
+        <span style="font-family:Newsreader,serif;font-size:20px;font-weight:300;line-height:1.15;letter-spacing:-.01em">{{ headline }}</span>
+        <span style="font-size:12.5px;line-height:1.45;color:var(--ink2)">{{ feels }}</span>
+      </div>
+      <button onClick="{{ onClose }}" title="Close reading" aria-label="Close reading" style="flex:none;cursor:pointer;width:30px;height:30px;margin:-3px -3px 0 0;border-radius:8px;border:none;background:transparent;color:var(--ink3);display:flex;align-items:center;justify-content:center;padding:0" style-hover="background:var(--sunk);color:var(--ink)" style-focus="outline:2px solid var(--ink);outline-offset:-2px">
+        <span style="position:relative;display:block;width:11px;height:11px">
+          <span style="position:absolute;top:4.75px;left:0;width:11px;height:1.5px;background:currentColor;transform:rotate(45deg)"></span>
+          <span style="position:absolute;top:4.75px;left:0;width:11px;height:1.5px;background:currentColor;transform:rotate(-45deg)"></span>
+        </span>
+      </button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line)">
+      <sc-for list="{{ facts }}" as="f" hint-placeholder-count="4">
+        <div style="padding:10px 14px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:3px;min-width:0">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:.07em;color:var(--ink3)">{{ f.k }}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.v }}</span>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="padding:11px 14px 12px;display:flex;flex-direction:column;gap:10px">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;line-height:1.65;color:var(--ink3)">{{ disclaimer }}</span>
+      <sc-if value="{{ canSave }}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{ onSave }}" style="cursor:pointer;min-height:40px;border:1px solid var(--line2);border-radius:10px;background:transparent;color:var(--ink);font:inherit;font-size:13px;padding:0 14px;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:10px" style-hover="background:var(--sunk)" style-focus="outline:2px solid var(--ink);outline-offset:2px">
+          <span>Save this point as a place</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink3)">→</span>
+        </button>
+      </sc-if>
+    </div>
+  </div>
+
+  <sc-if value="{{ tethered }}" hint-placeholder-val="{{ true }}">
+    <span style="position:absolute;left:{{ tailX }}px;{{ tailEdge }}:-6px;width:10px;height:10px;background:var(--surface);border-right:1px solid var(--line2);border-bottom:1px solid var(--line2);transform:rotate({{ tailRot }}deg)"></span>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:300,&quot;height&quot;:300},&quot;rate&quot;:{&quot;editor&quot;:&quot;float&quot;,&quot;default&quot;:4.2,&quot;min&quot;:0,&quot;max&quot;:40,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;mm/h&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;covered&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;frameMinutes&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:0,&quot;min&quot;:0,&quot;max&quot;:115,&quot;step&quot;:5,&quot;unit&quot;:&quot;min&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;coords&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;59.913 N, 10.752 E&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;placement&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;below&quot;,&quot;above&quot;],&quot;default&quot;:&quot;below&quot;,&quot;tsType&quot;:&quot;'below'|'above'&quot;},&quot;tethered&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;canSave&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;width&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:268,&quot;min&quot;:220,&quot;max&quot;:360,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;''|'light'|'dark'&quot;},&quot;tailX&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;number&quot;},&quot;onSave&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;onClose&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;}}">
+// CellReadout — what one radar cell says, and nothing more.
+//
+// IT REPORTS A READING, NEVER A VERDICT, and that is the whole design. A verdict
+// is a claim about a place someone told us they care about: it has a radius, a
+// spell model, a duration and a bound. A tapped square has none of those. Giving
+// it a sentence like "Rain for about 25 min" would be byge answering a question
+// nobody asked, at a point nobody said mattered — and it would be the app's own
+// headline treatment applied to something it does not qualify for. So: no
+// duration, no bound, no "at least", no radius, no spell segmentation. Band name,
+// what it feels like, the exact rate, where, and when.
+//
+// IT ANCHORS TO THE TAPPED CELL, not to a corner. A reading is a statement about
+// one square kilometre; parking it in the bottom-left leaves the reader to
+// remember which square they hit, and on a moving animation that link is gone
+// within two frames. The tail points at the cell. On a phone the card flips above
+// the cell when the tap lands low, and the tail flips with it — the anchor is
+// kept, the occlusion is not.
+//
+// THE EXIT IS THE SENTENCE. "Save this point as a place" is the one action, and
+// it is the bridge from browsing back to the thing byge actually does: a reading
+// becomes an answer only once it has a place attached to it.
+class Component extends DCLogic {
+  componentDidMount() { if (!window.BYGE) this._t = setInterval(() => { if (window.BYGE) { clearInterval(this._t); this.forceUpdate(); } }, 40); }
+  componentWillUnmount() { clearInterval(this._t); }
+  renderVals() {
+    const B = window.BYGE, theme = this.props.theme ?? '';
+    const th = theme === 'dark' ? 'dark' : 'light';
+    const covered = this.props.covered ?? true;
+    const rate = this.props.rate ?? 0;
+    const band = B && covered ? B.bandOf(rate) : null;
+    const min = this.props.frameMinutes ?? 0;
+    const t = new Date(Date.now() + min * 60000);
+    const hh = String(t.getHours()).padStart(2, '0') + ':' + String(t.getMinutes()).padStart(2, '0');
+    const flip = this.props.placement === 'above';
+
+    return {
+      theme, width: this.props.width ?? 268,
+      // Three states, never two: not-covered is its own answer, and it is not dry.
+      headline: !covered ? 'Not observed' : band ? band.label.charAt(0).toUpperCase() + band.label.slice(1) : 'Dry',
+      feels: !covered ? 'This square is outside radar coverage, so there is nothing to report either way.'
+        : band ? band.feels.charAt(0).toUpperCase() + band.feels.slice(1) + '.'
+        : 'Radar sees this square and sees no rain in it.',
+      swatchBg: !covered ? 'var(--nodata)' : band ? B.colorOf(rate, th) : 'var(--sunk)',
+      swatchHatch: !covered && B ? B.HATCH : 'none',
+      swatchBorder: band ? 'transparent' : 'var(--line2)',
+      facts: [
+        { k: 'RATE', v: !covered ? '—' : rate.toFixed(1) + ' mm/h' },
+        { k: 'FRAME', v: (min === 0 ? 'now' : '+' + min + ' min') + ' · ' + hh },
+        { k: 'CELL', v: this.props.coords ?? '59.913 N, 10.752 E' },
+        { k: 'RESOLUTION', v: '1 km · 5 min' }
+      ],
+      disclaimer: 'A reading from one radar square — not a forecast for a place. byge only makes a claim about somewhere you have saved, where it knows the radius.',
+      canSave: this.props.canSave ?? true,
+      onSave: this.props.onSave, onClose: this.props.onClose,
+      tethered: this.props.tethered ?? true,
+      tailEdge: flip ? 'bottom' : 'top',
+      tailRot: flip ? 45 : 225,
+      tailX: this.props.tailX ?? 28
+    };
+  }
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="foundation.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root, [data-theme="light"] { --ink:#15181B; --ink2:rgba(21,24,27,.62); --ink3:rgba(21,24,27,.40); --line2:rgba(21,24,27,.18); }
+  [data-theme="dark"] { --ink:#ECEEF0; --ink2:rgba(236,238,240,.60); --ink3:rgba(236,238,240,.38); --line2:rgba(236,238,240,.20); }
+</style>
+</helmet>
+<sc-if value="{{ shown }}" hint-placeholder-val="{{ true }}">
+  <div data-theme="{{ theme }}" style="display:inline-flex;align-items:center;gap:9px;font-family:'IBM Plex Mono',monospace">
+    <span style="display:flex;gap:3px" title="{{ title }}">
+      <sc-for list="{{ bars }}" as="b" hint-placeholder-count="3">
+        <span style="width:14px;height:3px;border-radius:2px;background:{{ b.bg }}"></span>
+      </sc-for>
+    </span>
+    <span style="font-size:10px;color:var(--ink2);letter-spacing:.03em">{{ text }}</span>
+  </div>
+</sc-if>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:330,&quot;height&quot;:50},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;s1&quot;,&quot;s2&quot;,&quot;s3&quot;,&quot;s4&quot;,&quot;s5&quot;,&quot;s8&quot;,&quot;s9&quot;,&quot;partial&quot;,&quot;edge&quot;,&quot;s6&quot;],&quot;default&quot;:&quot;s1&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;''|'light'|'dark'&quot;}}">
+// PrecipitationConfidence — the weakest link in what we are ASSERTING.
+// Observations are certain; only forecast leads decay (FEEDBACK-01 §1). So
+// "it is raining on you" and "the field is clear" are both high, and the
+// forecast half of those claims is hedged in the prose instead.
+// Never shown for a blind location: there is no claim to rate.
+class Component extends DCLogic {
+  componentDidMount() { if (!window.BYGE) this._t = setInterval(() => { if (window.BYGE) { clearInterval(this._t); this.forceUpdate(); } }, 40); }
+  componentWillUnmount() { clearInterval(this._t); }
+  renderVals() {
+    const B = window.BYGE, theme = this.props.theme ?? '';
+    if (!B) return { theme, shown: false, bars: [] };
+    const v = B.verdict(B.FIXTURES[this.props.scenario ?? 's1']);
+    if (!v.confidence) return { theme, shown: false, bars: [] };
+    const n = { high: 3, moderate: 2, low: 1 }[v.confidence];
+    const basis = v.raining_now
+      ? (v.current.open ? 'observed — it is raining' : 'end predicted +' + v.current.end_min + ' min')
+      : v.next ? 'arrival predicted +' + v.next.start_min + ' min' : 'observed — the field is clear';
+    return {
+      theme, shown: true,
+      bars: [1, 2, 3].map(i => ({ bg: i <= n ? 'var(--ink2)' : 'var(--line2)' })),
+      text: v.confidence + ' confidence · ' + basis,
+      title: 'Confidence rates the weakest link in the claim: observations are certain, forecast leads decay.'
+    };
+  }
+}
+
+</script>
+</body>
+</html>

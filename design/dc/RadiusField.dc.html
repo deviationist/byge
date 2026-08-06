@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root, [data-theme="light"] { --bg:#F6F4F0; --surface:#FFF; --sunk:#EFEDE8; --ink:#15181B; --ink2:rgba(21,24,27,.62); --ink3:rgba(21,24,27,.40); --line:rgba(21,24,27,.10); --line2:rgba(21,24,27,.18); }
+  [data-theme="dark"] { --bg:#0E1113; --surface:#16191C; --sunk:#1B1F22; --ink:#ECEEF0; --ink2:rgba(236,238,240,.60); --ink3:rgba(236,238,240,.38); --line:rgba(236,238,240,.12); --line2:rgba(236,238,240,.20); }
+</style>
+</helmet>
+<div data-theme="{{ theme }}" style="width:100%;display:flex;flex-direction:column;gap:11px;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink)">
+
+  <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;color:var(--ink3)">HOW WIDE IS “HERE”</span>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ink)">{{ valueLabel }}</span>
+  </div>
+
+  <div onPointerDown="{{ onDown }}" onPointerMove="{{ onMove }}" onPointerUp="{{ onUp }}" style="position:relative;height:44px;display:flex;align-items:center;cursor:pointer;touch-action:none">
+    <span style="position:absolute;left:0;right:0;height:3px;border-radius:2px;background:var(--line)"></span>
+    <span style="position:absolute;left:0;width:{{ fill }};height:3px;border-radius:2px;background:var(--ink2)"></span>
+    <sc-for list="{{ ticks }}" as="t" hint-placeholder-count="6">
+      <span style="position:absolute;left:{{ t.at }};transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:0">
+        <span style="width:1px;height:9px;background:{{ t.color }}"></span>
+      </span>
+    </sc-for>
+    <span style="position:absolute;left:{{ fill }};transform:translateX(-50%);width:22px;height:22px;border-radius:50%;background:var(--surface);border:1px solid var(--line2);box-shadow:0 2px 6px rgba(0,0,0,.18)"></span>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ink3)">
+    <sc-for list="{{ ticks }}" as="t" hint-placeholder-count="6">
+      <span>{{ t.label }}</span>
+    </sc-for>
+  </div>
+
+  <div style="display:flex;gap:11px;align-items:flex-start;border-top:1px solid var(--line);padding-top:12px">
+    <span style="flex:none;margin-top:4px;width:2px;height:auto;align-self:stretch;background:var(--line2);border-radius:1px"></span>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;line-height:1.7;color:var(--ink2);max-width:52ch">{{ note }}</span>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:420,&quot;height&quot;:220},&quot;value&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:3,&quot;min&quot;:2,&quot;max&quot;:25,&quot;unit&quot;:&quot;km&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;''|'light'|'dark'&quot;},&quot;onChange&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(km:number)=&gt;void&quot;}}">
+// RadiusField — "how wide is here". Any rain touching the circle counts as rain
+// for this place, so the control is monotonic: wider is always MORE sensitive,
+// never less. That is the fix for a control that used to invert its own meaning
+// (a 25 km disc diluted a real shower into "dry").
+//
+// The 3 km default is load-bearing — it is what keeps the answer about YOU. The
+// wide end is a deliberate choice ("watch this whole valley"), and the copy says
+// so, because at 10 km and up in Norway "some rain somewhere in the next two
+// hours" is very nearly always true and the answer stops discriminating.
+// Floor 2 km: the grid is 1 km, below that buys nothing real.
+class Component extends DCLogic {
+  state = {};
+  renderVals() {
+    const MIN = 2, MAX = 25;
+    const v = this.state.v ?? (this.props.value ?? 3);
+    const pct = (x) => ((x - MIN) / (MAX - MIN) * 100).toFixed(1) + '%';
+    const notes = {
+      tight: 'About you. One wet cell anywhere in the circle counts as rain here, so a small circle is a precise question — and the answer moves when the shower actually reaches you.',
+      valley: 'Wider than you: this now answers “is it raining anywhere in this area”. Good for watching a valley or a bay, blunter about your own roof.',
+      wide: 'Very wide. Somewhere in a ' + Math.round(v) + ' km circle it is nearly always about to rain, so expect a near-permanent “raining”. Also ' + (v >= 25 ? '350 KB' : '57 KB') + ' per refresh — fine on wifi, less so on a phone plan.'
+    };
+    const note = v <= 5 ? notes.tight : v <= 12 ? notes.valley : notes.wide;
+    const set = (val) => {
+      const nv = Math.min(MAX, Math.max(MIN, Math.round(val)));
+      this.setState({ v: nv });
+      if (this.props.onChange) this.props.onChange(nv);
+    };
+    const fromEvent = (e) => {
+      const r = e.currentTarget.getBoundingClientRect();
+      set(MIN + (e.clientX - r.left) / r.width * (MAX - MIN));
+    };
+    return {
+      theme: this.props.theme ?? '', fill: pct(v), valueLabel: v + ' km radius',
+      ticks: [2, 3, 5, 10, 15, 25].map(t => ({ at: pct(t), label: t + '', color: t === 3 ? 'var(--ink2)' : 'var(--line2)' })),
+      note,
+      onDown: (e) => { this._d = true; fromEvent(e); if (e.currentTarget.setPointerCapture) e.currentTarget.setPointerCapture(e.pointerId); },
+      onMove: (e) => { if (this._d) fromEvent(e); },
+      onUp: () => { this._d = false; }
+    };
+  }
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root, [data-theme="light"] { --bg:#F6F4F0; --surface:#FFF; --ink:#15181B; --ink2:rgba(21,24,27,.62); --ink3:rgba(21,24,27,.40); --line:rgba(21,24,27,.10); --line2:rgba(21,24,27,.18); }
+  [data-theme="dark"] { --bg:#0E1113; --surface:#16191C; --ink:#ECEEF0; --ink2:rgba(236,238,240,.60); --ink3:rgba(236,238,240,.38); --line:rgba(236,238,240,.12); --line2:rgba(236,238,240,.20); }
+</style>
+</helmet>
+<div data-theme="{{ theme }}" style="position:relative;width:100%;display:flex;align-items:center;gap:12px;min-height:52px;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink)">
+
+  <sc-if value="{{ hasBack }}" hint-placeholder-val="{{ true }}">
+    <button onClick="{{ onBack }}" title="{{ backTitle }}" aria-label="{{ backTitle }}" style="flex:none;cursor:pointer;background:transparent;border:1px solid var(--line);border-radius:11px;width:44px;height:44px;padding:0;color:var(--ink2);display:flex;align-items:center;justify-content:center" style-hover="color:var(--ink);border-color:var(--line2)" style-focus="outline:2px solid var(--ink);outline-offset:2px">
+      <span style="display:block;width:9px;height:9px;border-left:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg);margin-right:-3px"></span>
+    </button>
+  </sc-if>
+
+  <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+    <sc-if value="{{ isBrand }}" hint-placeholder-val="{{ false }}">
+      <span style="font-family:Newsreader,serif;font-size:26px;font-weight:300;letter-spacing:.01em;line-height:1.1">byge</span>
+    </sc-if>
+    <sc-if value="{{ isPlain }}" hint-placeholder-val="{{ true }}">
+      <span style="font-size:13.5px;font-weight:500;letter-spacing:-.005em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ title }}</span>
+    </sc-if>
+    <sc-if value="{{ hasSub }}" hint-placeholder-val="{{ false }}">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ink3);letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ subtitle }}</span>
+    </sc-if>
+  </div>
+
+  <sc-for list="{{ actions }}" as="a" hint-placeholder-count="2">
+    <button onClick="{{ a.onPress }}" title="{{ a.title }}" style="flex:none;cursor:pointer;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:12.5px;background:transparent;border:1px solid var(--line);border-radius:11px;min-width:44px;height:44px;padding:0 13px;color:var(--ink2);display:flex;align-items:center;gap:7px" style-hover="color:var(--ink);border-color:var(--line2)" style-focus="outline:2px solid var(--ink);outline-offset:2px">{{ a.label }}</button>
+  </sc-for>
+
+  <sc-if value="{{ hasMenu }}" hint-placeholder-val="{{ false }}">
+    <dc-import name="OverflowMenu" items="{{ menu }}" title="{{ menuTitle }}" theme="{{ theme }}" hint-size="44px,44px"></dc-import>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:420,&quot;height&quot;:80},&quot;variant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;plain&quot;,&quot;brand&quot;],&quot;default&quot;:&quot;plain&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;title&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Home · Grünerløkka, Oslo&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;subtitle&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;59.9273, 10.7607 · 3 km&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;backTitle&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Back&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;menuTitle&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;More actions&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;''|'light'|'dark'&quot;},&quot;onBack&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;actions&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{label:string,title:string,onPress:()=&gt;void}[]&quot;},&quot;menu&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{label:string,note?:string,onPress:()=&gt;void}[]&quot;}}">
+// NavBar — back on the left, content in the middle, real actions on the right.
+// Two rules it enforces:
+//   · every target is 44×44 minimum
+//   · the back button goes back where you CAME from, not to a fixed home, so
+//     Verdict reached from the map returns to the map
+// About is reached from the action slot here, not from a line of legal text.
+class Component extends DCLogic {
+  renderVals() {
+    const variant = this.props.variant ?? 'plain';    // plain | brand
+    return {
+      theme: this.props.theme ?? '',
+      hasBack: !!this.props.onBack, onBack: this.props.onBack,
+      backTitle: this.props.backTitle ?? 'Back',
+      isBrand: variant === 'brand', isPlain: variant !== 'brand',
+      title: this.props.title ?? '', subtitle: this.props.subtitle ?? '',
+      hasSub: !!(this.props.subtitle ?? ''),
+      actions: this.props.actions ?? [],
+      // A place's own actions (edit, remove) go in the ⋯ menu, not the bar —
+      // the bar is for navigation, and destructive verbs do not belong one
+      // stray tap from the answer.
+      menu: this.props.menu ?? [], hasMenu: (this.props.menu ?? []).length > 0,
+      menuTitle: this.props.menuTitle ?? 'More actions'
+    };
+  }
+}
+
+</script>
+</body>
+</html>

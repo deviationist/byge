@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="foundation.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root, [data-theme="light"] { --bg:#F6F4F0; --surface:#FFF; --sunk:#EFEDE8; --ink:#15181B; --ink2:rgba(21,24,27,.62); --ink3:rgba(21,24,27,.40); --line:rgba(21,24,27,.10); --line2:rgba(21,24,27,.18); --nodata:#FFF; --nodata-line:rgba(21,24,27,.28); }
+  [data-theme="dark"] { --bg:#0E1113; --surface:#16191C; --sunk:#1B1F22; --ink:#ECEEF0; --ink2:rgba(236,238,240,.60); --ink3:rgba(236,238,240,.38); --line:rgba(236,238,240,.12); --line2:rgba(236,238,240,.20); --nodata:#2A2E31; --nodata-line:rgba(236,238,240,.30); }
+</style>
+</helmet>
+<div data-theme="{{ theme }}" style="width:100%;display:flex;flex-direction:column;gap:14px;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink)">
+
+  <div style="position:relative;width:100%;height:{{ mapH }}px;border-radius:14px;overflow:hidden;border:1px solid var(--line)">
+    <dc-import name="MapCanvas" basemap="{{ basemap }}" showMask="{{ showMask }}" maskWidth="{{ maskWidth }}" pannable="{{ true }}" onPan="{{ onPan }}" credit="© Kartverket · coverage: MET Norway" theme="{{ theme }}" hint-size="100%,100%" style="position:absolute;inset:0"></dc-import>
+
+    <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;width:{{ ringPx }}px;height:{{ ringPx }}px;border-radius:50%;border:1.5px solid var(--ink);box-shadow:0 0 0 1px rgba(255,255,255,.35) inset;overflow:hidden">
+      <sc-if value="{{ clipped }}" hint-placeholder-val="{{ false }}">
+        <span style="position:absolute;left:0;top:0;bottom:0;width:{{ clipW }}px;background:var(--nodata);background-image:{{ hatch }};background-size:6px 6px;opacity:.9"></span>
+      </sc-if>
+    </div>
+    <span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;width:11px;height:11px;border-radius:50%;background:var(--ink);border:2px solid var(--surface)"></span>
+    <span style="position:absolute;left:50%;top:calc(50% + {{ labelOffset }}px);transform:translateX(-50%);pointer-events:none;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:2px 7px">{{ radiusLabel }}</span>
+
+    <button onClick="{{ onLocate }}" style="position:absolute;right:12px;top:12px;cursor:pointer;font:inherit;font-size:12.5px;min-height:44px;padding:0 14px;border-radius:11px;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:flex;align-items:center;gap:9px" style-hover="border-color:var(--line2)">
+      <span style="width:9px;height:9px;border-radius:50%;border:1.5px solid currentColor"></span>{{ locateLabel }}
+    </button>
+
+    <div style="position:absolute;left:12px;top:12px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:7px 10px;display:flex;flex-direction:column;gap:2px">
+      <span>{{ coords }}</span>
+      <span style="font-size:9px;color:var(--ink3)">pan the map · the pin stays put</span>
+    </div>
+  </div>
+
+  <sc-if value="{{ denied }}" hint-placeholder-val="{{ false }}">
+    <div style="border:1px solid var(--line2);background:var(--sunk);border-radius:12px;padding:14px 15px;display:flex;flex-direction:column;gap:6px">
+      <span style="font-size:13.5px;font-weight:500">Location is switched off for byge</span>
+      <span style="font-size:12.5px;line-height:1.55;color:var(--ink2);max-width:46ch">{{ deniedBody }}</span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink3);margin-top:2px">You can still pan the map or type coordinates — nothing here needs permission.</span>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ offCoverage }}" hint-placeholder-val="{{ false }}">
+    <dc-import name="CoverageNotice" scenario="{{ noticeScenario }}" theme="{{ theme }}" hint-size="100%,110px"></dc-import>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:520,&quot;height&quot;:380},&quot;radiusKm&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:3,&quot;min&quot;:2,&quot;max&quot;:25,&quot;unit&quot;:&quot;km&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;height&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:260,&quot;min&quot;:160,&quot;max&quot;:520,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;basemap&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;terrain&quot;,&quot;street&quot;,&quot;satellite&quot;,&quot;hybrid&quot;],&quot;default&quot;:&quot;terrain&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;showMask&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;maskWidth&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:22,&quot;min&quot;:0,&quot;max&quot;:80,&quot;unit&quot;:&quot;%&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;permission&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;unknown&quot;,&quot;granted&quot;,&quot;denied&quot;],&quot;default&quot;:&quot;unknown&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;''|'light'|'dark'&quot;},&quot;onLocate&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;onMove&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(lat:string,lon:string)=&gt;void&quot;}}">
+// MapField — the add-a-place picker. Centre-pinned: you pan the world beneath a
+// fixed crosshair, and the coordinate under it is the selection. Steadier on a
+// phone than dragging a pin, and it keeps the target under your thumb rather
+// than beneath it. Search and typed coordinates set the same value and recentre
+// this map.
+//
+// "Use my location" here is the MVP one-shot: permission is requested when the
+// button is tapped, never on load, and you still confirm the result. It is NOT
+// the phase-3 live-position feature, which continuously follows you.
+//
+// The coverage mask is real data (10 km, 0.6 KB) — so a place outside radar
+// coverage is catchable BEFORE it is saved, rather than after.
+class Component extends DCLogic {
+  state = { x: 0, y: 0 };
+  componentDidMount() { if (!window.BYGE) this._t = setInterval(() => { if (window.BYGE) { clearInterval(this._t); this.forceUpdate(); } }, 40); }
+  componentWillUnmount() { clearInterval(this._t); }
+  renderVals() {
+    const B = window.BYGE, theme = this.props.theme ?? '';
+    const km = this.props.radiusKm ?? 3;
+    const PX_PER_KM = 4.5;
+    const mapH = this.props.height ?? 260;
+    const x = this.state.x, y = this.state.y;
+    // 4 decimals, always: MET returns 403 above that.
+    const lat = (59.9273 - y * 0.0011).toFixed(4);
+    const lon = (10.7607 + x * 0.0021).toFixed(4);
+    const maskWidth = this.props.maskWidth ?? 22;
+    const showMask = this.props.showMask ?? true;
+    // where the mask edge sits relative to the pinned centre, in px
+    const maskEdge = showMask ? (maskWidth / 100) * 520 + x - 260 : -9999;
+    const r = Math.max(14, km * PX_PER_KM);
+    const overlap = maskEdge + r;
+    return {
+      theme, mapH, basemap: this.props.basemap ?? 'terrain',
+      showMask, maskWidth, hatch: B ? B.HATCH : 'none',
+      ringPx: r * 2, radiusLabel: km + ' km', labelOffset: Math.round(r + 12),
+      clipped: overlap > 0 && maskEdge < r, clipW: Math.max(0, Math.min(r * 2, overlap)),
+      coords: lat + ', ' + lon,
+      offCoverage: maskEdge > -r * 0.2,
+      noticeScenario: maskEdge > r ? 's6' : 'partial',
+      denied: this.props.permission === 'denied',
+      deniedBody: 'iOS will not let us ask again from inside the app. Settings → Privacy & Security → Location Services → byge, then come back — the map will be waiting where you left it.',
+      locateLabel: this.props.permission === 'denied' ? 'Location off' : 'Use my location',
+      onLocate: this.props.onLocate,
+      onPan: (nx, ny) => { this.setState({ x: nx, y: ny }); if (this.props.onMove) this.props.onMove(lat, lon); }
+    };
+  }
+}
+
+</script>
+</body>
+</html>

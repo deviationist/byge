@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root, [data-theme="light"] { --bg:#F6F4F0; --surface:#FFF; --sunk:#EFEDE8; --ink:#15181B; --ink2:rgba(21,24,27,.62); --ink3:rgba(21,24,27,.40); --line:rgba(21,24,27,.10); --line2:rgba(21,24,27,.18); }
+  [data-theme="dark"] { --bg:#0E1113; --surface:#16191C; --sunk:#1B1F22; --ink:#ECEEF0; --ink2:rgba(236,238,240,.60); --ink3:rgba(236,238,240,.38); --line:rgba(236,238,240,.12); --line2:rgba(236,238,240,.20); }
+</style>
+</helmet>
+<div data-theme="{{ theme }}" style="display:flex;align-items:center;gap:13px;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink)">
+
+  <button onClick="{{ toggle }}" title="{{ title }}" aria-label="{{ title }}" style="flex:none;cursor:pointer;width:44px;height:44px;border-radius:50%;border:1px solid var(--line2);background:var(--surface);color:var(--ink);display:flex;align-items:center;justify-content:center;padding:0" style-hover="background:var(--sunk)" style-focus="outline:2px solid var(--ink);outline-offset:2px">
+    <sc-if value="{{ isPlaying }}" hint-placeholder-val="{{ false }}">
+      <span style="display:flex;gap:3.5px">
+        <span style="width:3.5px;height:14px;background:currentColor;border-radius:1px"></span>
+        <span style="width:3.5px;height:14px;background:currentColor;border-radius:1px"></span>
+      </span>
+    </sc-if>
+    <sc-if value="{{ isPaused }}" hint-placeholder-val="{{ true }}">
+      <span style="width:0;height:0;border-left:12px solid currentColor;border-top:7.5px solid transparent;border-bottom:7.5px solid transparent;margin-left:3px"></span>
+    </sc-if>
+    <sc-if value="{{ isEnded }}" hint-placeholder-val="{{ false }}">
+      <span style="display:block;width:13px;height:13px;border:1.5px solid currentColor;border-right-color:transparent;border-radius:50%;position:relative">
+        <span style="position:absolute;top:-2.5px;right:-1px;width:0;height:0;border-top:4px solid currentColor;border-left:4px solid transparent"></span>
+      </span>
+    </sc-if>
+  </button>
+
+  <div style="display:flex;flex-direction:column;gap:3px;min-width:0">
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink);letter-spacing:.02em;font-variant-numeric:tabular-nums">{{ readout }}</span>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ink3);letter-spacing:.04em">{{ label }}</span>
+  </div>
+
+  <sc-if value="{{ atHorizon }}" hint-placeholder-val="{{ false }}">
+    <span style="margin-left:auto;max-width:26ch;font-family:'IBM Plex Mono',monospace;font-size:9.5px;line-height:1.6;color:var(--ink3);text-align:right">This is as far as the radar run goes. Anything still falling here has no known end.</span>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:420,&quot;height&quot;:80},&quot;frameCount&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:24,&quot;min&quot;:2,&quot;max&quot;:48,&quot;tsType&quot;:&quot;number&quot;},&quot;interval&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:380,&quot;min&quot;:120,&quot;max&quot;:1200,&quot;unit&quot;:&quot;ms&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;openEnded&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;''|'light'|'dark'&quot;},&quot;frameIndex&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;number&quot;},&quot;onFrame&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(i:number)=&gt;void&quot;}}">
+// PlaybackControl — one 44 px transport and a clock. Confirming both decisions
+// in the map brief, for reasons worth writing down.
+//
+// IT STOPS AT THE HORIZON. Looping is the convention and the convention is
+// wrong here: it turns a two-hour forecast into wallpaper, and it erases the
+// single most important moment on the screen — the frame where the data runs
+// out. Stopping leaves the reader exactly there, which is the same edge the
+// verdict is describing when it says "no end in sight". The button then reads
+// REPLAY, so the stop is a state rather than a failure.
+//
+// IT NEVER AUTOPLAYS. Arriving into motion means the first thing a reader sees
+// is not the present, and the present is the one frame the verdict is about.
+//
+// REDUCED MOTION SLOWS IT, it does not remove it. Stepping through frames is how
+// this screen is read; removing the control would take away the point instead of
+// the motion. 380 ms normally, 900 ms when the OS asks for less.
+//
+// The clock is the primary readout and it is RELATIVE first, wall time second —
+// the same convention the verdict sentence uses. One app, one way of saying when.
+class Component extends DCLogic {
+  state = { i: 0, playing: false };
+  componentDidMount() {
+    try { this._reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { this._reduce = false; }
+  }
+  componentWillUnmount() { clearInterval(this._tick); }
+
+  step() {
+    const last = (this.props.frameCount ?? 24) - 1;
+    const n = (this.state.i ?? 0) + 1;
+    if (n >= last) { clearInterval(this._tick); this.setState({ i: last, playing: false, ended: true }); this.emit(last); return; }
+    this.setState({ i: n }); this.emit(n);
+  }
+  emit(i) { if (this.props.onFrame) this.props.onFrame(i); }
+  toggle() {
+    const last = (this.props.frameCount ?? 24) - 1;
+    if (this.state.playing) { clearInterval(this._tick); this.setState({ playing: false }); return; }
+    const from = (this.state.ended || this.state.i >= last) ? 0 : this.state.i;
+    this.setState({ i: from, playing: true, ended: false }); this.emit(from);
+    clearInterval(this._tick);
+    this._tick = setInterval(() => this.step(), this._reduce ? 900 : (this.props.interval ?? 380));
+  }
+
+  renderVals() {
+    const count = this.props.frameCount ?? 24;
+    const i = this.props.frameIndex !== undefined ? this.props.frameIndex : (this.state.i ?? 0);
+    const playing = this.state.playing ?? false;
+    const ended = !playing && i >= count - 1;
+    const min = i * 5;
+    const t = new Date(Date.now() + min * 60000);
+    const hh = String(t.getHours()).padStart(2, '0') + ':' + String(t.getMinutes()).padStart(2, '0');
+    return {
+      theme: this.props.theme ?? '',
+      isPlaying: playing, isPaused: !playing && !ended, isEnded: ended,
+      title: playing ? 'Pause' : ended ? 'Replay the run' : 'Play the run',
+      readout: (min === 0 ? 'now' : '+' + min + ' min') + '  ·  ' + hh,
+      label: ended ? 'END OF RUN · REPLAY' : playing ? 'PLAYING · FRAME ' + (i + 1) + ' OF ' + count : 'FRAME ' + (i + 1) + ' OF ' + count,
+      atHorizon: ended && (this.props.openEnded ?? false),
+      toggle: () => this.toggle()
+    };
+  }
+}
+
+</script>
+</body>
+</html>

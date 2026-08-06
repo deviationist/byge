@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="foundation.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root, [data-theme="light"] { --bg:#F6F4F0; --surface:#FFF; --sunk:#EFEDE8; --ink:#15181B; --ink2:rgba(21,24,27,.62); --ink3:rgba(21,24,27,.40); --line:rgba(21,24,27,.10); --line2:rgba(21,24,27,.18); --nodata:#FFF; --nodata-line:rgba(21,24,27,.28); }
+  [data-theme="dark"] { --bg:#0E1113; --surface:#16191C; --sunk:#1B1F22; --ink:#ECEEF0; --ink2:rgba(236,238,240,.60); --ink3:rgba(236,238,240,.38); --line:rgba(236,238,240,.12); --line2:rgba(236,238,240,.20); --nodata:#2A2E31; --nodata-line:rgba(236,238,240,.30); }
+</style>
+</helmet>
+<div data-theme="{{ theme }}" style="width:100%;height:100%;display:flex;flex-direction:column;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink);background:var(--bg)">
+
+  <div ref="{{ paneRef }}" style="flex:1;min-height:240px;position:relative">
+    <dc-import name="MapCanvas" fill="{{ true }}" basemap="{{ basemap }}" showRadar="{{ true }}" scenario="{{ scenario }}" frameIndex="{{ frameIndex }}" showMask="{{ true }}" maskWidth="{{ maskWidth }}" credit="© Kartverket · radar: MET Norway" theme="{{ theme }}" hint-size="100%,100%" style="position:absolute;inset:0"></dc-import>
+
+    <div style="position:absolute;left:50%;top:46%;transform:translate(-50%,-100%)">
+      <dc-import name="LocationCard" scenario="{{ scenario }}" placement="popup" showPlace="{{ true }}" theme="{{ theme }}" hint-size="230px,80px"></dc-import>
+    </div>
+
+    <div style="position:absolute;left:12px;top:{{ chromeTop }}px">
+      <span style="position:relative;display:inline-flex">
+        <button onClick="{{ toggleLayers }}" title="Choose a basemap" aria-haspopup="menu" aria-expanded="{{ layersOpen }}" style="cursor:pointer;font:inherit;font-size:12px;min-height:44px;padding:0 13px;border-radius:11px;border:1px solid var(--line2);background:var(--surface);box-shadow:0 0 0 2px var(--bg);color:var(--ink);display:flex;align-items:center;gap:10px" style-hover="background:var(--sunk)" style-focus="outline:2px solid var(--ink);outline-offset:2px">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.06em;color:var(--ink3)">LAYER</span>
+          <span>{{ basemapLabel }}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink3)">{{ layersCaret }}</span>
+        </button>
+        <dc-import name="DropdownMenu" open="{{ layersOpen }}" items="{{ layerItems }}" label="Basemap" align="left" direction="down" offset-top="{{ layersTop }}" min-width="{{ 208 }}" onClose="{{ closeLayers }}" theme="{{ theme }}" hint-size="208px,0px"></dc-import>
+      </span>
+    </div>
+
+    <div style="position:absolute;right:12px;bottom:12px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:11px 12px;display:flex;flex-direction:column;gap:7px;max-width:210px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.05em;color:var(--ink3)">MM/H</div>
+      <sc-for list="{{ legend }}" as="g" hint-placeholder-count="8">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="flex:none;width:13px;height:13px;border-radius:3px;background:{{ g.bg }};border:1px solid {{ g.border }};background-image:{{ g.hatch }};background-size:5px 5px"></span>
+          <span style="font-size:10.5px;color:var(--ink2);white-space:nowrap">{{ g.label }}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink3);margin-left:auto;white-space:nowrap">{{ g.range }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="flex:none;padding:16px 20px 20px;border-top:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;gap:12px">
+    <dc-import name="PrecipitationGraph" scenario="{{ scenario }}" density="expanded" height="{{ scrubH }}" onFrame="{{ onFrame }}" showCaption="{{ false }}" theme="{{ theme }}" hint-size="100%,110px"></dc-import>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.65;color:var(--ink3);max-width:70ch">{{ footnote }}</div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:700,&quot;height&quot;:560},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;s1&quot;,&quot;s2&quot;,&quot;s3&quot;,&quot;s4&quot;,&quot;s8&quot;,&quot;s9&quot;,&quot;partial&quot;,&quot;edge&quot;],&quot;default&quot;:&quot;s1&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;basemap&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;terrain&quot;,&quot;street&quot;,&quot;satellite&quot;,&quot;hybrid&quot;],&quot;default&quot;:&quot;terrain&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;insetTop&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:0,&quot;min&quot;:0,&quot;max&quot;:80,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Safe area&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;''|'light'|'dark'&quot;}}">
+// RadarMap — phase 2, and a confirmation layer only: it shows WHY the sentence
+// says what it says. Never the landing view, never a default tab, never the
+// largest thing on the verdict screen. You arrive here from "See why", and the
+// answer you came for is still in the header above.
+//
+// It mounts the SAME MapCanvas as the add-a-place picker and the SAME graph as
+// the verdict screen, at expanded density, where it drives the map frame. The
+// legend is generated from the palette constants — never from colours that
+// happen to arrive in a tile — so the map cannot disagree with the headline.
+class Component extends DCLogic {
+  state = {};
+  componentDidMount() {
+    if (!window.BYGE) this._t = setInterval(() => { if (window.BYGE) { clearInterval(this._t); this.forceUpdate(); } }, 40);
+    const el = this._pane;
+    if (el && window.ResizeObserver) {
+      this._ro = new ResizeObserver(() => {
+        const h = Math.round(el.getBoundingClientRect().height);
+        if (h && Math.abs(h - (this.state.paneH || 0)) > 1) this.setState({ paneH: h });
+      });
+      this._ro.observe(el);
+    }
+  }
+  componentWillUnmount() { clearInterval(this._t); if (this._ro) this._ro.disconnect(); }
+  renderVals() {
+    const B = window.BYGE, theme = this.props.theme ?? '';
+    const th = theme === 'dark' ? 'dark' : 'light';
+    const basemap = this.state.basemap ?? (this.props.basemap ?? 'muted');
+    const minutes = this.state.minutes ?? 0;
+    const legend = B ? B.BANDS.map(b => ({
+      bg: th === 'dark' ? b.dark : b.light, border: 'var(--line2)', hatch: 'none',
+      label: b.label, range: b.range
+    })).concat([
+      { bg: 'var(--nodata)', border: 'var(--nodata-line)', hatch: B.HATCH, label: 'no coverage', range: 'not observed' },
+      { bg: 'var(--dry)', border: 'var(--line2)', hatch: 'none', label: 'dry', range: 'observed dry' }
+    ]) : [];
+    const layersOpen = this.state.layersOpen ?? false;
+    return {
+      theme, scenario: this.props.scenario ?? 's1', basemap, legend,
+      maskWidth: 14, scrubH: 74,
+      // measured, for the same reason as RadarBrowseScreen
+      paneRef: (el) => { this._pane = el; },
+      paneH: this.state.paneH || 240,
+      // the basemap switcher floats over the map, so it needs the inset too
+      chromeTop: 12 + (this.props.insetTop ?? 0),
+      frameIndex: Math.max(0, Math.round(minutes / 5)),
+      // The four layers Kartverket actually serves. satellite/hybrid are not
+      // features we skipped -- Norge i bilder needs a signed agreement -- and
+      // offering an option we cannot serve is a promise we cannot keep.
+      basemapOptions: [
+        { key: 'muted', label: 'muted' }, { key: 'terrain', label: 'terrain' },
+        { key: 'detailed', label: 'detailed' }, { key: 'nautical', label: 'nautical' }
+      ],
+      // Same menu as the general radar screen: one trigger, not four buttons.
+      // It opens DOWNWARD here, because on this screen the control sits at the top.
+      layersOpen: layersOpen, layersCaret: layersOpen ? '\u2013' : '\u2304',
+      layersTop: 50,
+      basemapLabel: ({ muted: 'Muted', terrain: 'Terrain', detailed: 'Detailed', nautical: 'Nautical' })[basemap],
+      layerItems: [
+        { key: 'muted', label: 'Muted', note: 'greyscale topo · quietest under the overlay' },
+        { key: 'terrain', label: 'Terrain', note: 'shaded relief' },
+        { key: 'detailed', label: 'Detailed', note: 'scanned 1:50 000' },
+        { key: 'nautical', label: 'Nautical', note: 'official sea charts' }
+      ].map(o => ({ label: o.label, note: o.key === basemap ? o.note + ' · showing' : o.note, onPress: () => this.setState({ basemap: o.key }) })),
+      toggleLayers: () => this.setState({ layersOpen: !layersOpen }),
+      closeLayers: () => this.setState({ layersOpen: false }),
+      onBasemap: (k) => this.setState({ basemap: k }),
+      onFrame: (min) => this.setState({ minutes: min }),
+      footnote: (theme === 'dark'
+        ? 'Dark mode: MET renders these tiles light and has no dark equivalent, so the map stays a lit window inside dark chrome rather than a tinted version of someone else’s data. '
+        : '') + 'Hatched water is outside radar coverage — not dry, unobserved. The boundary follows individual radar ranges, so it is ragged rather than a tidy polygon.'
+    };
+  }
+}
+
+</script>
+</body>
+</html>

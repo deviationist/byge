@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="foundation.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root, [data-theme="light"] {
+    --surface:#FFF; --sunk:#EFEDE8; --ink:#15181B; --ink2:rgba(21,24,27,.62); --ink3:rgba(21,24,27,.40);
+    --line:rgba(21,24,27,.10); --line2:rgba(21,24,27,.18); --nodata:#FFF; --nodata-line:rgba(21,24,27,.28);
+  }
+  [data-theme="dark"] {
+    --surface:#16191C; --sunk:#1B1F22; --ink:#ECEEF0; --ink2:rgba(236,238,240,.60); --ink3:rgba(236,238,240,.38);
+    --line:rgba(236,238,240,.12); --line2:rgba(236,238,240,.20); --nodata:#2A2E31; --nodata-line:rgba(236,238,240,.30);
+  }
+</style>
+</helmet>
+<sc-if value="{{ shown }}" hint-placeholder-val="{{ true }}">
+  <div data-theme="{{ theme }}" style="display:flex;gap:14px;align-items:flex-start;border:1px solid var(--line2);border-radius:12px;padding:15px 16px;background:var(--sunk);font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink);width:100%">
+    <span style="flex:none;margin-top:2px;width:34px;height:34px;border-radius:8px;background:var(--nodata);border:1px solid var(--nodata-line);background-image:{{ hatch }};background-size:6px 6px;position:relative;overflow:hidden">
+      <span style="position:absolute;left:0;top:0;bottom:0;width:{{ seenPct }};background:var(--dry-fill)"></span>
+    </span>
+    <span style="display:flex;flex-direction:column;gap:5px">
+      <span style="font-size:13.5px;font-weight:500">{{ title }}</span>
+      <span style="font-size:12.5px;color:var(--ink2);line-height:1.5;max-width:46ch">{{ body }}</span>
+      <sc-if value="{{ hasAction }}" hint-placeholder-val="{{ false }}">
+        <span onClick="{{ onAction }}" style="cursor:pointer;margin-top:3px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink);border-bottom:1px solid var(--line2);align-self:flex-start;padding-bottom:2px">{{ actionLabel }}</span>
+      </sc-if>
+    </span>
+  </div>
+</sc-if>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:420,&quot;height&quot;:140},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;partial&quot;,&quot;s6&quot;,&quot;s1&quot;],&quot;default&quot;:&quot;partial&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;''|'light'|'dark'&quot;},&quot;onAction&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;}}">
+// CoverageNotice — the two honest answers about what we could see.
+//   blind      observed = 0     no reading at all for this coordinate
+//   partial    0 < observed < 1 the answer is drawn from less than you asked for
+// Both render in the same hatched language as the swatch and the map, so the
+// shortfall is visible and not only stated. Never dressed as an error: a fair
+// question about a real place deserves an answer, and "we cannot see" is one.
+class Component extends DCLogic {
+  componentDidMount() { if (!window.BYGE) this._t = setInterval(() => { if (window.BYGE) { clearInterval(this._t); this.forceUpdate(); } }, 40); }
+  componentWillUnmount() { clearInterval(this._t); }
+  renderVals() {
+    const B = window.BYGE, theme = this.props.theme ?? '';
+    if (!B) return { theme, shown: false };
+    const fx = B.FIXTURES[this.props.scenario ?? 'partial'], v = B.verdict(fx);
+    const pct = Math.round(v.observed * 100);
+    if (v.blind) return {
+      theme, shown: true, hatch: B.HATCH, seenPct: '0%',
+      title: 'Outside radar coverage',
+      body: 'The Nordic mosaic does not reach ' + fx.place + '. We have no observation here, so byge makes no claim — this is not the same as dry.',
+      hasAction: !!this.props.onAction, actionLabel: 'Choose somewhere else', onAction: this.props.onAction
+    };
+    if (v.partial) return {
+      theme, shown: true, hatch: B.HATCH, seenPct: pct + '%',
+      title: 'Radar sees ' + pct + '% of your area',
+      body: 'The rest of your ' + v.radius_km + ' km circle is outside coverage and is not counted either way — not as rain, not as dry. Shrink the radius to keep the answer inside what radar can see.',
+      hasAction: !!this.props.onAction, actionLabel: 'Adjust radius', onAction: this.props.onAction
+    };
+    return { theme, shown: false };
+  }
+}
+
+</script>
+</body>
+</html>

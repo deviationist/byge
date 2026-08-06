@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="foundation.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root, [data-theme="light"] { --surface:#FFF; --ink:#15181B; --ink2:rgba(21,24,27,.62); --ink3:rgba(21,24,27,.40); --line:rgba(21,24,27,.10); --line2:rgba(21,24,27,.18); --nodata:#FFF; --nodata-line:rgba(21,24,27,.28); }
+  [data-theme="dark"] { --surface:#16191C; --ink:#ECEEF0; --ink2:rgba(236,238,240,.60); --ink3:rgba(236,238,240,.38); --line:rgba(236,238,240,.12); --line2:rgba(236,238,240,.20); --nodata:#2A2E31; --nodata-line:rgba(236,238,240,.30); }
+</style>
+</helmet>
+<div data-theme="{{ theme }}" onPointerDown="{{ onDown }}" onPointerMove="{{ onMove }}" onPointerUp="{{ onUp }}" style="position:{{ posn }};inset:{{ inset }};width:100%;height:{{ selfH }};min-height:{{ minH }}px;overflow:hidden;background:{{ basemapBg }};cursor:{{ cursor }};touch-action:none">
+
+  <div ref="{{ fieldRef }}" style="position:absolute;inset:-40px;transform:translate({{ tx }}px,{{ ty }}px)">
+    <div style="position:absolute;inset:0;background-image:{{ terrainWash }}"></div>
+    <div style="position:absolute;inset:0;background-image:linear-gradient(90deg,{{ grat }} 1px,transparent 1px),linear-gradient({{ grat }} 1px,transparent 1px);background-size:{{ gridSize }}px {{ gridSize }}px"></div>
+
+    <sc-if value="{{ showRadar }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;inset:0;display:grid;grid-template-columns:repeat({{ cols }},{{ cell }}px);grid-auto-rows:{{ cell }}px">
+        <sc-for list="{{ cells }}" as="c" hint-placeholder-count="80">
+          <span style="background:{{ c.bg }};background-image:{{ c.hatch }};background-size:5px 5px;opacity:{{ c.op }}"></span>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ showOffBasemap }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;right:0;top:0;bottom:0;width:{{ offBasemapW }}%;background:var(--sunk);border-left:1px dashed var(--line2);display:flex;align-items:flex-start;justify-content:flex-end;padding:14px">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;line-height:1.6;color:var(--ink3);text-align:right;max-width:16ch">no basemap here · radar still valid</span>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ showMask }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;left:0;top:0;bottom:0;width:{{ maskW }}%;background:var(--nodata);background-image:{{ hatch }};background-size:6px 6px;opacity:.92;border-right:1px dashed var(--nodata-line)"></div>
+    </sc-if>
+  </div>
+
+
+  <sc-if value="{{ showCredit }}" hint-placeholder-val="{{ true }}">
+    <div style="position:absolute;left:12px;bottom:12px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink3);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:5px 8px">{{ credit }}</div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:700,&quot;height&quot;:460},&quot;basemap&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;muted&quot;,&quot;terrain&quot;,&quot;detailed&quot;,&quot;nautical&quot;],&quot;default&quot;:&quot;muted&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;s1&quot;,&quot;s2&quot;,&quot;s3&quot;,&quot;s4&quot;,&quot;s8&quot;,&quot;s9&quot;,&quot;partial&quot;,&quot;edge&quot;],&quot;default&quot;:&quot;s1&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;showRadar&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;frameIndex&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:0,&quot;min&quot;:0,&quot;max&quot;:23,&quot;tsType&quot;:&quot;number&quot;},&quot;cellSize&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:26,&quot;min&quot;:12,&quot;max&quot;:60,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;showMask&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;maskWidth&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:26,&quot;min&quot;:0,&quot;max&quot;:80,&quot;unit&quot;:&quot;%&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;offBasemapWidth&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:0,&quot;min&quot;:0,&quot;max&quot;:60,&quot;unit&quot;:&quot;%&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;pannable&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;showCredit&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;credit&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;© Kartverket&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;''|'light'|'dark'&quot;}}">
+// MapCanvas — the ONE map primitive. MapField (add-a-place, MVP) and RadarMap
+// (phase 2) both mount this; the picker needs a basemap, not weather on it, so
+// the radar layer is a prop rather than a second map.
+//
+// Standing in for MapLibre + Kartverket here: real tiles arrive in the build.
+// What is real in this comp is the geometry and the layer order — basemap,
+// coverage mask, radar, then unclipped chrome on top — plus the pan behaviour
+// the centre-pinned picker depends on.
+//
+// Dark mode, deliberately: MET renders the radar tiles light and there is no
+// dark equivalent. Rather than tint someone else's data until the scale lies,
+// the basemap stays light and the map is framed as a lit window inside dark
+// chrome.
+class Component extends DCLogic {
+  state = { x: 0, y: 0, w: 0, h: 0 };
+  componentDidMount() {
+    if (!window.BYGE) this._t = setInterval(() => { if (window.BYGE) { clearInterval(this._t); this.forceUpdate(); } }, 40);
+    // Radar cells must be SQUARE: a pixel of radar is a fixed area of ground, so
+    // a stretched cell misstates the shape of the band — the one thing the map
+    // is here to show. A fixed cell count in a variably-shaped box cannot be
+    // square, so measure and derive the count instead.
+    const el = this._field;
+    if (el && window.ResizeObserver) {
+      this._ro = new ResizeObserver(() => {
+        const r = el.getBoundingClientRect();
+        if (Math.abs(r.width - this.state.w) > 1 || Math.abs(r.height - this.state.h) > 1)
+          this.setState({ w: r.width, h: r.height });
+      });
+      this._ro.observe(el);
+    }
+  }
+  componentWillUnmount() { clearInterval(this._t); if (this._ro) this._ro.disconnect(); }
+
+  renderVals() {
+    const B = window.BYGE, theme = this.props.theme ?? '';
+    const th = theme === 'dark' ? 'dark' : 'light';
+    const bm = this.props.basemap ?? 'muted';
+    const pannable = this.props.pannable ?? true;
+    const x = this.state.x, y = this.state.y;
+
+    // The four layers that actually exist (map brief §5). satellite/hybrid are
+    // gone: Norge i bilder needs a signed agreement and the open gateways are
+    // dead, so offering them would be offering something we cannot serve.
+    // Muted is the default — a basemap under a data overlay should lose every
+    // argument with the data, and greyscale topo is the only one of the four
+    // that reliably does.
+    const washes = {
+      muted: 'radial-gradient(circle at 32% 42%,rgba(120,124,118,.22),transparent 62%),radial-gradient(circle at 70% 66%,rgba(136,138,130,.20),transparent 56%)',
+      terrain: 'radial-gradient(circle at 30% 40%,rgba(150,160,130,.30),transparent 60%),radial-gradient(circle at 70% 65%,rgba(170,160,140,.28),transparent 55%)',
+      detailed: 'radial-gradient(circle at 30% 40%,rgba(168,150,120,.26),transparent 58%),radial-gradient(circle at 68% 64%,rgba(150,140,116,.22),transparent 54%)',
+      nautical: 'radial-gradient(circle at 22% 34%,rgba(206,196,164,.62),transparent 42%),radial-gradient(circle at 76% 70%,rgba(206,196,164,.5),transparent 38%)'
+    };
+    const bgs = { muted: '#ECEAE6', terrain: '#E7E2D6', detailed: '#F2EDE2', nautical: '#DCE7EE' };
+    const dark = false;
+
+    // ~26 px is the density that reads as radar rather than as mosaic; the count
+    // follows the box so the cells stay square. Fallback counts only apply for
+    // the first frame, before the observer reports.
+    const cell = this.props.cellSize ?? 26;
+    const cols = Math.max(8, Math.ceil((this.state.w || 720) / cell));
+    const rows = Math.max(6, Math.ceil((this.state.h || 460) / cell));
+
+    let cells = [];
+    if (this.props.showRadar ?? false) {
+      const fx = B ? B.FIXTURES[this.props.scenario ?? 's1'] : null;
+      const v = fx ? B.verdict(fx) : null;
+      const idx = this.props.frameIndex ?? 0;
+      const frac = v ? Math.min(1, Math.max(0, idx / (v.frames.length - 1))) : 0;
+      const scale = v ? (v.frames[Math.round(frac * (v.frames.length - 1))].coverage + 0.25) : 1;
+      // The field is defined in NORMALISED coordinates and sampled onto whatever
+      // square grid fits, so the band keeps its shape and position at every size
+      // rather than being distorted by the container's aspect. The old weights
+      // (0.66 x, 1.05 y) existed only to undo the stretch; square cells make
+      // both 1, so the band is actually round.
+      for (let gy = 0; gy < rows; gy++) for (let gx = 0; gx < cols; gx++) {
+        const u = (gx + 0.5) / cols, vv = (gy + 0.5) / rows;
+        const cu = 0.22 + frac * 0.56, cv = 0.5 + Math.sin(frac * 3.1) * 0.15;
+        const ar = (cols * cell) / Math.max(1, rows * cell);
+        const d = Math.sqrt(Math.pow((u - cu) * ar, 2) + Math.pow(vv - cv, 2)) * 16;
+        const wob = Math.sin(u * 25 + vv * 10) * 0.9;
+        const rate = Math.max(0, (5.6 - d * 0.95 + wob)) * scale * (0.6 + 0.5 * Math.sin(vv * 7.2 + u * 6.2));
+        const band = B ? B.bandOf(rate) : null;
+        cells.push({ bg: band ? B.colorOf(rate, th) : 'transparent', hatch: 'none', op: band ? (band.i <= 2 ? '.8' : '.92') : '0' });
+      }
+    }
+
+    return {
+      theme, cells, cols, cell, showRadar: this.props.showRadar ?? false,
+      // FILL escapes the mount chain. Every host between a screen and this
+      // component is an auto-height block, so height:100% here has nothing to
+      // resolve against and the map collapses to its own floor no matter what the
+      // pane does. Absolute positioning resolves against the nearest POSITIONED
+      // ancestor -- the pane itself -- skipping those hosts entirely.
+      posn: (this.props.fill ?? false) ? 'absolute' : 'relative',
+      inset: (this.props.fill ?? false) ? '0' : 'auto',
+      selfH: (this.props.fill ?? false) ? 'auto' : '100%',
+      minH: (this.props.fill ?? false) ? 0 : (this.props.minHeight ?? 220),
+      fieldRef: (el) => { this._field = el; },
+      basemapBg: bgs[bm], terrainWash: washes[bm],
+      // The graticule IS the radar grid — same origin, same pitch — so a patch
+      // fills a square rather than floating across two. It reads as sampled
+      // data on a fixed grid, which is what radar is, instead of decoration
+      // laid under it at an unrelated size.
+      grat: dark ? 'rgba(255,255,255,.10)' : 'rgba(90,90,80,.13)', gridSize: cell,
+      tx: x, ty: y, cursor: pannable ? (this.state.drag ? 'grabbing' : 'grab') : 'default',
+      showMask: this.props.showMask ?? false, maskW: this.props.maskWidth ?? 26,
+      // Kartverket stops at the border but the radar mosaic reaches St Petersburg,
+      // so panning east puts real measurements over blank ground. Blank ground is
+      // itself a claim if it goes unnamed — it looks like the data ended. Drawn as
+      // a distinct neutral field that says the radar is still good here.
+      showOffBasemap: (this.props.offBasemapWidth ?? 0) > 0,
+      offBasemapW: this.props.offBasemapWidth ?? 0,
+      hatch: B ? B.HATCH : 'none',
+      showCredit: this.props.showCredit ?? true,
+      credit: this.props.credit ?? '© Kartverket',
+      onDown: pannable ? (e) => { this._p = { x: e.clientX, y: e.clientY }; this.setState({ drag: true }); if (e.target.setPointerCapture) e.target.setPointerCapture(e.pointerId); } : undefined,
+      onMove: pannable ? (e) => {
+        if (!this.state.drag || !this._p) return;
+        const nx = x + (e.clientX - this._p.x), ny = y + (e.clientY - this._p.y);
+        this._p = { x: e.clientX, y: e.clientY };
+        this.setState({ x: nx, y: ny });
+        if (this.props.onPan) this.props.onPan(nx, ny);
+      } : undefined,
+      onUp: pannable ? () => { this.setState({ drag: false }); this._p = null; } : undefined
+    };
+  }
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>*, *::before, *::after { box-sizing: border-box; }</style>
+</helmet>
+<svg viewBox="0 0 64 64" width="{{ px }}" height="{{ px }}" style="display:block;flex:none">
+  <defs>
+    <clipPath id="{{ cid }}"><rect x="0" y="0" width="64" height="64" rx="{{ rr }}" ry="{{ rr }}"></rect></clipPath>
+  </defs>
+  <g clipPath="url(#{{ cid }})">
+    <rect x="0" y="0" width="64" height="64" fill="{{ bg }}"></rect>
+    <g transform="rotate(-32 32 32)">
+      <sc-if value="{{ twoBands }}" hint-placeholder-val="{{ true }}">
+        <rect x="-24" y="{{ y1 }}" width="112" height="{{ h1 }}" fill="{{ band2 }}" opacity="0.75"></rect>
+      </sc-if>
+      <rect x="-24" y="{{ y2 }}" width="112" height="{{ h2 }}" fill="{{ band }}"></rect>
+    </g>
+    <circle cx="32" cy="32" r="{{ dotR }}" fill="{{ dot }}"></circle>
+    <sc-if value="{{ maskable }}" hint-placeholder-val="{{ false }}">
+      <circle cx="32" cy="32" r="25.6" fill="none" stroke="rgba(255,255,255,.4)" strokeDasharray="3 3" strokeWidth="0.8"></circle>
+    </sc-if>
+  </g>
+</svg>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:120,&quot;height&quot;:120},&quot;size&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:64,&quot;min&quot;:16,&quot;max&quot;:512,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;variant&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;standard&quot;,&quot;maskable&quot;,&quot;mono&quot;,&quot;favicon&quot;],&quot;default&quot;:&quot;standard&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;cut&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;auto&quot;,&quot;standard&quot;,&quot;small&quot;],&quot;default&quot;:&quot;auto&quot;,&quot;tsType&quot;:&quot;'auto'|'standard'|'small'&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'light'|'dark'&quot;}}">
+// BrandMark — a band crossing a point: the shower passes over where you are.
+// No cloud, no droplet. Two solid shapes and a dot, so it survives 16 px and
+// arbitrary Android masking.
+//
+// Small cut (≤40 px): one heavier band and a much larger dot. Below that size
+// the second band closes up and the dot disappears, which would lose the whole
+// idea of the mark at exactly the size the brief requires.
+// Maskable: REDRAWN at 68 % inset inside a full-bleed field — not the standard
+// icon with padding — so the crossing point stays centred under any mask.
+class Component extends DCLogic {
+  renderVals() {
+    const px = this.props.size ?? 64;
+    const variant = this.props.variant ?? 'standard';   // standard | maskable | mono | favicon
+    const theme = this.props.theme ?? 'light';
+    const maskable = variant === 'maskable';
+    const mono = variant === 'mono';
+    // The small cut is a legibility rule for icon sizes, so it must be requestable
+    // rather than inferred from whatever box a preview happens to use: a splash
+    // renders the mark at ~216 px in production but at 36 px in a scaled-down
+    // comp, and the comp must not show a different mark than the asset it names.
+    const cut = this.props.cut ?? 'auto';
+    const small = cut === 'small' || (cut === 'auto' && px <= 40 && !maskable);
+    const inset = maskable ? 0.68 : 1;
+    const g = k => 32 + (k - 32) * inset;
+    let bg = '#0B2A3A', band = '#00AAFF', band2 = '#0080FF', dot = '#F6F4F0';
+    if (mono) { bg = '#000'; band = '#FFF'; band2 = '#FFF'; dot = '#FFF'; }
+    else if (variant === 'favicon') {
+      if (theme === 'dark') { bg = '#0E1113'; band = '#7EC0FF'; band2 = '#3A9BC4'; dot = '#ECEEF0'; }
+      else { bg = '#F6F4F0'; band = '#0080FF'; band2 = '#00AAFF'; dot = '#15181B'; }
+    }
+    return {
+      px, cid: 'bm-' + variant + '-' + theme + '-' + px + '-' + (small ? 's' : 'n'), rr: maskable ? 0 : 14,
+      bg, band, band2, dot, maskable, twoBands: !small,
+      y1: g(19), h1: g(27) - g(19),
+      y2: g(small ? 36 : 38), h2: g(small ? 48 : 46) - g(small ? 36 : 38),
+      dotR: (small ? 9.6 : 6.2) * inset
+    };
+  }
+}
+
+</script>
+</body>
+</html>

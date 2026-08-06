@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root, [data-theme="light"] { --surface:#FFF; --sunk:#EFEDE8; --ink:#15181B; --ink2:rgba(21,24,27,.62); --line:rgba(21,24,27,.10); --line2:rgba(21,24,27,.18); }
+  [data-theme="dark"] { --surface:#16191C; --sunk:#1B1F22; --ink:#ECEEF0; --ink2:rgba(236,238,240,.60); --line:rgba(236,238,240,.12); --line2:rgba(236,238,240,.20); }
+</style>
+</helmet>
+<button data-theme="{{ theme }}" onClick="{{ onPress }}" title="{{ title }}" aria-haspopup="menu" aria-expanded="{{ open }}" aria-label="{{ title }}" style="flex:none;cursor:pointer;width:{{ size }}px;height:{{ size }}px;border-radius:11px;border:1px solid {{ border }};background:{{ background }};color:{{ color }};display:flex;flex-direction:{{ direction }};align-items:center;justify-content:center;gap:{{ gap }}px;padding:0" style-hover="color:var(--ink);border-color:var(--line2)" style-focus="outline:2px solid var(--ink);outline-offset:2px">
+  <span style="width:{{ dot }}px;height:{{ dot }}px;border-radius:50%;background:currentColor"></span>
+  <span style="width:{{ dot }}px;height:{{ dot }}px;border-radius:50%;background:currentColor"></span>
+  <span style="width:{{ dot }}px;height:{{ dot }}px;border-radius:50%;background:currentColor"></span>
+</button>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:120,&quot;height&quot;:90},&quot;orientation&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;vertical&quot;,&quot;horizontal&quot;],&quot;default&quot;:&quot;vertical&quot;,&quot;tsType&quot;:&quot;'vertical'|'horizontal'&quot;},&quot;open&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;size&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:44,&quot;min&quot;:36,&quot;max&quot;:56,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;dotSize&quot;:{&quot;editor&quot;:&quot;float&quot;,&quot;default&quot;:3.5,&quot;min&quot;:2,&quot;max&quot;:6,&quot;step&quot;:0.5,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;dotGap&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:3,&quot;min&quot;:2,&quot;max&quot;:6,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;title&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;More actions&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;''|'light'|'dark'&quot;},&quot;onPress&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;}}">
+// MoreButton — the ⋮ trigger, and only the trigger. No menu, no state: whoever
+// owns the menu owns the open state, so this stays usable anywhere a row or a
+// header needs one.
+//
+// Vertical by default. The convention is worth following rather than inventing:
+// vertical dots mean "this item's own actions" (a place, a row), horizontal mean
+// "this section's actions". byge's menu belongs to one saved place, so vertical.
+// 44 px square with 3.5 px dots — the dots are small, the target is not.
+class Component extends DCLogic {
+  renderVals() {
+    const vertical = (this.props.orientation ?? 'vertical') === 'vertical';
+    const open = this.props.open ?? false;
+    return {
+      theme: this.props.theme ?? '',
+      size: this.props.size ?? 44,
+      dot: this.props.dotSize ?? 3.5,
+      gap: this.props.dotGap ?? 3,
+      direction: vertical ? 'column' : 'row',
+      open, title: this.props.title ?? 'More actions',
+      background: open ? 'var(--sunk)' : 'transparent',
+      border: open ? 'var(--line2)' : 'var(--line)',
+      color: open ? 'var(--ink)' : 'var(--ink2)',
+      onPress: this.props.onPress
+    };
+  }
+}
+
+</script>
+</body>
+</html>

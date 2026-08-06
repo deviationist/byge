@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root, [data-theme="light"] { --ink:#15181B; --ink2:rgba(21,24,27,.62); --ink3:rgba(21,24,27,.40); --line2:rgba(21,24,27,.18); }
+  [data-theme="dark"] { --ink:#ECEEF0; --ink2:rgba(236,238,240,.60); --ink3:rgba(236,238,240,.38); --line2:rgba(236,238,240,.20); }
+  a.byge-att { color: var(--ink2); text-decoration: none; border-bottom: 1px solid var(--line2); }
+  a.byge-att:hover { color: var(--ink); }
+</style>
+</helmet>
+<div data-theme="{{ theme }}" style="font-family:'IBM Plex Mono',monospace;font-size:{{ size }}px;line-height:1.7;color:var(--ink3);letter-spacing:.02em;display:flex;flex-direction:column;gap:2px">
+  <span>Data from <a class="byge-att" href="https://www.met.no/" target="_blank">MET Norway</a> · <a class="byge-att" href="https://data.norge.no/nlod/en/2.0" target="_blank">NLOD 2.0</a> / <a class="byge-att" href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC BY 4.0</a></span>
+  <sc-if value="{{ showLong }}" hint-placeholder-val="{{ false }}">
+    <span style="color:var(--ink3)">Radar nowcast, yrwms-nordic. Not affiliated with, or endorsed by, MET Norway or NRK.</span>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:420,&quot;height&quot;:60},&quot;long&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;size&quot;:{&quot;editor&quot;:&quot;float&quot;,&quot;default&quot;:10,&quot;min&quot;:9,&quot;max&quot;:14,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;''|'light'|'dark'&quot;}}">
+// Attribution — a legal obligation, met in the open: present on every screen and
+// linked. It is NOT navigation, and nothing else hangs off it (About has its own
+// entry point in the nav bar).
+class Component extends DCLogic {
+  renderVals() {
+    return { theme: this.props.theme ?? '', size: this.props.size ?? 10, showLong: this.props.long ?? false };
+  }
+}
+
+</script>
+</body>
+</html>
