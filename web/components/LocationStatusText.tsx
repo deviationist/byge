@@ -86,8 +86,12 @@ export type Headline = {
  */
 function horizonPhrase(min: number): string {
   const h = Math.round(min / 60);
-  if (h >= 1 && Math.abs(min - h * 60) <= 10) return `${h} hour${h === 1 ? "" : "s"}`;
-  return `${min} min`;
+  // i18next plural rules rather than an inline ternary: English needs two forms
+  // here and other languages need more, which a `${n === 1 ? "" : "s"}` cannot
+  // express at all.
+  if (h >= 1 && Math.abs(min - h * 60) <= 10)
+    return i18next.t("status.horizonHours", { count: h });
+  return i18next.t("status.horizonMin", { count: min });
 }
 
 /**
@@ -135,19 +139,29 @@ function secondaryOf(v: Verdict): { text: string; clock: string | null } | null 
   const n = v.next;
   if (!v.rainingNow || !cur || !n) return null;
 
-  const tail = isOpenEnded(n)
-    ? // Still no number. The second spell can outlive the horizon too.
-      "and no end in sight after that"
-    : `lasting about ${durationMin(n, v.horizonMin)} min`;
-
   const gap = cur.endMin === null ? null : n.startMin - cur.endMin;
-  const between = gap !== null && gap > 0 ? ` — about ${gap} min of dry in between` : "";
+  const hasGap = gap !== null && gap > 0;
+  const open = isOpenEnded(n);
+  // Four whole sentences rather than a stem glued to two tails and an optional
+  // clause. Concatenating them would fix English word order into the table, and
+  // Norwegian does not put the gap clause in the same place.
+  const key = open
+    ? hasGap
+      ? "status.secondOpenGap"
+      : "status.secondOpenNoGap"
+    : hasGap
+      ? "status.secondClosedGap"
+      : "status.secondClosedNoGap";
 
   // Leads with the RELATIVE time, matching the primary spell. It used to lead
   // with the clock ("Then more from 19:15"), which made the second spell the
   // only place in the app where a time was absolute — the clock now sits
   // beneath, in the same treatment the primary uses.
-  const text = `Then more in about ${n.startMin} min${between}, ${tail}.`;
+  const text = i18next.t(key, {
+    start: n.startMin,
+    gap,
+    dur: durationMin(n, v.horizonMin),
+  });
   const end = n.endMin;
   const clock =
     isOpenEnded(n) || end === null ? null : `${clockAt(v, n.startMin)}-${clockAt(v, end)}`;
@@ -162,16 +176,14 @@ export function headlineOf(v: Verdict): Headline {
     // difference rather than trusting the phrase "no radar" to carry it.
     return {
       state: "blind",
-      lead: "No radar here.",
-      body: "We cannot see this place.",
+      lead: i18next.t("status.blindLead"),
+      body: i18next.t("status.blindBody"),
       bound: null,
       tail: "",
       clock: null,
       secondary: null,
       secondClock: null,
-      note:
-        'This is not "dry". We have no observation at all for this coordinate — so byge ' +
-        "makes no claim. Dry means we looked and saw nothing falling.",
+      note: i18next.t("status.blindNote"),
     };
   }
 
@@ -189,24 +201,19 @@ export function headlineOf(v: Verdict): Headline {
     // at 2 km inside a 20 km circle.
     const km = nearestKmOf(v);
     const edge = v.edgeOnly;
-    const lead = edge ? `Rain within ${km} km — not on you yet.` : "Raining.";
-    const edgeNote = edge
-      ? `Nothing is falling at your coordinate; the nearest cell is ${km} km off. It counts ` +
-        `because any rain touching the ${v.radiusKm} km circle you drew counts.`
-      : null;
+    const lead = edge ? i18next.t("status.edgeLead", { km }) : i18next.t("status.rainingLead");
+    const edgeNote = edge ? i18next.t("status.edgeNote", { km, radius: v.radiusKm }) : null;
 
     if (isOpenEnded(s)) {
-      const openNote =
-        `Still raining at the last frame we have. The spell outlives our ${v.horizonMin}-minute ` +
-        "horizon, so we cannot tell you when it stops — only that it has not by then.";
+      const openNote = i18next.t("status.rainingOpenNote", { horizon: v.horizonMin });
       return {
         state: edge ? "edge-only" : "raining-open",
         lead,
         // Deliberately empty: state 2 must not read as a variation on state 1's
         // sentence. The grammar changes, not just the value.
         body: "",
-        bound: "No end in sight",
-        tail: ` within the next ${horizonPhrase(v.horizonMin)}.`,
+        bound: i18next.t("status.noEndBound"),
+        tail: i18next.t("status.noEndTail", { horizon: horizonPhrase(v.horizonMin) }),
         // No clock. Naming a time here would contradict the sentence.
         clock: null,
         secondary,
@@ -218,10 +225,13 @@ export function headlineOf(v: Verdict): Headline {
     return {
       state: edge ? "edge-only" : "raining",
       lead,
-      body: `Stops in about ${s.endMin} min.`,
+      body: i18next.t("status.stops", { min: s.endMin }),
       bound: null,
       tail: "",
-      clock: s.endMin === null ? null : `around ${clockAt(v, s.endMin)}`,
+      clock:
+        s.endMin === null
+          ? null
+          : i18next.t("status.clockAround", { time: clockAt(v, s.endMin) }),
       secondary,
       secondClock,
       note: edgeNote,
@@ -235,25 +245,26 @@ export function headlineOf(v: Verdict): Headline {
     if (isOpenEnded(s)) {
       return {
         state: "incoming-open",
-        lead: "Dry.",
-        body: `Rain in about ${s.startMin} min, lasting `,
+        lead: i18next.t("status.dryLead"),
+        body: i18next.t("status.incomingOpenBody", { start: s.startMin }),
         // "at least N min" — the ONLY form this may take. Rendering the same
         // number bare would turn a floor into a forecast.
-        bound: `at least ${dur} min`,
-        tail: ".",
+        bound: i18next.t("status.incomingOpenBound", { dur }),
+        tail: i18next.t("status.incomingOpenTail"),
         clock: null,
         secondary: null,
         secondClock: null,
-        note:
-          `${dur} min is a floor, not a forecast: the band is still overhead when our ` +
-          `${horizonPhrase(v.horizonMin)} view ends. It could be twice that.`,
+        note: i18next.t("status.incomingOpenNote", {
+          dur,
+          horizon: horizonPhrase(v.horizonMin),
+        }),
       };
     }
 
     return {
       state: "incoming",
-      lead: "Dry.",
-      body: `Rain in about ${s.startMin} min, lasting about ${dur} min.`,
+      lead: i18next.t("status.dryLead"),
+      body: i18next.t("status.incomingBody", { start: s.startMin, dur }),
       bound: null,
       tail: "",
       clock: s.endMin === null ? null : `${clockAt(v, s.startMin)}-${clockAt(v, s.endMin)}`,
@@ -265,8 +276,8 @@ export function headlineOf(v: Verdict): Headline {
 
   return {
     state: "clear",
-    lead: "Dry.",
-    body: "Nothing approaching.",
+    lead: i18next.t("status.dryLead"),
+    body: i18next.t("status.clearBody"),
     bound: null,
     tail: "",
     clock: null,
@@ -277,9 +288,7 @@ export function headlineOf(v: Verdict): Headline {
     // one flat assertion; the near term is solid, the tail is indicative. The
     // confidence badge stays high because the OBSERVATION is certain — so the
     // decay has to be carried here, in the prose, or it is carried nowhere.
-    note:
-      "The next ~30 min are a confident call. " +
-      `Radar sees no rain through +${v.horizonMin} min, but that far out is indicative only.`,
+    note: i18next.t("status.clearNote", { horizon: v.horizonMin }),
   };
 }
 
@@ -291,32 +300,40 @@ export function headlineOf(v: Verdict): Headline {
  * verdict from this string alone, with the swatch adding nothing they need.
  */
 export function statusLine(v: Verdict): string {
-  if (isBlindVerdict(v)) return "No radar coverage — we cannot see here";
+  if (isBlindVerdict(v)) return i18next.t("compact.blind");
 
   const parts: string[] = [];
 
   if (v.rainingNow && v.current) {
     const s = v.current;
-    parts.push(v.edgeOnly ? `Rain within ${nearestKmOf(v)} km · not on you yet` : "Raining");
+    parts.push(
+      v.edgeOnly
+        ? i18next.t("compact.edge", { km: nearestKmOf(v) })
+        : i18next.t("compact.raining"),
+    );
     // Still no number for an unknown end, even in the compact form.
-    parts.push(isOpenEnded(s) ? "no end in sight →" : `stops in about ${s.endMin} min`);
-    if (v.next) parts.push(`then more from about ${v.next.startMin} min`);
-    return parts.join(" · ");
+    parts.push(
+      isOpenEnded(s)
+        ? i18next.t("compact.noEnd")
+        : i18next.t("compact.stops", { min: s.endMin }),
+    );
+    if (v.next) parts.push(i18next.t("compact.thenMore", { start: v.next.startMin }));
+    return parts.join(i18next.t("compact.separator"));
   }
 
   if (v.next) {
     const s = v.next;
     const dur = durationMin(s, v.horizonMin);
-    parts.push("Dry");
+    parts.push(i18next.t("compact.dry"));
     parts.push(
       isOpenEnded(s)
-        ? `rain in about ${s.startMin} min, at least ${dur} min →`
-        : `rain in about ${s.startMin} min, about ${dur} min`,
+        ? i18next.t("compact.incomingOpen", { start: s.startMin, dur })
+        : i18next.t("compact.incoming", { start: s.startMin, dur }),
     );
-    return parts.join(" · ");
+    return parts.join(i18next.t("compact.separator"));
   }
 
-  return "Dry · nothing approaching";
+  return i18next.t("compact.clear");
 }
 
 export type LocationStatusTextProps = {
