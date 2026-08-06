@@ -350,6 +350,7 @@
     "darkNote": "Dark mode: MET renders these tiles light and has no dark equivalent, so the map stays a lit window inside dark chrome rather than a tinted version of someone else's data.",
     "unavailable": "Could not load the radar field. The verdict above is unaffected — it was already fetched.",
     "seeWhy": "See why — radar map",
+    "seeWhyFor": "See why — radar map for {{name}}",
     "window": "The dashed rectangle is how much radar we asked for around this place. Beyond it we have not looked — which is not the same as clear.",
     "play": "Play the next two hours",
     "pause": "Pause",

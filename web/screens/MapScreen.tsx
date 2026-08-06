@@ -24,7 +24,7 @@ const START_ZOOM = 7;
 /**
  * The radar, with no place in mind.
  *
- * A DIFFERENT SCREEN FROM `/location/<id>/map`, not a generalisation of it, and
+ * A DIFFERENT SCREEN FROM `/map/<id>`, not a generalisation of it, and
  * the difference is what you arrive with. That one answers "why does my place
  * say what it says" — it is anchored, it is reached from a sentence, and the
  * sentence is still the answer. This one answers "what is the weather doing",

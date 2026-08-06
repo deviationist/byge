@@ -350,6 +350,7 @@
     "darkNote": "Mørk modus: MET lager disse flisene lyse og har ingen mørk variant, så kartet blir stående som et opplyst vindu i mørk ramme i stedet for en tonet versjon av andres data.",
     "unavailable": "Fikk ikke lastet radarfeltet. Svaret over er upåvirket — det var allerede hentet.",
     "seeWhy": "Se hvorfor — radarkart",
+    "seeWhyFor": "Se hvorfor — radarkart for {{name}}",
     "window": "Den stiplede firkanten viser hvor mye radar vi ba om rundt dette stedet. Utenfor har vi ikke sett etter — som ikke er det samme som klart.",
     "play": "Spill av de neste to timene",
     "pause": "Sett på pause",
