@@ -4,6 +4,7 @@ import { isWet } from "../lib/forecast";
 import { type Frame, isBlind } from "../lib/radar";
 import { BANDS, bandOf, colorOf, describeRate, NOTICEABLE } from "../lib/scale";
 import { HATCH, MONO } from "../theme/tokens";
+import { Hatch } from "./Hatch";
 import type { Theme } from "../theme/useTheme";
 
 /**
@@ -253,7 +254,9 @@ export function PrecipitationGraph({
               onPress={() => onScrub(i)}
               className={barClass}
               style={style}
-            />
+            >
+              {bar.backgroundImage ? <Hatch size={d.stripHeight} /> : null}
+            </Pressable>
           ) : (
             <View
               key={key}
@@ -261,7 +264,9 @@ export function PrecipitationGraph({
               accessibilityLabel={bar.label}
               className={barClass}
               style={style}
-            />
+            >
+              {bar.backgroundImage ? <Hatch size={d.stripHeight} /> : null}
+            </View>
           );
         })}
 

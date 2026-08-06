@@ -2,6 +2,7 @@ import { View } from "react-native";
 import type { Verdict } from "../lib/forecast";
 import { bandOf, colorOf, NOTICEABLE } from "../lib/scale";
 import { HATCH } from "../theme/tokens";
+import { Hatch } from "./Hatch";
 import type { Theme } from "../theme/useTheme";
 
 /**
@@ -77,10 +78,14 @@ export function Swatch({ mode, rate = 0, size = 13, theme }: SwatchProps) {
       role="img"
       className={shape.className}
       style={[
+        // `backgroundImage` paints the hatch on web and is inert on native,
+        // where <Hatch /> draws the same pattern from the same numbers.
         { width: size, height: size, borderRadius: radius, flexShrink: 0 },
         shape.style,
         mode === "blind" ? ({ backgroundImage: HATCH } as object) : null,
       ]}
-    />
+    >
+      {mode === "blind" ? <Hatch size={size} /> : null}
+    </View>
   );
 }
