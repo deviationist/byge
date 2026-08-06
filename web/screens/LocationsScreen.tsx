@@ -1,12 +1,11 @@
 import { useRouter } from "expo-router";
-import { useTranslation } from "react-i18next";
 import { View } from "react-native";
+import { AddPlaceCard } from "../components/AddPlaceCard";
 import { Attribution } from "../components/Attribution";
-import { Button } from "../components/Button";
 import { EmptyState } from "../components/EmptyState";
 import { InstallPrompt } from "../components/InstallPrompt";
+import { ListHeader } from "../components/ListHeader";
 import { LocationsList } from "../components/LocationsList";
-import { NavBar } from "../components/NavBar";
 import { PrecipitationLegend } from "../components/PrecipitationLegend";
 import { useInstallPrompt } from "../hooks/useInstallPrompt";
 import { useLocations } from "../hooks/useLocations";
@@ -34,7 +33,6 @@ export type LocationsScreenProps = {
 
 export function LocationsScreen({ selectedId, onSelect }: LocationsScreenProps = {}) {
   const router = useRouter();
-  const { t } = useTranslation();
   const theme = useResolvedTheme();
   const { locations } = useLocations();
   const { data: verdicts } = useVerdicts(locations);
@@ -45,6 +43,10 @@ export function LocationsScreen({ selectedId, onSelect }: LocationsScreenProps =
   // Deriving rows from verdicts made every saved place disappear behind the
   // first-run welcome until the first fetch resolved.
   const items = locations.map((l) => ({ ...l, verdict: verdicts?.[l.id] }));
+
+  // Every verdict is cut from the SAME MET analysis, so any one of them dates
+  // all of them — no need to reduce over the set looking for the oldest.
+  const age = items.find((i) => i.verdict)?.verdict?.analysisAgeMin;
 
   // Two distinct empty states. First run is a welcome; the one after removing
   // your last place confirms what you did and makes no pitch.
@@ -62,17 +64,13 @@ export function LocationsScreen({ selectedId, onSelect }: LocationsScreenProps =
 
   return (
     <Screen>
-      <NavBar
-        trailing={
-          <Button
-            label={t("nav.about")}
-            variant="ghost"
-            onPress={() => router.push("/about")}
-          />
-        }
-      >
-        <View />
-      </NavBar>
+      {/*
+        The masthead replaces a nav bar. The design puts no bar on this screen
+        at all — it is the root, so there is nothing to go back to, and About
+        lives in the attribution line at the foot where the other legal text is.
+        A bar holding one ghost button was furniture around an empty slot.
+      */}
+      <ListHeader count={locations.length} ageMin={age} compact={!!onSelect} />
 
       {install.available ? (
         <InstallPrompt theme={theme} onInstall={install.prompt} onDismiss={install.dismiss} />
@@ -84,20 +82,13 @@ export function LocationsScreen({ selectedId, onSelect }: LocationsScreenProps =
         selectedId={selectedId}
         onSelect={onSelect ?? ((id) => router.push(`/location/${id}`))}
         empty={empty}
-        footer={
-          <Button
-            label={t("nav.addPlace")}
-            variant="secondary"
-            block
-            onPress={() => router.push("/add")}
-          />
-        }
+        footer={<AddPlaceCard compact={!!onSelect} onPress={() => router.push("/add")} />}
       />
 
       {items.length > 0 ? <PrecipitationLegend theme={theme} /> : null}
 
       <View style={{ marginTop: "auto", paddingTop: 24 }}>
-        <Attribution />
+        <Attribution onAbout={() => router.push("/about")} />
       </View>
     </Screen>
   );

@@ -22,7 +22,8 @@
     "about": "About",
     "back": "Back",
     "backToPlaces": "Back to places",
-    "addPlace": "+ Add a place"
+    "addPlace": "+ Add a place",
+    "aboutByge": "About byge"
   },
   "install": {
     "body": "Keep byge one tap away — add it to your home screen. Works offline with the last verdict.",
@@ -77,7 +78,13 @@
     "outline": "Outline",
     "outlineBody": "Dry now, but a spell is on the way within the next two hours.",
     "hatched": "Hatched",
-    "hatchedBody": "Outside radar coverage — we have no observation at all."
+    "hatchedBody": "Outside radar coverage — we have no observation at all.",
+    "ramp": "HOW HARD · MM/H",
+    "dry": "dry",
+    "dryFeels": "we looked, nothing is falling",
+    "dryRange": "observed",
+    "notObserved": "NOT OBSERVED",
+    "notObservedBody": "Hatching is not a level of rain and it is not dry. It means the radar mosaic cannot see that place at all, so byge makes no claim either way. Dry means we looked and saw nothing falling; hatched means we could not look."
   },
   "field": {
     "coordHint": "Four decimals max — MET rejects anything finer. That is about 11 m, far inside a single 1 km radar cell, so nothing is lost."
@@ -125,7 +132,8 @@
     "edit": "Edit place",
     "editHint": "coordinate, radius and name",
     "remove": "Remove place",
-    "removeHint": "cannot be undone"
+    "removeHint": "cannot be undone",
+    "moreFor": "More for {{name}}"
   },
   "map": {
     "pick": "Pick a place — pan the map to move the marker",
@@ -200,5 +208,15 @@
     "removed": "Removed {{name}}.",
     "removedShowing": "Removed {{name}}. Showing {{showing}}.",
     "dismiss": "{{message}} Tap to dismiss."
+  },
+  "list": {
+    "places_one": "{{count}} place",
+    "places_other": "{{count}} places",
+    "justNow": "updated just now",
+    "updatedAge": "updated {{age}} min ago",
+    "offlineAge": "last updated {{age}} min ago · offline",
+    "checking": "checking…",
+    "caption": "{{places}} · {{freshness}}",
+    "key": "FILLED = RAINING NOW · OUTLINE = ON THE WAY · HATCHED = NOT OBSERVED"
   }
 }

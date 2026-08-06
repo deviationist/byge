@@ -382,7 +382,14 @@ export function LocationStatusText({
     );
   }
 
-  const line = { fontSize: size, lineHeight: size * 1.04, letterSpacing: size * -0.015 };
+  const line = {
+    fontSize: size,
+    lineHeight: size * 1.04,
+    letterSpacing: size * -0.015,
+    // Newsreader is loaded as a 200-400 variable face; without an explicit
+    // weight it renders at 400 and the headline sits heavier than the design.
+    fontWeight: "300" as const,
+  };
 
   // Clock is 0.28x the headline, floored at 11 px. The floor matters: the old
   // 0.22x/9.5 px made it caption-sized, and this is something people plan
@@ -476,7 +483,10 @@ export function LocationStatusText({
       {h.note ? (
         <View testID="status-note" style={{ flexDirection: "row", gap: 10, maxWidth: 420 }}>
           <View className="bg-line2" style={{ width: 2, borderRadius: 1 }} aria-hidden />
-          <Text className="text-ink2" style={{ flex: 1, fontSize: 11.5, lineHeight: 19 }}>
+          <Text
+            className="text-ink2 font-mono"
+            style={{ flex: 1, fontSize: 11, lineHeight: 18 }}
+          >
             {h.note}
           </Text>
         </View>
