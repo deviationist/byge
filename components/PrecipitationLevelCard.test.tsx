@@ -126,11 +126,14 @@ describe("PrecipitationLevelCard rendering", () => {
   });
 
   it("draws incoming rain as a ring, matching the list row", () => {
-    // react-native-web expands the border shorthand and normalises transparent.
     const v = verdictLike({});
     v.frames[12].maxRate = 3.4;
     render(<PrecipitationLevelCard verdict={v} theme="light" />);
-    expect(swatch().style.backgroundColor).toBe("rgba(0, 0, 0, 0)");
+    // Unfilled centre via token class; the ring itself keeps its resolved
+    // assertion because the band colour comes from lib/scale.ts and stays
+    // inline. react-native-web expands the border shorthand to longhands.
+    expect(swatch().className).toContain("bg-transparent");
+    expect(swatch().style.backgroundColor).toBe("");
     expect(swatch().style.borderTopColor).toBe("rgb(0, 128, 255)");
   });
 

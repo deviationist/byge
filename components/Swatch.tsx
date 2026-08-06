@@ -56,37 +56,29 @@ export function Swatch({ mode, rate = 0, size = 13, theme }: SwatchProps) {
   const color = colorOf(bandOf(rate), theme);
   const radius = Math.max(2, Math.round(size * 0.24));
 
+  // Band colour comes from lib/scale.ts as a real value and STAYS inline: it is
+  // computed per rate, and the same values drive canvas and SVG fills where no
+  // class can reach. Only the chrome around it — the hairline, the dry fill,
+  // the not-observed fill — is a token, so only that becomes a class.
   const shape = {
-    now: {
-      backgroundColor: color,
-      borderWidth: 1,
-      borderColor: "var(--color-line2)",
-    },
+    now: { className: "border-line2", style: { backgroundColor: color, borderWidth: 1 } },
     later: {
-      backgroundColor: "transparent",
+      className: "bg-transparent",
       // Scales with size so the ring stays legible at 11px and at 24px.
-      borderWidth: Math.max(2, Math.round(size * 0.2)),
-      borderColor: color,
+      style: { borderWidth: Math.max(2, Math.round(size * 0.2)), borderColor: color },
     },
-    dry: {
-      backgroundColor: "var(--color-dry)",
-      borderWidth: 1,
-      borderColor: "var(--color-line2)",
-    },
-    blind: {
-      backgroundColor: "var(--color-nodata)",
-      borderWidth: 1,
-      borderColor: "var(--color-nodata-line)",
-    },
+    dry: { className: "bg-dry border-line2", style: { borderWidth: 1 } },
+    blind: { className: "bg-nodata border-nodata-line", style: { borderWidth: 1 } },
   }[mode];
 
   return (
     <View
       accessibilityLabel={TITLES[mode]}
       role="img"
+      className={shape.className}
       style={[
         { width: size, height: size, borderRadius: radius, flexShrink: 0 },
-        shape,
+        shape.style,
         mode === "blind" ? ({ backgroundImage: HATCH } as object) : null,
       ]}
     />
