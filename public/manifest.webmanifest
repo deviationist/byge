@@ -9,10 +9,7 @@
   "orientation": "any",
   "background_color": "#F6F4F0",
   "theme_color": "#F6F4F0",
-  "categories": [
-    "weather",
-    "utilities"
-  ],
+  "categories": ["weather", "utilities"],
   "icons": [
     {
       "src": "/icons/icon-192.png",

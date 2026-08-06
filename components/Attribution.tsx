@@ -53,15 +53,33 @@ export function Attribution() {
     >
       <Text className="text-ink3" style={base}>
         Data from{" "}
-        <Link href={MET} hrefAttrs={OPEN_AWAY} accessibilityRole="link" className="text-ink3" style={link}>
+        <Link
+          href={MET}
+          hrefAttrs={OPEN_AWAY}
+          accessibilityRole="link"
+          className="text-ink3"
+          style={link}
+        >
           MET Norway
         </Link>{" "}
         ·{" "}
-        <Link href={NLOD} hrefAttrs={OPEN_AWAY} accessibilityRole="link" className="text-ink3" style={link}>
+        <Link
+          href={NLOD}
+          hrefAttrs={OPEN_AWAY}
+          accessibilityRole="link"
+          className="text-ink3"
+          style={link}
+        >
           NLOD 2.0
         </Link>{" "}
         /{" "}
-        <Link href={CC_BY} hrefAttrs={OPEN_AWAY} accessibilityRole="link" className="text-ink3" style={link}>
+        <Link
+          href={CC_BY}
+          hrefAttrs={OPEN_AWAY}
+          accessibilityRole="link"
+          className="text-ink3"
+          style={link}
+        >
           CC BY 4.0
         </Link>
       </Text>

@@ -62,13 +62,12 @@ export function CoverageNotice({ observed, theme }: CoverageNoticeProps) {
   return (
     <View
       role="note"
+      className={`bg-surface ${blind ? "border-nodata-line" : "border-line2"}`}
       style={{
         flexDirection: "row",
         alignItems: "flex-start",
         gap: 12,
-        backgroundColor: "var(--color-surface)",
         borderWidth: 1,
-        borderColor: blind ? "var(--color-nodata-line)" : "var(--color-line2)",
         borderRadius: 12,
         paddingVertical: 13,
         paddingHorizontal: 15,
@@ -86,19 +85,20 @@ export function CoverageNotice({ observed, theme }: CoverageNoticeProps) {
           <>
             <Text
               accessibilityRole="header"
-              style={{ fontSize: 14, lineHeight: 20, color: "var(--color-ink)" }}
+              className="text-ink"
+              style={{ fontSize: 14, lineHeight: 20 }}
             >
               No radar coverage — we cannot see this place.
             </Text>
             {/* The single most important sentence in this component. Without it
                 a reader fills the silence with "so it must be fine". */}
-            <Text style={{ fontSize: 12.5, lineHeight: 20, color: "var(--color-ink2)" }}>
+            <Text className="text-ink2" style={{ fontSize: 12.5, lineHeight: 20 }}>
               That is not the same as dry: we have no observation at all, so byge makes no claim
               either way.
             </Text>
           </>
         ) : (
-          <Text style={{ fontSize: 12.5, lineHeight: 20, color: "var(--color-ink2)" }}>
+          <Text className="text-ink2" style={{ fontSize: 12.5, lineHeight: 20 }}>
             Radar sees only {observedPercent(observed)}% of your area — the rest is outside
             coverage and not included either way.
           </Text>

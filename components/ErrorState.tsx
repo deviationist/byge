@@ -37,26 +37,21 @@ export function ErrorState({ variant = "full", onRetry, detail }: ErrorStateProp
     return (
       <View
         role="status"
+        className="border-line2"
         style={{
           flexDirection: "row",
           alignItems: "center",
           flexWrap: "wrap",
           gap: 10,
           borderWidth: 1,
-          borderColor: "var(--color-line2)",
           borderRadius: 12,
           paddingVertical: 10,
           paddingHorizontal: 14,
         }}
       >
         <Text
-          style={{
-            flex: 1,
-            minWidth: 180,
-            fontSize: 12.5,
-            lineHeight: 20,
-            color: "var(--color-ink2)",
-          }}
+          className="text-ink2"
+          style={{ flex: 1, minWidth: 180, fontSize: 12.5, lineHeight: 20 }}
         >
           {INLINE_BODY}
         </Text>
@@ -68,31 +63,30 @@ export function ErrorState({ variant = "full", onRetry, detail }: ErrorStateProp
   return (
     <View
       role="alert"
+      className="bg-surface border-line2"
       style={{
         gap: 14,
-        backgroundColor: "var(--color-surface)",
         borderWidth: 1,
-        borderColor: "var(--color-line2)",
         borderRadius: 16,
         padding: 22,
       }}
     >
       <Text
         accessibilityRole="header"
-        style={{ fontSize: 22, lineHeight: 28, letterSpacing: -0.3, color: "var(--color-ink)" }}
+        className="text-ink"
+        style={{ fontSize: 22, lineHeight: 28, letterSpacing: -0.3 }}
       >
         {FULL_TITLE}
       </Text>
-      <Text style={{ fontSize: 13.5, lineHeight: 22, color: "var(--color-ink2)" }}>
+      <Text className="text-ink2" style={{ fontSize: 13.5, lineHeight: 22 }}>
         {FULL_BODY}
       </Text>
       {detail ? (
         <Text
+          className="text-ink3 bg-sunk"
           style={{
             fontSize: 10.5,
             lineHeight: 18,
-            color: "var(--color-ink3)",
-            backgroundColor: "var(--color-sunk)",
             borderRadius: 9,
             paddingVertical: 11,
             paddingHorizontal: 13,

@@ -27,12 +27,11 @@ export function AboutScreen() {
   const router = useRouter();
   const { choice, choose } = useThemeContext();
 
-  const body = { fontSize: 14, lineHeight: 23, color: "var(--color-ink2)" } as const;
+  const body = { fontSize: 14, lineHeight: 23 } as const;
   const note = {
     fontFamily: MONO,
     fontSize: 11,
     lineHeight: 19,
-    color: "var(--color-ink3)",
   } as const;
 
   return (
@@ -43,10 +42,12 @@ export function AboutScreen() {
 
       <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
         <BrandMark size={52} />
-        <Text style={note}>byge /ˈbyːɡə/{"\n"}Norwegian: a passing shower.</Text>
+        <Text className="text-ink3" style={note}>
+          byge /ˈbyːɡə/{"\n"}Norwegian: a passing shower.
+        </Text>
       </View>
 
-      <Text style={{ fontSize: 19, lineHeight: 29, color: "var(--color-ink)" }}>
+      <Text className="text-ink" style={{ fontSize: 19, lineHeight: 29 }}>
         byge reads MET Norway’s radar nowcast for your exact coordinate and tells you whether it
         is raining, and for how long. Nothing else.
       </Text>
@@ -62,16 +63,16 @@ export function AboutScreen() {
       </Section>
 
       <Section title="How it works">
-        <Text style={body}>
+        <Text className="text-ink2" style={body}>
           Forecast frames are advection-only: the measured rain field slides along measured
           motion. Cells do not grow or die, so far-out frames are weaker — which is what the
           confidence marker tells you.
         </Text>
-        <Text style={body}>
+        <Text className="text-ink2" style={body}>
           The horizon is 115 minutes. When a spell is still going at the horizon, byge reports a
           lower bound and says so. It will never round an unknown into a number.
         </Text>
-        <Text style={body}>
+        <Text className="text-ink2" style={body}>
           Where the radar cannot see, byge says so rather than saying “dry”. Those are different
           claims.
         </Text>
@@ -79,7 +80,9 @@ export function AboutScreen() {
 
       <Section title="Data">
         <Attribution />
-        <Text style={note}>Not affiliated with, or endorsed by, MET Norway or NRK.</Text>
+        <Text className="text-ink3" style={note}>
+          Not affiliated with, or endorsed by, MET Norway or NRK.
+        </Text>
       </Section>
     </Screen>
   );
