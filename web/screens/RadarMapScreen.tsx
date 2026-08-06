@@ -221,7 +221,13 @@ export function RadarMapScreen() {
           <>
             <PlaybackControl
               playing={playing}
-              onToggle={() => setPlaying((p) => !p)}
+              atEnd={frame >= frameCount - 1}
+              onToggle={() => {
+                // At the horizon there is nowhere further to go, so play means
+                // start again rather than nothing at all.
+                if (!playing && frame >= frameCount - 1) setFrame(0);
+                setPlaying((p) => !p);
+              }}
               minutes={frames[frame]?.minutes ?? 0}
             />
             <PrecipitationGraph

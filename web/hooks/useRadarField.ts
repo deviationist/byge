@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { type BandField, decodeField, strideForZoom } from "../lib/fieldFormat";
+import { type BandField, decodeField } from "../lib/fieldFormat";
 import { cellOf, NX, NY } from "../lib/grid";
 import { API_BASE, CLIENT_KEY, latestAnalysis } from "../lib/opendap";
 
@@ -21,15 +21,13 @@ import { API_BASE, CLIENT_KEY, latestAnalysis } from "../lib/opendap";
  * national scale you want to see the weather move, and at street scale you want
  * the detail.
  */
-const MAX_VALUES = 380_000; // just under the proxy's 400k, leaving room to round
-
-/**
- * Frames worth having before detail is spent on.
- *
- * Twelve is an hour of motion at five-minute steps — enough to see which way a
- * band is going, which is the question a map answers that a sentence cannot.
- */
-const TARGET_FRAMES = 12;
+// Just under the proxy's FieldMaxValues, leaving room to round.
+//
+// Far larger than the raw-float budget because this endpoint sends one gzipped
+// byte per cell rather than a float32 — measured at about a twentieth of the
+// size. Three million values is ~150 KB on the wire, and it is what lets a
+// national view sample at 2 km instead of 5.
+const MAX_VALUES = 4_000_000;
 
 export type FieldRequest = {
   /** Viewport centre. */
@@ -81,44 +79,33 @@ export function useRadarField(req: FieldRequest | null) {
  */
 export function planWindow(req: FieldRequest) {
   // How many 1 km cells the viewport covers, plus a margin so a small pan does
-  // not immediately expose an edge. A quarter-screen each way: half was chosen
-  // first and it doubled the window's area for a flick nobody makes.
+  // not immediately expose an edge.
   const mpp = (156543.03392 * Math.cos((req.lat * Math.PI) / 180)) / 2 ** req.zoom;
-  const cellsWide = Math.ceil((req.width * mpp) / 1000);
-  const cellsHigh = Math.ceil((req.height * mpp) / 1000);
-  const spanCols = Math.ceil(cellsWide * 1.5);
-  const spanRows = Math.ceil(cellsHigh * 1.5);
-
-  // Two things want a say in the sampling, and the budget has the final one.
-  //
-  //  - the SCREEN: no point sending four samples for one pixel.
-  //  - the BUDGET: the proxy caps frames × rows × cols, and a national view is
-  //    hundreds of thousands of cells before any frames are asked for. Sizing
-  //    for pixels alone is what made the first national request ask for 1.3
-  //    million values and get a 400.
-  //
-  // Solving for frames rather than for detail is deliberate. A radar map's
-  // value is watching the band MOVE; a sharper still picture of one moment is
-  // the worse trade, so the stride is chosen to afford a useful run of frames
-  // and the resolution takes what is left.
-  const byPixels = strideForZoom(req.zoom, req.lat);
-  const byBudget = Math.ceil(Math.sqrt((spanRows * spanCols * TARGET_FRAMES) / MAX_VALUES));
-  const stride = clamp(Math.max(byPixels, byBudget), 1, 64);
+  const spanCols = Math.ceil((req.width * mpp * 1.5) / 1000);
+  const spanRows = Math.ceil((req.height * mpp * 1.5) / 1000);
 
   const { row, col } = safeCell(req.lat, req.lon);
   const row0 = clamp(row - Math.floor(spanRows / 2), 0, NY - 1);
   const col0 = clamp(col - Math.floor(spanCols / 2), 0, NX - 1);
-  const rows = Math.max(
-    1,
-    Math.min(Math.ceil(spanRows / stride), Math.ceil((NY - row0) / stride)),
-  );
-  const cols = Math.max(
-    1,
-    Math.min(Math.ceil(spanCols / stride), Math.ceil((NX - col0) / stride)),
-  );
 
-  // Whatever the budget buys after the area is settled. Always at least one — a
-  // still picture of now beats no picture — and never more than MET publishes.
+  // FULL RESOLUTION, ALWAYS. Every cell, at every zoom — a 1 km sample is what
+  // the radar measures, and a map that quietly coarsens as you zoom out is
+  // showing you a different instrument than the one it names.
+  //
+  // Sampling used to follow the zoom, which made a national view 5 km blocks.
+  // That was solving the wrong problem: MET decompresses a whole frame however
+  // few cells you ask for, so a coarse stride never saved the SERVER anything —
+  // it only sent fewer bytes, and bytes are the cheap part after quantising.
+  //
+  // The window still bounds itself, because it cannot exceed the grid.
+  const stride = 1;
+  const rows = Math.max(1, Math.min(spanRows, NY - row0));
+  const cols = Math.max(1, Math.min(spanCols, NX - col0));
+
+  // So FRAMES pay for the area instead of detail paying for it. A close view
+  // gets all 24; a national one gets a handful, because a national frame is
+  // three quarters of a million cells and each one is a float MET has to send
+  // us. Motion is the thing worth trading here — the picture stays true.
   const frames = clamp(Math.floor(MAX_VALUES / Math.max(1, rows * cols)), 1, 24);
 
   return { row0, col0, rows, cols, stride, frames };

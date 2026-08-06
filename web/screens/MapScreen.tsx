@@ -198,7 +198,11 @@ export function MapScreen() {
         <View style={{ flexDirection: "row", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
           <PlaybackControl
             playing={playing}
-            onToggle={() => setPlaying((p) => !p)}
+            atEnd={frameCount > 0 && frame >= frameCount - 1}
+            onToggle={() => {
+              if (!playing && frame >= frameCount - 1) setFrame(0);
+              setPlaying((p) => !p);
+            }}
             minutes={frame * 5}
           />
           <Text className="text-ink3" style={{ fontFamily: MONO, fontSize: 10 }}>

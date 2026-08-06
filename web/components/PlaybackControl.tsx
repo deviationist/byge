@@ -26,9 +26,24 @@ export type PlaybackControlProps = {
   onToggle: () => void;
   /** Minutes from the analysis for the frame on screen. */
   minutes: number;
+  /**
+   * Sitting on the last frame.
+   *
+   * Playback stops at the horizon rather than looping — that is deliberate, the
+   * end of the data is where byge starts saying "no end in sight" and the
+   * reader should be left there. But stopping left the control saying "play"
+   * while pressing it did nothing at all, because there was nowhere further to
+   * go. It says REPLAY instead, and starts again from now.
+   */
+  atEnd?: boolean;
 };
 
-export function PlaybackControl({ playing, onToggle, minutes }: PlaybackControlProps) {
+export function PlaybackControl({
+  playing,
+  onToggle,
+  minutes,
+  atEnd = false,
+}: PlaybackControlProps) {
   const { t } = useTranslation();
 
   return (
@@ -37,7 +52,9 @@ export function PlaybackControl({ playing, onToggle, minutes }: PlaybackControlP
         testID="playback"
         accessibilityRole="button"
         // Names the ACTION and the state, because the glyph alone is a shape.
-        accessibilityLabel={playing ? t("radarMap.pause") : t("radarMap.play")}
+        accessibilityLabel={
+          playing ? t("radarMap.pause") : atEnd ? t("radarMap.replay") : t("radarMap.play")
+        }
         onPress={onToggle}
         className="bg-surface border-line2"
         style={({ pressed }) => ({
@@ -56,7 +73,7 @@ export function PlaybackControl({ playing, onToggle, minutes }: PlaybackControlP
           announcing "black right-pointing triangle" is noise.
         */}
         <Text aria-hidden className="text-ink" style={{ fontSize: 12 }}>
-          {playing ? "❚❚" : "▶"}
+          {playing ? "❚❚" : atEnd ? "↻" : "▶"}
         </Text>
       </Pressable>
 

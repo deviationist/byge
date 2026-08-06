@@ -91,9 +91,12 @@ func (h *Handler) field(w http.ResponseWriter, r *http.Request) {
 		base, frames-1, row0, stride, rowEnd, col0, stride, colEnd,
 	)
 
-	// The same cap the transparent route enforces. This endpoint is not a way
-	// around it — it shrinks what comes BACK, not what MET is asked to do.
-	if err := limits.Check(target, h.opts.MaxValues); err != nil {
+	// A LARGER cap than the transparent route, not a way around it. What MET is
+	// asked to do is identical — bounded by the frame span, since a frame is one
+	// chunk — and what comes back is quantised and gzipped to about a twentieth
+	// of the float payload. Holding this to the raw-float budget was making the
+	// map coarse to save bytes that were never going to be sent.
+	if err := limits.Check(target, limits.FieldMaxValues); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
