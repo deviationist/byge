@@ -1,5 +1,5 @@
-import type { ComponentType } from "react";
-import { Text, type TextProps, View } from "react-native";
+import { Text, View } from "react-native";
+import { ExternalLink } from "./ExternalLink";
 
 /**
  * "Data from MET Norway · NLOD 2.0 / CC BY 4.0".
@@ -15,21 +15,11 @@ import { Text, type TextProps, View } from "react-native";
  * screen. About gets its own entry point on the Locations nav bar.
  */
 
-// react-native-web renders a Text with `href` as a real <a>. RN core's types do
-// not declare it, and the cast is preferred over an onPress handler because a
-// legal attribution has to behave like a link — openable in a new tab,
-// copyable, reachable by keyboard — not like a button that needs a mouse.
-//
-// `target`/`rel` go through `hrefAttrs`, not as bare props: react-native-web
-// drops unknown props on Text, so passing them directly silently produced
-// anchors with no target at all.
-type LinkProps = TextProps & {
-  href?: string;
-  hrefAttrs?: { target?: string; rel?: string; download?: string };
-};
-const Link = Text as unknown as ComponentType<LinkProps>;
-
-const OPEN_AWAY = { target: "_blank", rel: "noreferrer" };
+// The links go through ExternalLink, which is an <a> on web and a Linking
+// .openURL on native. Before that split they were a Text cast to accept href —
+// a react-native-web affordance, so on iOS and Android they would have rendered
+// as underlined text that does nothing. A licence obligation cannot be a link
+// that only looks like one.
 
 const MET = "https://www.met.no/";
 const NLOD = "https://data.norge.no/nlod/en/2.0";
@@ -53,35 +43,17 @@ export function Attribution() {
     >
       <Text className="text-ink3" style={base}>
         Data from{" "}
-        <Link
-          href={MET}
-          hrefAttrs={OPEN_AWAY}
-          accessibilityRole="link"
-          className="text-ink3"
-          style={link}
-        >
+        <ExternalLink href={MET} className="text-ink3" style={link}>
           MET Norway
-        </Link>{" "}
+        </ExternalLink>{" "}
         ·{" "}
-        <Link
-          href={NLOD}
-          hrefAttrs={OPEN_AWAY}
-          accessibilityRole="link"
-          className="text-ink3"
-          style={link}
-        >
+        <ExternalLink href={NLOD} className="text-ink3" style={link}>
           NLOD 2.0
-        </Link>{" "}
+        </ExternalLink>{" "}
         /{" "}
-        <Link
-          href={CC_BY}
-          hrefAttrs={OPEN_AWAY}
-          accessibilityRole="link"
-          className="text-ink3"
-          style={link}
-        >
+        <ExternalLink href={CC_BY} className="text-ink3" style={link}>
           CC BY 4.0
-        </Link>
+        </ExternalLink>
       </Text>
     </View>
   );

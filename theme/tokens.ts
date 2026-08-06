@@ -9,8 +9,28 @@
  * `MONO` is the micro-label face. A CSS token would be cleaner, but these are
  * consumed as React Native style objects, where a `var()` is not resolvable.
  */
-export const HATCH =
-  "repeating-linear-gradient(45deg,rgba(128,128,128,.42) 0 1.5px,transparent 1.5px 5px)";
+/**
+ * The pattern itself, as numbers.
+ *
+ * Web draws it as one CSS gradient; React Native has no `backgroundImage` at
+ * all and has to compose it from rotated views (see `Hatch.native.tsx`). Two
+ * renderings are unavoidable — two DEFINITIONS are not, and a hatch that is
+ * 45° here and 40° there is exactly how "we cannot see here" stops being one
+ * mark and starts looking like a texture someone chose.
+ */
+export const HATCH_PATTERN = {
+  angleDeg: 45,
+  /** Stroke width, px. */
+  lineWidth: 1.5,
+  /** Distance from one stroke to the next, px. */
+  period: 5,
+  /** Neutral by design: this is the absence of a reading, not a low one. */
+  color: "rgba(128,128,128,.42)",
+} as const;
+
+const { angleDeg, lineWidth, period, color } = HATCH_PATTERN;
+
+export const HATCH = `repeating-linear-gradient(${angleDeg}deg,${color} 0 ${lineWidth}px,transparent ${lineWidth}px ${period}px)`;
 
 export const MONO = "ui-monospace, SFMono-Regular, Menlo, monospace";
 
