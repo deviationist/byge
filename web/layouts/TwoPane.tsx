@@ -16,7 +16,12 @@ import { useWindowDimensions, View } from "react-native";
  * fetching and a second copy of everything in the accessibility tree.
  */
 export const TWO_PANE_BREAKPOINT = 768;
-const LIST_WIDTH = 300;
+// The design runs the list at 300 on tablet and 350 on desktop: the column
+// holds the same rows either way, and on a wide screen the extra 50 goes to the
+// place names rather than to more empty gutter beside them.
+const LIST_WIDTH_TABLET = 300;
+const LIST_WIDTH_DESKTOP = 350;
+const DESKTOP = 1100;
 
 export type TwoPaneProps = {
   list: ReactNode;
@@ -39,10 +44,12 @@ export function TwoPane({
   show = "list",
   breakpoint = TWO_PANE_BREAKPOINT,
   width,
-  listWidth = LIST_WIDTH,
+  listWidth,
 }: TwoPaneProps) {
   const window = useWindowDimensions();
   const available = width ?? window.width;
+  const paneWidth =
+    listWidth ?? (available >= DESKTOP ? LIST_WIDTH_DESKTOP : LIST_WIDTH_TABLET);
 
   if (available < breakpoint) {
     return (
@@ -58,7 +65,7 @@ export function TwoPane({
         testID="twopane-list"
         className="border-r-line bg-surface"
         style={{
-          width: listWidth,
+          width: paneWidth,
           flexGrow: 0,
           flexShrink: 0,
           borderRightWidth: 1,

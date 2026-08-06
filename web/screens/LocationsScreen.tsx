@@ -37,6 +37,11 @@ export function LocationsScreen({ selectedId, onSelect }: LocationsScreenProps =
   const { locations } = useLocations();
   const { data: verdicts } = useVerdicts(locations);
   const install = useInstallPrompt();
+  // `onSelect` is supplied only by the two-pane shell, which is also the only
+  // place the list is a 300 px column — so it is the honest signal for "step
+  // everything down a size", and it needs no second breakpoint check that could
+  // disagree with the one TwoPane already made.
+  const twoPane = !!onSelect;
 
   // Rows come from the SAVED LIST, not from the verdicts. A verdict merges in
   // when it arrives; until then the row is present and says it is checking.
@@ -70,22 +75,32 @@ export function LocationsScreen({ selectedId, onSelect }: LocationsScreenProps =
         lives in the attribution line at the foot where the other legal text is.
         A bar holding one ghost button was furniture around an empty slot.
       */}
-      <ListHeader count={locations.length} ageMin={age} compact={!!onSelect} />
+      <ListHeader count={locations.length} ageMin={age} compact={twoPane} />
 
       {install.available ? (
         <InstallPrompt theme={theme} onInstall={install.prompt} onDismiss={install.dismiss} />
       ) : null}
 
-      <LocationsList
-        items={items}
-        theme={theme}
-        selectedId={selectedId}
-        onSelect={onSelect ?? ((id) => router.push(`/location/${id}`))}
-        empty={empty}
-        footer={<AddPlaceCard compact={!!onSelect} onPress={() => router.push("/add")} />}
-      />
+      {/*
+        In the two-pane column the cards sit WIDER than the header above them —
+        the design insets the masthead 22 px and the cards 12 px, so the list
+        reads as a stack of objects the heading labels rather than as a block of
+        text the heading is part of. Pulling out by 8 from the screen's 20 px
+        gutter is what produces that 12.
+      */}
+      <View style={twoPane ? { marginHorizontal: -8, gap: 6 } : { gap: 8 }}>
+        <LocationsList
+          items={items}
+          theme={theme}
+          compact={twoPane}
+          selectedId={selectedId}
+          onSelect={onSelect ?? ((id) => router.push(`/location/${id}`))}
+          empty={empty}
+          footer={<AddPlaceCard compact={twoPane} onPress={() => router.push("/add")} />}
+        />
 
-      {items.length > 0 ? <PrecipitationLegend theme={theme} /> : null}
+        {items.length > 0 ? <PrecipitationLegend theme={theme} /> : null}
+      </View>
 
       <View style={{ marginTop: "auto", paddingTop: 24 }}>
         <Attribution onAbout={() => router.push("/about")} />

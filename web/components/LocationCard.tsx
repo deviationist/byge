@@ -36,6 +36,12 @@ export type LocationCardProps = {
   variant?: LocationCardVariant;
   /** Highlighted as the current selection in a two-pane layout. */
   selected?: boolean;
+  /**
+   * The two-pane list is a 300 px column, so the row steps down a size — and
+   * loses its chevron, because a row that swaps the pane beside it is not
+   * navigating anywhere. Same row, two sizes; not a third variant.
+   */
+  compact?: boolean;
   onPress?: () => void;
 };
 
@@ -51,6 +57,7 @@ export function LocationCard({
   theme,
   variant = "row",
   selected = false,
+  compact = false,
   onPress,
 }: LocationCardProps) {
   const isRow = variant === "row";
@@ -61,11 +68,13 @@ export function LocationCard({
   const mode = verdict ? swatchModeOf(verdict) : "dry";
   const rate = verdict ? swatchRateOf(verdict) : 0;
 
+  const tight = isRow && compact;
+
   const body = (
     <>
-      <Swatch mode={mode} rate={rate} size={isRow ? 13 : 12} theme={theme} />
+      <Swatch mode={mode} rate={rate} size={isRow ? (tight ? 11 : 13) : 12} theme={theme} />
 
-      <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
+      <View style={{ flex: 1, minWidth: 0, gap: tight ? 3 : 4 }}>
         <Location
           name={name}
           place={place}
@@ -77,14 +86,16 @@ export function LocationCard({
         {verdict ? (
           <LocationStatusText verdict={verdict} theme={theme} variant="compact" />
         ) : (
-          <Text className="text-ink3" style={{ fontSize: 13.5, lineHeight: 18 }}>
+          <Text className="text-ink3" style={{ fontSize: tight ? 12.5 : 13.5, lineHeight: 18 }}>
             {status}
           </Text>
         )}
       </View>
 
-      {isRow ? (
-        // Affordance only. The row already announces itself as a button.
+      {isRow && !tight ? (
+        // Affordance only — the row already announces itself as a button. Absent
+        // in the compact column because there it swaps the pane beside it rather
+        // than pushing a screen, and a chevron would promise navigation.
         <Text aria-hidden className="text-ink3" style={{ fontSize: 15 }}>
           ›
         </Text>
@@ -99,11 +110,11 @@ export function LocationCard({
   const frame = {
     flexDirection: "row" as const,
     alignItems: isRow ? ("center" as const) : ("flex-start" as const),
-    gap: 14,
-    borderRadius: 12,
+    gap: tight ? 12 : 14,
+    borderRadius: tight ? 10 : 12,
     borderWidth: 1,
-    paddingVertical: isRow ? 14 : 11,
-    paddingHorizontal: isRow ? 17 : 13,
+    paddingVertical: isRow ? (tight ? 13 : 16) : 11,
+    paddingHorizontal: isRow ? (tight ? 14 : 17) : 13,
     minHeight: MIN_TARGET,
   };
 
