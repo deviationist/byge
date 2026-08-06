@@ -20,6 +20,13 @@ import { Swatch, type SwatchMode } from "./Swatch";
  * the legend would be is discoverable; a corner icon is hidden and nobody taps
  * it.
  *
+ * This is now the ONLY place the three shapes are explained — the masthead's
+ * one-line key was dropped rather than say it twice on one screen. Two things
+ * make that safe. The paragraph above: no shape is ever the sole carrier of
+ * anything, so failing to read this card costs a reader nothing. And the three
+ * swatches in the collapsed header, which is what turns "a row you might open"
+ * into "the thing that explains those little squares".
+ *
  * Not "markers": that word means map pin once `MapField` and `RadarMap` exist,
  * and this explains list glyphs. `Swatch` in code and in copy, here and
  * everywhere.

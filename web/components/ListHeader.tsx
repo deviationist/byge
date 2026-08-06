@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 
 /**
- * The masthead of the locations list: wordmark, one line of status, one line of key.
+ * The masthead of the locations list: wordmark, one line of status.
  *
  * THE WORDMARK IS THE ONLY BRANDING IN THE APP. There is no logo, no icon in a
  * bar, no colour that means "byge" — just the name set in the display face. It
@@ -11,14 +11,15 @@ import { Text, View } from "react-native";
  * that screen's job is to answer a question, and a wordmark above the answer is
  * the app talking about itself instead.
  *
- * THE KEY IS ONE LINE, ALWAYS VISIBLE. "FILLED = RAINING NOW · OUTLINE = ON THE
- * WAY · HATCHED = NOT OBSERVED" is the whole legend a scanner needs, and it is
- * set in mono at the smallest size in the app so it reads as an annotation on
- * the list rather than as content in it. The expandable `PrecipitationLegend`
- * below the list is the *long* form — the mm/h ramp, what each shape means in a
- * sentence — and a collapsed disclosure was never a substitute for this line.
- * Someone who has to open something to learn what the shapes mean is someone
- * who never learns what the shapes mean.
+ * NO KEY LINE HERE, and that is a deliberate step away from the specimen, which
+ * sets "FILLED = RAINING NOW · OUTLINE = ON THE WAY · HATCHED = NOT OBSERVED"
+ * under the caption. The specimen has no expandable legend at all; we do, and
+ * running both meant explaining the same three shapes twice on one screen — once
+ * in shouty mono a reader must decode, once in sentences beside the actual
+ * swatches. The card wins that comparison. What made the card viable is that it
+ * shows the three shapes in its collapsed header: the objection to a disclosure
+ * was that nobody finds it, and a card displaying the very symbols it explains
+ * is found.
  *
  * The caption is deliberately about the DATA, not the app: how many places and
  * how fresh the answer is. It is the only place on the list screen that admits
@@ -74,19 +75,6 @@ export function ListHeader({ count, ageMin, offline, compact = false }: ListHead
         }}
       >
         {t("list.caption", { places, freshness })}
-      </Text>
-
-      <Text
-        testID="list-key"
-        className="text-ink3 font-mono"
-        style={{
-          fontSize: compact ? 8.5 : 9,
-          marginTop: compact ? 7 : 8,
-          letterSpacing: 0.45,
-          lineHeight: (compact ? 8.5 : 9) * 1.6,
-        }}
-      >
-        {t("list.key")}
       </Text>
     </View>
   );
