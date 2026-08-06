@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200;0,6..72,300;0,6..72,400&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="foundation.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; background: #DCD9D2; }
+  a { color: #15181B; } a:hover { opacity: .7; }
+  [data-pane="light"] { background: #F6F4F0; color: #15181B; }
+  [data-pane="dark"] { background: #0E1113; color: #ECEEF0; }
+</style>
+</helmet>
+<div style="font-family:'IBM Plex Sans',system-ui,sans-serif;padding:40px 44px 90px;display:flex;flex-direction:column;gap:38px;color:#15181B">
+
+  <header style="display:flex;flex-direction:column;gap:10px;max-width:76ch">
+    <div style="font-family:Newsreader,serif;font-size:34px;font-weight:300">Foundation</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.7;color:rgba(21,24,27,.62)">One palette, two themes. One type scale. One mark, with every asset the install needs. Everything on this page is generated from <a href="foundation.js">foundation.js</a> — the same constants the components read, mirroring <span style="color:#15181B">scale.py</span>.</div>
+  </header>
+
+  <section style="display:flex;flex-direction:column;gap:12px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;color:rgba(21,24,27,.5)">PALETTE · LIGHT IS YR’S FITTED VALUES, UNCHANGED · DARK IS THE MATCHED SET</div>
+    <div style="border-radius:12px;overflow:hidden;width:960px;border:1px solid rgba(21,24,27,.1)">
+      <sc-for list="{{ palette }}" as="p" hint-placeholder-count="7">
+        <div style="display:grid;grid-template-columns:56px 56px 1fr 130px 190px;gap:16px;align-items:center;padding:10px 16px;background:#fff;border-bottom:1px solid rgba(21,24,27,.08)">
+          <span style="height:26px;border-radius:5px;background:{{ p.light }};border:1px solid rgba(21,24,27,.18);background-image:{{ p.hatch }};background-size:5px 5px"></span>
+          <span style="height:26px;border-radius:5px;background:{{ p.dark }};border:1px solid rgba(21,24,27,.18);background-image:{{ p.hatch }};background-size:5px 5px"></span>
+          <span style="font-size:13px">{{ p.label }} <span style="color:rgba(21,24,27,.4)">· {{ p.feels }}</span></span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:rgba(21,24,27,.5)">{{ p.range }}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:rgba(21,24,27,.5)">{{ p.hex }}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;line-height:1.8;color:rgba(21,24,27,.62);max-width:88ch">The dark set is not a tint. On black, yr’s pale trace bands out-shout the heavy ones and the scale silently inverts — so luminance now RISES with intensity: trace is a dim slate-cyan, torrential is the brightest thing on screen. Same six hues, same order, same meaning. Ordering is the meaning; the hex values only carry it. Consequence to accept rather than hide: phase 2 renders MET’s tiles, which are light-only, so the map stays a lit window inside dark chrome.</div>
+
+    <div style="display:flex;flex-direction:column;gap:11px;border:1px solid rgba(21,24,27,.12);border-radius:12px;padding:18px 20px;background:#fff;width:960px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;color:rgba(21,24,27,.5)">LUMINANCE · REC.709 ON SRGB VALUES, AS IN LIB/TOKENS.TEST.TS · BOTH RAMPS MONOTONIC ACROSS ALL SIX BANDS</div>
+      <div style="display:flex;gap:26px;flex-wrap:wrap">
+        <sc-for list="{{ ramps }}" as="r" hint-placeholder-count="2">
+          <div style="flex:1;min-width:400px;display:flex;flex-direction:column;gap:7px">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(21,24,27,.5)">{{ r.title }}</span>
+            <div style="display:flex;align-items:flex-end;gap:4px;height:96px;padding:8px;border-radius:8px;background:{{ r.pane }}">
+              <sc-for list="{{ r.bars }}" as="b" hint-placeholder-count="6">
+                <span style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px;height:100%">
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:{{ r.ink }}">{{ b.lum }}</span>
+                  <span style="width:100%;height:{{ b.h }}%;border-radius:3px 3px 0 0;background:{{ b.bg }}"></span>
+                </span>
+              </sc-for>
+            </div>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;line-height:1.6;color:rgba(21,24,27,.5)">{{ r.note }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;line-height:1.8;color:rgba(21,24,27,.62);max-width:88ch">Band 6 dark was <span style="color:#15181B">#C77BD6</span> (0.571) — a 0.144 <em>dip</em> below heavy rain, which put the inversion back at the top of the scale, on the one band where being noticed matters most. Now <span style="color:#15181B">#E8BCF4</span> (0.790, +0.074 over band 5), not <span style="color:#15181B">#E0AEEA</span>: +0.025 is under a noticeable difference at swatch and bar sizes, so it would satisfy the test and fail the eye. The ~288° purple stays as a categorical marker — <em>a different kind of weather</em> — but hue is the second signal, never the only one, because it is the signal a colour-blind reader may not receive. Scope the monotonic assertion to all six bands now, both ramps.</div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:12px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;color:rgba(21,24,27,.5)">TYPE · NEWSREADER FOR THE ANSWER, IBM PLEX SANS FOR UI, PLEX MONO FOR NUMBERS AND HEDGES</div>
+    <div style="background:#fff;border:1px solid rgba(21,24,27,.1);border-radius:12px;padding:26px 28px;width:960px;display:flex;flex-direction:column;gap:16px">
+      <sc-for list="{{ typeScale }}" as="t" hint-placeholder-count="7">
+        <div style="display:grid;grid-template-columns:150px 1fr;gap:22px;align-items:baseline;border-bottom:1px solid rgba(21,24,27,.06);padding-bottom:12px">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(21,24,27,.45);line-height:1.6">{{ t.meta }}</span>
+          <span style="font-family:{{ t.font }};font-size:{{ t.size }}px;font-weight:{{ t.weight }};line-height:1.1;letter-spacing:{{ t.tracking }}">{{ t.sample }}</span>
+        </div>
+      </sc-for>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;line-height:1.7;color:rgba(21,24,27,.55)">Norwegian-friendly throughout: æ ø å Æ Ø Å, and the copy lives in the model rather than the markup, so a bokmål build is a string table and not a redesign.</span>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:12px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;color:rgba(21,24,27,.5)">THE MARK · A BAND CROSSING A POINT — THE SHOWER PASSES OVER WHERE YOU ARE</div>
+    <div style="background:#fff;border:1px solid rgba(21,24,27,.1);border-radius:12px;padding:26px 28px;width:960px;display:flex;flex-direction:column;gap:26px">
+      <div style="display:flex;gap:26px;align-items:flex-end;flex-wrap:wrap">
+        <sc-for list="{{ sizes }}" as="s" hint-placeholder-count="6">
+          <div style="display:flex;flex-direction:column;gap:8px;align-items:center">
+            <dc-import name="BrandMark" size="{{ s.px }}" variant="standard" hint-size="{{ s.hint }}"></dc-import>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(21,24,27,.45)">{{ s.label }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:flex;gap:28px;flex-wrap:wrap">
+        <sc-for list="{{ variants }}" as="v" hint-placeholder-count="4">
+          <div style="display:flex;flex-direction:column;gap:9px;max-width:200px">
+            <dc-import name="BrandMark" size="{{ v.px }}" variant="{{ v.variant }}" theme="{{ v.theme }}" hint-size="96px,96px"></dc-import>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:rgba(21,24,27,.7)">{{ v.label }}</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;line-height:1.65;color:rgba(21,24,27,.45)">{{ v.note }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:12px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;color:rgba(21,24,27,.5)">SPLASH · A DOORWAY, NOT A WAIT</div>
+    <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start">
+      <sc-for list="{{ splashes }}" as="s" hint-placeholder-count="4">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="width:{{ s.w }}px;height:{{ s.h }}px;border-radius:{{ s.radius }}px;overflow:hidden;border:1px solid rgba(21,24,27,.14);box-shadow:0 10px 26px -12px rgba(0,0,0,.3);position:relative">
+            <div style="position:absolute;top:0;left:0;width:{{ s.trueW }}px;height:{{ s.trueH }}px;transform:scale({{ s.scale }});transform-origin:top left">
+              <dc-import name="SplashScreen" theme="{{ s.theme }}" width="{{ s.trueW }}" height="{{ s.trueH }}" hint-size="100%,100%"></dc-import>
+            </div>
+          </div>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;line-height:1.6;color:rgba(21,24,27,.5)">{{ s.label }}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;line-height:1.8;color:rgba(21,24,27,.62);max-width:88ch">The mark, centred, on the theme background, and gone. No wordmark, no animation to finish, no progress indicator, and never splash → spinner → content: the app renders a cached verdict immediately, so the splash exists only to prevent iOS’s white flash. If it reads as a brand moment it is already too long. Android and PWA show <span style="color:#15181B">background_color</span> plus the icon, which is why those two values are the same ones used here.</div>
+  </section>
+
+  <section style="display:flex;gap:24px;flex-wrap:wrap;width:960px">
+    <div style="flex:1;min-width:420px;display:flex;flex-direction:column;gap:9px">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;color:rgba(21,24,27,.5)">MANIFEST</span>
+      <pre style="margin:0;font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.7;color:rgba(21,24,27,.72);background:#fff;border:1px solid rgba(21,24,27,.1);border-radius:11px;padding:16px;overflow:auto">{{ manifest }}</pre>
+    </div>
+    <div style="flex:1;min-width:420px;display:flex;flex-direction:column;gap:9px">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;color:rgba(21,24,27,.5)">HEAD · ICONS, THEME COLOUR, iOS SPLASH SET</span>
+      <pre style="margin:0;font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.7;color:rgba(21,24,27,.72);background:#fff;border:1px solid rgba(21,24,27,.1);border-radius:11px;padding:16px;overflow:auto">{{ headTags }}</pre>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:10px;max-width:88ch">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;color:rgba(21,24,27,.5)">SERVICE WORKER · STALE-WHILE-REVALIDATE</div>
+    <pre style="margin:0;font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.7;color:rgba(21,24,27,.72);background:#fff;border:1px solid rgba(21,24,27,.1);border-radius:11px;padding:16px;overflow:auto">{{ sw }}</pre>
+  </section>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() { if (!window.BYGE) this._t = setInterval(() => { if (window.BYGE) { clearInterval(this._t); this.forceUpdate(); } }, 40); }
+  componentWillUnmount() { clearInterval(this._t); }
+  renderVals() {
+    const B = window.BYGE;
+    const manifest = [
+      '{', '  "id": "/?source=pwa",', '  "name": "byge — rain, and for how long",', '  "short_name": "byge",',
+      '  "description": "Do I need a jacket, and for how long?",', '  "start_url": "/?source=pwa",', '  "scope": "/",',
+      '  "display": "standalone",', '  "orientation": "any",', '  "lang": "en",',
+      '  "background_color": "#F6F4F0",', '  "theme_color": "#F6F4F0",', '  "icons": [',
+      '    { "src": "/icon-192.png",     "sizes": "192x192", "type": "image/png" },',
+      '    { "src": "/icon-512.png",     "sizes": "512x512", "type": "image/png" },',
+      '    { "src": "/maskable-192.png", "sizes": "192x192", "type": "image/png",',
+      '      "purpose": "maskable" },',
+      '    { "src": "/maskable-512.png", "sizes": "512x512", "type": "image/png",',
+      '      "purpose": "maskable" },',
+      '    { "src": "/mono.svg",         "sizes": "any",     "type": "image/svg+xml",',
+      '      "purpose": "monochrome" }', '  ]', '}'
+    ].join('\n');
+    const splash = [
+      ['1290x2796', '430px', '932px', 3], ['1179x2556', '393px', '852px', 3],
+      ['1170x2532', '390px', '844px', 3], ['1284x2778', '428px', '926px', 3],
+      ['1125x2436', '375px', '812px', 3], ['1242x2208', '414px', '736px', 3],
+      ['1620x2160', '810px', '1080px', 2], ['2048x2732', '1024px', '1366px', 2]
+    ];
+    const headTags = [
+      '<link rel="icon" href="/favicon.svg" type="image/svg+xml">',
+      '<link rel="icon" href="/favicon.ico" sizes="32x32">',
+      '<link rel="apple-touch-icon" href="/apple-touch-icon-180.png">',
+      '<meta name="apple-mobile-web-app-capable" content="yes">',
+      '<meta name="apple-mobile-web-app-title" content="byge">',
+      '<meta name="apple-mobile-web-app-status-bar-style" content="default">',
+      '<meta name="theme-color" content="#F6F4F0" media="(prefers-color-scheme: light)">',
+      '<meta name="theme-color" content="#0E1113" media="(prefers-color-scheme: dark)">',
+      '',
+      '<!-- iOS splash: one per device class × scheme. Generated from one',
+      '     template; the template is the design. -->'
+    ].concat(splash.map(([px, w, h, r]) =>
+      '<link rel="apple-touch-startup-image" href="/splash-' + px + '-light.png"\n' +
+      '      media="(device-width:' + w + ') and (device-height:' + h + ')\n' +
+      '             and (-webkit-device-pixel-ratio:' + r + ')\n' +
+      '             and (prefers-color-scheme: light)">'
+    )).concat(['', '<!-- …and the same set again with -dark.png / (prefers-color-scheme: dark) -->']).join('\n');
+    const sw = [
+      "// Never a blocking spinner: answer from cache, then refresh in place.",
+      "self.addEventListener('fetch', (e) => {",
+      "  const u = new URL(e.request.url);",
+      "  if (u.hostname === 'thredds.met.no') {",
+      "    e.respondWith((async () => {",
+      "      const c = await caches.open('byge-radar');",
+      "      const hit = await c.match(e.request);",
+      "      const net = fetch(e.request).then(r => { c.put(e.request, r.clone()); return r; });",
+      "      return hit || net;            // stale first, revalidate behind",
+      "    })());",
+      "  }",
+      "});",
+      "// Analyses are immutable once published and indexed by VALID TIME, never",
+      "// by frame 0 — so a file from 10 min ago still answers \"is it raining now\"",
+      "// from its T+10 frame. Background updates no more than once per 10 min."
+    ].join('\n');
+    // Rec.709 weights applied to the GAMMA-ENCODED sRGB values — deliberately not
+    // WCAG's linearized relative luminance. This is the metric lib/tokens.test.ts
+    // asserts, and these numbers are meant to be checkable against it: two
+    // different figures for the same hex is how the deviation became folklore
+    // the first time.
+    const lum = (hex) => {
+      const c = [1, 3, 5].map(i => parseInt(hex.substr(i, 2), 16) / 255);
+      return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+    };
+    const ramp = (which, title, pane, ink, note) => ({
+      title, pane, ink, note,
+      bars: (B ? B.BANDS : []).map(b => {
+        const L = lum(b[which]);
+        return { bg: b[which], lum: L.toFixed(3), h: Math.round(10 + L * 86) };
+      })
+    });
+    return {
+      splashMark: 72,
+      // One composition, rendered per device class — the mark is a share of the
+      // short edge, so phone and tablet are the same design, not two.
+      // Rendered at TRUE device size and scaled down as a whole, so the mark's
+      // intrinsic pixel size is the shipping one — a preview that shrinks the
+      // mark instead of the composition would show a different asset.
+      splashes: [
+        { theme: 'light', trueW: 390, trueH: 844, scale: (424 / 844).toFixed(4), w: 196, h: 424, radius: 26, label: 'iPhone · light\n1170×2532 @3× → splash-1170x2532-light.png' },
+        { theme: 'dark', trueW: 390, trueH: 844, scale: (424 / 844).toFixed(4), w: 196, h: 424, radius: 26, label: 'iPhone · dark\n(prefers-color-scheme: dark)' },
+        { theme: 'light', trueW: 810, trueH: 1080, scale: (346 / 1080).toFixed(4), w: 260, h: 346, radius: 14, label: 'iPad · light\n1620×2160 @2×, same composition' },
+        { theme: 'dark', trueW: 810, trueH: 1080, scale: (346 / 1080).toFixed(4), w: 260, h: 346, radius: 14, label: 'Android / PWA · dark\nbackground_color + icon, no PNG needed' }
+      ],
+      ramps: [
+        ramp('light', 'LIGHT · monotonic DOWN — darker means more intense', '#F6F4F0', 'rgba(21,24,27,.5)', 'Strictly decreasing 0.833 → 0.140. yr’s own values, untouched.'),
+        ramp('dark', 'DARK · monotonic UP — brighter means more intense', '#0E1113', 'rgba(236,238,240,.5)', 'Strictly increasing 0.259 → 0.790. Band 6 now clears band 5 by 0.074.')
+      ],
+      palette: B ? B.BANDS.map(b => ({ light: b.light, dark: b.dark, label: b.label, feels: b.feels, range: b.range + ' mm/h', hex: b.light + '  /  ' + b.dark, hatch: 'none' }))
+        .concat([{ light: '#FFFFFF', dark: '#2A2E31', label: 'no coverage', feels: 'we cannot see here', range: 'NO_DATA', hex: 'never inside PALETTE', hatch: B.HATCH }]) : [],
+      typeScale: [
+        { meta: 'answer · phone 38 / desktop 54', font: 'Newsreader,serif', size: 44, weight: 300, tracking: '-.016em', sample: 'Raining. Stops in about 25 min.' },
+        { meta: 'answer, secondary line · 0.46×', font: 'Newsreader,serif', size: 21, weight: 300, tracking: '-.01em', sample: 'Then more from 19:15 (+100)' },
+        { meta: 'about / long-form · 20', font: 'Newsreader,serif', size: 20, weight: 300, tracking: '0', sample: 'Nothing else. Æ Ø Å æ ø å' },
+        { meta: 'row title · 16 / 500', font: "'IBM Plex Sans',sans-serif", size: 16, weight: 500, tracking: '-.008em', sample: 'Mum & Dad · Ålesund' },
+        { meta: 'body · 13.5', font: "'IBM Plex Sans',sans-serif", size: 13.5, weight: 400, tracking: '0', sample: 'Dry · rain in about 40 min, 25 min' },
+        { meta: 'numbers & hedges · mono 11', font: "'IBM Plex Mono',monospace", size: 11, weight: 400, tracking: '.03em', sample: '6.0 mm/h · radar 7 min old · at least 75 min' },
+        { meta: 'labels · mono 9.5 caps', font: "'IBM Plex Mono',monospace", size: 9.5, weight: 400, tracking: '.06em', sample: 'NEXT 2 HOURS' }
+      ],
+      sizes: [{ px: 16, label: '16 favicon', hint: '16px,16px' }, { px: 32, label: '32', hint: '32px,32px' }, { px: 48, label: '48', hint: '48px,48px' }, { px: 96, label: '96', hint: '96px,96px' }, { px: 180, label: '180 apple-touch', hint: '180px,180px' }],
+      variants: [
+        { px: 96, variant: 'maskable', theme: 'light', label: 'maskable 192 / 512', note: 'Redrawn at 68% inset on a full-bleed field — not the standard icon padded. Dashed line is the 80% safe circle; the crossing point stays centred under any Android mask.' },
+        { px: 96, variant: 'mono', theme: 'light', label: 'monochrome', note: 'One colour, for tinted Android surfaces and pinned tabs.' },
+        { px: 96, variant: 'favicon', theme: 'light', label: 'favicon.svg · light', note: 'Inverted for light browser chrome. The .ico ships 16 and 32 rasters of the same two shapes.' },
+        { px: 96, variant: 'favicon', theme: 'dark', label: 'favicon.svg · dark', note: 'prefers-color-scheme inside the SVG, so it is one file rather than two.' }
+      ],
+      manifest, headTags, sw
+    };
+  }
+}
+
+</script>
+</body>
+</html>

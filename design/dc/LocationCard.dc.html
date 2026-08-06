@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="foundation.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root, [data-theme="light"] {
+    --bg:#F6F4F0; --surface:#FFF; --sunk:#EFEDE8; --ink:#15181B; --ink2:rgba(21,24,27,.62); --ink3:rgba(21,24,27,.40);
+    --line:rgba(21,24,27,.10); --line2:rgba(21,24,27,.18); --dry:rgba(21,24,27,.07); --nodata:#FFF; --nodata-line:rgba(21,24,27,.28);
+  }
+  [data-theme="dark"] {
+    --bg:#0E1113; --surface:#16191C; --sunk:#1B1F22; --ink:#ECEEF0; --ink2:rgba(236,238,240,.60); --ink3:rgba(236,238,240,.38);
+    --line:rgba(236,238,240,.12); --line2:rgba(236,238,240,.20); --dry:rgba(236,238,240,.07); --nodata:#2A2E31; --nodata-line:rgba(236,238,240,.30);
+  }
+</style>
+</helmet>
+<div data-theme="{{ theme }}" style="display:flex;flex-direction:column;align-items:center;gap:6px;width:{{ width }}">
+  <button onClick="{{ onPick }}" style="width:100%;cursor:pointer;text-align:left;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink);border:1px solid {{ border }};background:{{ background }};border-radius:12px;padding:{{ pad }};display:grid;grid-template-columns:14px 1fr auto;gap:14px;align-items:center;box-shadow:{{ shadow }};min-height:{{ minH }}px" style-hover="border-color:var(--line2)">
+    <dc-import name="Swatch" mode="{{ mode }}" rate="{{ rate }}" size="{{ swatchSize }}" theme="{{ theme }}" hint-size="14px,14px"></dc-import>
+    <span style="display:flex;flex-direction:column;gap:4px;min-width:0">
+      <span style="font-size:{{ nameSize }}px;font-weight:500;letter-spacing:-.008em">{{ name }}</span>
+      <span style="font-size:{{ statusSize }}px;color:var(--ink2);line-height:1.35">{{ status }}</span>
+      <sc-if value="{{ showPlace }}" hint-placeholder-val="{{ false }}">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ink3);letter-spacing:.03em">{{ place }}</span>
+      </sc-if>
+    </span>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:15px;color:var(--ink3)">{{ chevron }}</span>
+  </button>
+  <sc-if value="{{ isPopup }}" hint-placeholder-val="{{ false }}">
+    <span style="width:10px;height:10px;border-radius:50%;background:var(--ink);border:2px solid var(--surface)"></span>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:380,&quot;height&quot;:110},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;s1&quot;,&quot;s2&quot;,&quot;s3&quot;,&quot;s4&quot;,&quot;s5&quot;,&quot;s8&quot;,&quot;s9&quot;,&quot;partial&quot;,&quot;edge&quot;,&quot;s6&quot;],&quot;default&quot;:&quot;s1&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;placement&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;row&quot;,&quot;popup&quot;],&quot;default&quot;:&quot;row&quot;,&quot;tsType&quot;:&quot;'row'|'popup'&quot;},&quot;selected&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;showPlace&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;''|'light'|'dark'&quot;},&quot;onPick&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;}}">
+// CSS DEPENDENCY — box-shadow on the popup placement (web only). LOAD-BEARING,
+// needs a native equivalent. A popup sits over live radar colour rather than
+// over a flat surface, so unlike the overflow menu its 1 px border is not enough
+// on its own: a pale border against a pale band leaves the popup looking like
+// part of the map. On native, draw a 1 px --line2 border PLUS a 2 px --bg outer
+// ring (a second view behind the card) — the halo, not the shadow, is what
+// separates it from the imagery.
+//
+// LocationCard — the saved-place row, and the map marker popup in phase 2.
+// One component, two placements: `placement="row"` sits in the list,
+// `placement="popup"` gets the shadow and the pin dot beneath it. Same swatch,
+// same status sentence, same palette — so the map can never disagree with the
+// list about whether a place is wet.
+class Component extends DCLogic {
+  componentDidMount() { if (!window.BYGE) this._t = setInterval(() => { if (window.BYGE) { clearInterval(this._t); this.forceUpdate(); } }, 40); }
+  componentWillUnmount() { clearInterval(this._t); }
+  renderVals() {
+    const B = window.BYGE, theme = this.props.theme ?? '';
+    const popup = (this.props.placement ?? 'row') === 'popup';
+    const selected = this.props.selected ?? false;
+    const base = {
+      theme, isPopup: popup, width: popup ? '230px' : '100%',
+      pad: popup ? '12px 14px' : '15px 16px', minH: popup ? 0 : 62,
+      nameSize: popup ? 14 : 16, statusSize: popup ? 12 : 13.5, swatchSize: 14,
+      chevron: popup ? '' : '›', showPlace: this.props.showPlace ?? popup,
+      shadow: popup ? '0 10px 26px -10px rgba(0,0,0,.45)' : 'none',
+      background: popup ? 'var(--surface)' : (selected ? 'var(--sunk)' : 'var(--surface)'),
+      border: selected ? 'var(--line2)' : 'var(--line)',
+      onPick: this.props.onPick
+    };
+    if (!B) return Object.assign(base, { name: '', status: '', place: '', mode: 'dry', rate: 0 });
+    const key = this.props.scenario ?? 's1', fx = B.FIXTURES[key], v = B.verdict(fx);
+    const mode = v.blind ? 'blind' : v.raining_now ? 'now' : (v.next ? 'later' : 'dry');
+    return Object.assign(base, {
+      name: fx.name, place: fx.place + ' · ' + fx.coords, status: B.statusLine(v), mode,
+      rate: v.raining_now ? v.now_rate : (v.next ? v.next.peak_rate : 0)
+    });
+  }
+}
+
+</script>
+</body>
+</html>

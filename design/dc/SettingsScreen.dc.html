@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root, [data-theme="light"] { --bg:#F6F4F0; --surface:#FFF; --sunk:#EFEDE8; --ink:#15181B; --ink2:rgba(21,24,27,.62); --ink3:rgba(21,24,27,.40); --line:rgba(21,24,27,.10); --line2:rgba(21,24,27,.18); --dry:rgba(21,24,27,.07); }
+  [data-theme="dark"] { --bg:#0E1113; --surface:#16191C; --sunk:#1B1F22; --ink:#ECEEF0; --ink2:rgba(236,238,240,.60); --ink3:rgba(236,238,240,.38); --line:rgba(236,238,240,.12); --line2:rgba(236,238,240,.20); --dry:rgba(236,238,240,.07); }
+</style>
+</helmet>
+<div data-theme="{{ theme }}" style="width:100%;min-height:100%;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif;padding:{{ pad }}">
+  <div style="width:100%;max-width:{{ measure }};margin:0 auto;display:flex;flex-direction:column;gap:22px">
+
+    <dc-import name="NavBar" title="Position &amp; notifications" subtitle="PHASE 3 — NOT IN THE MVP BUILD" onBack="{{ onBack }}" backTitle="Back to about" theme="{{ theme }}" hint-size="100%,52px"></dc-import>
+
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;line-height:1.7;color:var(--ink2);border:1px dashed var(--line2);border-radius:11px;padding:13px 14px;max-width:60ch">Designed now so the seams are known, shipped later. The MVP omits this screen entirely rather than greying it out — a dead toggle teaches people the app is broken.</div>
+
+    <sc-for list="{{ rows }}" as="r" hint-placeholder-count="3">
+      <div style="border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:16px;display:flex;gap:16px;align-items:center">
+        <span style="flex:1;display:flex;flex-direction:column;gap:5px">
+          <span style="font-size:14px;font-weight:500">{{ r.title }}</span>
+          <span style="font-size:12.5px;color:var(--ink2);line-height:1.5;max-width:46ch">{{ r.sub }}</span>
+        </span>
+        <span onClick="{{ r.toggle }}" style="cursor:pointer;flex:none;width:46px;height:28px;border-radius:999px;background:{{ r.track }};border:1px solid var(--line2);position:relative;transition:background .18s ease">
+          <span style="position:absolute;top:3px;left:{{ r.knob }};width:20px;height:20px;border-radius:50%;background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .18s ease"></span>
+        </span>
+      </div>
+    </sc-for>
+
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.7;color:var(--ink3);border-top:1px solid var(--line);padding-top:14px;max-width:62ch">Push needs a server, which byge does not otherwise have. Note also that a PWA cannot poll in the background on iOS at all — so “tell me before it starts” is an Android-and-desktop promise first, and the copy must not imply otherwise.</div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:620},&quot;device&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;phone&quot;,&quot;tablet&quot;,&quot;desktop&quot;],&quot;default&quot;:&quot;phone&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;insetTop&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:0,&quot;min&quot;:0,&quot;max&quot;:80,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Safe area&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;''|'light'|'dark'&quot;},&quot;onBack&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;}}">
+// SettingsScreen — the phase-3 shell. Live position is a continuously updating
+// verdict for wherever you are; it is NOT the one-shot "use my location" in the
+// add flow, and the two are worded so they cannot be confused.
+class Component extends DCLogic {
+  state = { live: false, before: false, after: false };
+  renderVals() {
+    const theme = this.props.theme ?? '';
+    const dev = this.props.device ?? 'phone', phone = dev === 'phone';
+    const row = (k, title, sub) => ({
+      title, sub, track: this.state[k] ? 'var(--ink)' : 'var(--dry)',
+      knob: this.state[k] ? '21px' : '3px',
+      toggle: () => this.setState({ [k]: !this.state[k] })
+    });
+    return {
+      theme,
+      pad: ((phone ? 14 : 40) + (this.props.insetTop ?? 0)) + 'px ' + (phone ? '22px 30px' : '48px 34px'),
+      measure: phone ? '100%' : '620px',
+      rows: [
+        row('live', 'Live position', 'A verdict for wherever you are, updating as you move. Coordinates are rounded to four decimals on the device before any request leaves it.'),
+        row('before', 'Tell me before it starts', 'One push about 20 minutes ahead, for the places you choose. Never more than one an hour, and never for a spell we are unsure of.'),
+        row('after', 'Tell me when it stops', 'For when you are waiting it out under an awning.')
+      ],
+      onBack: this.props.onBack
+    };
+  }
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>*, *::before, *::after { box-sizing: border-box; }</style>
+</helmet>
+<span data-theme="{{ theme }}" style="position:relative;flex:none;display:inline-flex">
+  <dc-import name="MoreButton" open="{{ open }}" orientation="{{ orientation }}" title="{{ title }}" onPress="{{ toggle }}" theme="{{ theme }}" hint-size="44px,44px"></dc-import>
+  <dc-import name="DropdownMenu" open="{{ open }}" items="{{ items }}" label="{{ title }}" align="{{ align }}" minWidth="{{ minWidth }}" onClose="{{ close }}" theme="{{ theme }}" hint-size="178px,120px"></dc-import>
+</span>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:260,&quot;height&quot;:220},&quot;orientation&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;vertical&quot;,&quot;horizontal&quot;],&quot;default&quot;:&quot;vertical&quot;,&quot;tsType&quot;:&quot;'vertical'|'horizontal'&quot;},&quot;align&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;right&quot;,&quot;left&quot;],&quot;default&quot;:&quot;right&quot;,&quot;tsType&quot;:&quot;'right'|'left'&quot;},&quot;minWidth&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:178,&quot;min&quot;:140,&quot;max&quot;:300,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;title&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;More actions&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;''|'light'|'dark'&quot;},&quot;items&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{label:string,note?:string,onPress:()=&gt;void}[]&quot;}}">
+// OverflowMenu — the two-line composer: MoreButton plus DropdownMenu, holding
+// the open state between them and the positioned ancestor they both need. Kept
+// separate from either so a trigger can be reused without a menu, and a menu
+// without a ⋮.
+class Component extends DCLogic {
+  state = {};
+  renderVals() {
+    const open = this.state.open ?? false;
+    return {
+      theme: this.props.theme ?? '',
+      open, items: this.props.items ?? [],
+      orientation: this.props.orientation ?? 'vertical',
+      align: this.props.align ?? 'right',
+      minWidth: this.props.minWidth ?? 178,
+      title: this.props.title ?? 'More actions',
+      toggle: () => this.setState({ open: !open }),
+      close: () => this.setState({ open: false })
+    };
+  }
+}
+
+</script>
+</body>
+</html>

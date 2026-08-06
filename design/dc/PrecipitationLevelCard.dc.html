@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="foundation.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root, [data-theme="light"] {
+    --bg:#F6F4F0; --surface:#FFF; --sunk:#EFEDE8; --ink:#15181B; --ink2:rgba(21,24,27,.62); --ink3:rgba(21,24,27,.40);
+    --line:rgba(21,24,27,.10); --line2:rgba(21,24,27,.18); --dry:rgba(21,24,27,.07); --nodata:#FFF; --nodata-line:rgba(21,24,27,.28);
+  }
+  [data-theme="dark"] {
+    --bg:#0E1113; --surface:#16191C; --sunk:#1B1F22; --ink:#ECEEF0; --ink2:rgba(236,238,240,.60); --ink3:rgba(236,238,240,.38);
+    --line:rgba(236,238,240,.12); --line2:rgba(236,238,240,.20); --dry:rgba(236,238,240,.07); --nodata:#2A2E31; --nodata-line:rgba(236,238,240,.30);
+  }
+</style>
+</helmet>
+<div data-theme="{{ theme }}" style="display:inline-flex;align-items:center;gap:11px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 15px 8px 10px;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink)">
+  <dc-import name="Swatch" mode="{{ mode }}" rate="{{ rate }}" size="{{ swatchSize }}" hint-size="22px,22px"></dc-import>
+  <span style="display:flex;flex-direction:column;gap:1px">
+    <span style="font-size:13px;font-weight:500;letter-spacing:-.005em">{{ label }}</span>
+    <span style="font-size:11.5px;color:var(--ink2)">{{ feels }}</span>
+  </span>
+  <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink3);margin-left:5px;white-space:nowrap">{{ rateText }}</span>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:330,&quot;height&quot;:80},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;s1&quot;,&quot;s2&quot;,&quot;s3&quot;,&quot;s4&quot;,&quot;s5&quot;,&quot;s8&quot;,&quot;s9&quot;,&quot;partial&quot;,&quot;edge&quot;,&quot;s6&quot;],&quot;default&quot;:&quot;s1&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;''|'light'|'dark'&quot;}}">
+// PrecipitationLevelCard — the plain-language anchor. Label and feels-like lead;
+// the number is present but quiet. Shares one Swatch with the list row and the
+// map popup, and one palette with the graph and the map legend.
+class Component extends DCLogic {
+  componentDidMount() { if (!window.BYGE) this._t = setInterval(() => { if (window.BYGE) { clearInterval(this._t); this.forceUpdate(); } }, 40); }
+  componentWillUnmount() { clearInterval(this._t); }
+  renderVals() {
+    const B = window.BYGE, theme = this.props.theme ?? '';
+    if (!B) return { theme, swatchSize: 22, label: '', feels: '', rateText: '', rate: 0, mode: 'dry' };
+    const fx = B.FIXTURES[this.props.scenario ?? 's1'], v = B.verdict(fx);
+    const peak = v.peak_rate, trace = B.bandOf(peak);
+    if (v.blind) return { theme, swatchSize: 22, mode: 'blind', rate: 0, label: 'Not observed', feels: 'no reading for this place', rateText: '— mm/h' };
+    if (v.raining_now) {
+      const b = B.bandOf(v.now_rate);
+      return { theme, swatchSize: 22, mode: 'now', rate: v.now_rate,
+        label: v.edge_only ? 'nearby: ' + b.label : b.label, feels: b.feels,
+        rateText: v.now_rate.toFixed(1) + ' mm/h' };
+    }
+    if (v.next) {
+      const b = B.bandOf(v.next.peak_rate);
+      return { theme, swatchSize: 22, mode: 'later', rate: v.next.peak_rate,
+        label: 'incoming: ' + b.label, feels: b.feels, rateText: 'peak ' + v.next.peak_rate.toFixed(1) + ' mm/h' };
+    }
+    // Dry, but radar may still see sub-threshold moisture. Say "<0.1" rather
+    // than "0.0" so the badge cannot contradict its own footnote.
+    return { theme, swatchSize: 22, mode: 'dry', rate: 0, label: 'dry',
+      feels: trace ? 'a trace on radar, below rain' : 'nothing falling, and we can see that',
+      rateText: trace ? '<0.1 mm/h' : '0.0 mm/h' };
+  }
+}
+
+</script>
+</body>
+</html>

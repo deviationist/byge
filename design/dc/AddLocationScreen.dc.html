@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200;0,6..72,300;0,6..72,400&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="foundation.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root, [data-theme="light"] { --bg:#F6F4F0; --surface:#FFF; --sunk:#EFEDE8; --ink:#15181B; --ink2:rgba(21,24,27,.62); --ink3:rgba(21,24,27,.40); --line:rgba(21,24,27,.10); --line2:rgba(21,24,27,.18); --nodata:#FFF; --nodata-line:rgba(21,24,27,.28); }
+  [data-theme="dark"] { --bg:#0E1113; --surface:#16191C; --sunk:#1B1F22; --ink:#ECEEF0; --ink2:rgba(236,238,240,.60); --ink3:rgba(236,238,240,.38); --line:rgba(236,238,240,.12); --line2:rgba(236,238,240,.20); --nodata:#2A2E31; --nodata-line:rgba(236,238,240,.30); }
+</style>
+</helmet>
+<div data-theme="{{ theme }}" style="position:relative;width:100%;min-height:100%;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif;padding:{{ pad }}">
+  <div style="width:100%;max-width:{{ measure }};margin:0 auto;display:flex;flex-direction:column;gap:24px">
+
+    <dc-import name="NavBar" title="{{ navTitle }}" subtitle="{{ navSubtitle }}" onBack="{{ onBack }}" backTitle="{{ backTitle }}" theme="{{ theme }}" hint-size="100%,52px"></dc-import>
+
+    <sc-if value="{{ isEdit }}" hint-placeholder-val="{{ false }}">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;line-height:1.7;color:var(--ink2);background:var(--sunk);border-radius:11px;padding:12px 14px;max-width:58ch">{{ editNote }}</div>
+    </sc-if>
+
+    <dc-import name="MapField" radiusKm="{{ radiusKm }}" height="{{ mapH }}" permission="{{ permission }}" onLocate="{{ onLocate }}" showMask="{{ showMask }}" maskWidth="{{ maskWidth }}" theme="{{ theme }}" hint-size="100%,300px"></dc-import>
+
+    <dc-import name="RadiusField" value="{{ radiusKm }}" onChange="{{ onRadius }}" theme="{{ theme }}" hint-size="100%,200px"></dc-import>
+
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <dc-import name="TextField" label="{{ searchLabel }}" kind="search" value="{{ query }}" placeholder="Grünerløkka" onChange="{{ onQuery }}" theme="{{ theme }}" hint-size="100%,80px"></dc-import>
+      <sc-if value="{{ hasHits }}" hint-placeholder-val="{{ true }}">
+        <div style="border:1px solid var(--line);border-radius:11px;background:var(--surface);overflow:hidden">
+          <sc-for list="{{ hits }}" as="h" hint-placeholder-count="3">
+            <button onClick="{{ h.onPick }}" style="width:100%;cursor:pointer;text-align:left;font:inherit;color:inherit;background:transparent;border:none;border-bottom:1px solid var(--line);padding:0 15px;min-height:50px;display:flex;justify-content:space-between;gap:12px;align-items:center" style-hover="background:var(--sunk)">
+              <span style="font-size:14px">{{ h.name }}</span>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink3)">{{ h.coords }}</span>
+            </button>
+          </sc-for>
+        </div>
+      </sc-if>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;color:var(--ink3)">OR TYPE COORDINATES</span>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <span style="flex:1;min-width:140px"><dc-import name="TextField" kind="coord" value="{{ lat }}" suffix="LAT" onChange="{{ onLat }}" theme="{{ theme }}" hint-size="100%,60px"></dc-import></span>
+        <span style="flex:1;min-width:140px"><dc-import name="TextField" kind="coord" value="{{ lon }}" suffix="LON" onChange="{{ onLon }}" theme="{{ theme }}" hint-size="100%,60px"></dc-import></span>
+      </div>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.7;color:var(--ink3)">Four decimals is the limit — MET rejects anything finer. That is about eleven metres, closer than radar can see anyway, so nothing is lost.</span>
+    </div>
+
+    <dc-import name="TextField" label="NAME IT" value="{{ name }}" placeholder="Home" onChange="{{ onName }}" theme="{{ theme }}" hint-size="100%,80px"></dc-import>
+
+    <div style="display:flex;gap:11px;flex-wrap:wrap;padding-top:2px">
+      <dc-import name="Button" label="{{ saveLabel }}" kind="primary" onPress="{{ onSave }}" theme="{{ theme }}" hint-size="150px,48px"></dc-import>
+      <dc-import name="Button" label="Cancel" kind="secondary" onPress="{{ onBack }}" theme="{{ theme }}" hint-size="110px,48px"></dc-import>
+    </div>
+
+    <sc-if value="{{ isEdit }}" hint-placeholder-val="{{ false }}">
+      <div style="border-top:1px solid var(--line);padding-top:18px;display:flex;flex-direction:column;gap:10px">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;color:var(--ink3)">REMOVE</span>
+        <span style="font-size:12.5px;line-height:1.55;color:var(--ink2);max-width:48ch">{{ removeBody }}</span>
+        <dc-import name="Button" label="{{ removeLabel }}" kind="secondary" onPress="{{ askRemove }}" theme="{{ theme }}" hint-size="180px,48px"></dc-import>
+      </div>
+    </sc-if>
+
+    <div style="border-top:1px solid var(--line);padding-top:14px;font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.7;color:var(--ink3);max-width:60ch">{{ footnote }}</div>
+  </div>
+
+  <dc-import name="ConfirmSheet" open="{{ confirming }}" title="{{ confirmTitle }}" body="{{ confirmBody }}" detail="{{ confirmDetail }}" confirmLabel="{{ removeLabel }}" onConfirm="{{ onRemove }}" onCancel="{{ cancelRemove }}" theme="{{ theme }}" hint-size="100%,100%"></dc-import>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:900},&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;add&quot;,&quot;edit&quot;],&quot;default&quot;:&quot;add&quot;,&quot;tsType&quot;:&quot;'add'|'edit'&quot;},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;s1&quot;,&quot;s2&quot;,&quot;s3&quot;,&quot;s4&quot;,&quot;s5&quot;,&quot;s8&quot;,&quot;s9&quot;,&quot;partial&quot;,&quot;edge&quot;,&quot;s6&quot;],&quot;default&quot;:&quot;s1&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;device&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;phone&quot;,&quot;tablet&quot;,&quot;desktop&quot;],&quot;default&quot;:&quot;phone&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;insetTop&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:0,&quot;min&quot;:0,&quot;max&quot;:80,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Safe area&quot;},&quot;permission&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;unknown&quot;,&quot;granted&quot;,&quot;denied&quot;],&quot;default&quot;:&quot;unknown&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;showMask&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;maskWidth&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:18,&quot;min&quot;:0,&quot;max&quot;:80,&quot;unit&quot;:&quot;%&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;''|'light'|'dark'&quot;},&quot;onBack&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;onSave&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;onRemove&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;onLocate&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;}}">
+// AddLocationScreen — one component, two modes, the same pattern as the graph's
+// two densities: `mode="edit"` prefills every field from the saved place and
+// changes only the labels and the destination of Save.
+//
+// Edit exists because three values were write-once at add time: radius (per
+// location, and the whole point of the radius control), the coordinate (a map pan
+// — one valley over is a plausible mistake), and the name. A field you can set
+// but never correct is a trap.
+//
+// Remove lives here too, at the bottom, after everything constructive — and on
+// the verdict screen, which is where you are when you decide a place is wrong.
+// Not swipe-to-delete: swipe is keyboard-unreachable, hostile to screen readers,
+// and meaningless in the two-pane layout. Fine later as an accelerator, never as
+// the only route.
+class Component extends DCLogic {
+  state = {};
+  componentDidMount() { if (!window.BYGE) this._t = setInterval(() => { if (window.BYGE) { clearInterval(this._t); this.forceUpdate(); } }, 40); }
+  componentWillUnmount() { clearInterval(this._t); }
+  renderVals() {
+    const B = window.BYGE, theme = this.props.theme ?? '';
+    const dev = this.props.device ?? 'phone', phone = dev === 'phone';
+    const edit = (this.props.mode ?? 'add') === 'edit';
+    const fx = (edit && B) ? B.FIXTURES[this.props.scenario ?? 's1'] : null;
+    const radiusKm = this.state.km ?? (fx ? fx.radius : 3);
+    const name = this.state.name ?? (fx ? fx.name : '');
+    const hits = [
+      { name: 'Grünerløkka, Oslo', coords: '59.9273, 10.7607' },
+      { name: 'Grünerløkka skole', coords: '59.9241, 10.7592' },
+      { name: 'Grünerhagen park', coords: '59.9218, 10.7635' }
+    ];
+    const q = this.state.q ?? (fx ? '' : 'Grünerløkka');
+    return {
+      theme, isEdit: edit,
+      pad: ((phone ? 14 : dev === 'tablet' ? 30 : 48) + (this.props.insetTop ?? 0)) + 'px ' +
+           (phone ? '22px 26px' : dev === 'tablet' ? '40px 30px' : '64px 40px'),
+      measure: phone ? '100%' : '620px',
+      mapH: phone ? 240 : 300,
+      navTitle: edit ? 'Edit ' + (fx ? fx.name : 'place') : 'Add a place',
+      navSubtitle: edit && fx ? 'SAVED ' + fx.coords.toUpperCase() + ' · ' + fx.radius + ' KM' : '',
+      backTitle: edit ? 'Back to the answer' : 'Back to places',
+      editNote: 'Changing the coordinate or the radius asks MET a different question, so the answer is refetched when you save — the reading you were looking at will be replaced rather than adjusted.',
+      searchLabel: edit ? 'MOVE IT — SEARCH' : 'SEARCH FOR A PLACE',
+      saveLabel: edit ? 'Save changes' : 'Save place',
+      radiusKm, permission: this.props.permission ?? 'unknown',
+      showMask: this.props.showMask ?? true, maskWidth: this.props.maskWidth ?? 18,
+      query: q, hasHits: q.length > 2,
+      hits: hits.map(h => Object.assign({}, h, { onPick: () => this.setState({ q: h.name, lat: h.coords.split(', ')[0], lon: h.coords.split(', ')[1] }) })),
+      lat: this.state.lat ?? (fx ? fx.coords.split(', ')[0] : '59.9273'),
+      lon: this.state.lon ?? (fx ? fx.coords.split(', ')[1] : '10.7607'),
+      name,
+      removeLabel: 'Remove ' + (name || 'this place'),
+      removeBody: 'Deletes this place and its saved answer from this device. There is no account and no sync, so it cannot be brought back.',
+      confirming: this.state.confirming ?? false,
+      askRemove: () => this.setState({ confirming: true }),
+      cancelRemove: () => this.setState({ confirming: false }),
+      confirmTitle: 'Remove ' + (name || 'this place') + '?',
+      confirmBody: 'This deletes the place and its last saved answer from this device. byge has no account and no sync, so there is nothing to restore it from.',
+      confirmDetail: fx ? fx.place + ' · ' + fx.coords + ' · ' + radiusKm + ' km' : '',
+      onRemove: () => { this.setState({ confirming: false }); if (this.props.onRemove) this.props.onRemove(); },
+      onRadius: (km) => this.setState({ km }),
+      onQuery: (q) => this.setState({ q }), onLat: (lat) => this.setState({ lat }),
+      onLon: (lon) => this.setState({ lon }), onName: (name) => this.setState({ name }),
+      onLocate: this.props.onLocate, onBack: this.props.onBack, onSave: this.props.onSave,
+      footnote: 'byge fetches a disc of radar cells around this point, straight from MET Norway — no server of ours in between. A 3 km disc is 7.9 KB; 25 km is 350 KB. Fetch time is the same either way, so the only cost of a wide circle is data.'
+    };
+  }
+}
+
+</script>
+</body>
+</html>

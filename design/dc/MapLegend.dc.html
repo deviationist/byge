@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="foundation.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root, [data-theme="light"] { --bg:#F6F4F0; --surface:#FFF; --sunk:#EFEDE8; --ink:#15181B; --ink2:rgba(21,24,27,.62); --ink3:rgba(21,24,27,.40); --line:rgba(21,24,27,.10); --line2:rgba(21,24,27,.18); --nodata:#FFF; }
+  [data-theme="dark"] { --bg:#0E1113; --surface:#16191C; --sunk:#1B1F22; --ink:#ECEEF0; --ink2:rgba(236,238,240,.60); --ink3:rgba(236,238,240,.38); --line:rgba(236,238,240,.12); --line2:rgba(236,238,240,.20); --nodata:#2A2E31; }
+</style>
+</helmet>
+<div data-theme="{{ theme }}" style="font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink);border:1px solid var(--line2);border-radius:11px;background:var(--surface);box-shadow:0 0 0 2px var(--bg);overflow:hidden;width:{{ width }}">
+
+  <sc-if value="{{ compact }}" hint-placeholder-val="{{ false }}">
+    <button onClick="{{ toggle }}" title="Show the full legend" style="cursor:pointer;border:none;background:transparent;color:inherit;padding:7px 8px;display:flex;align-items:center;gap:8px;min-height:44px" style-hover="background:var(--sunk)" style-focus="outline:2px solid var(--ink);outline-offset:-2px">
+      <span style="display:flex;flex-direction:column;width:11px;border-radius:3px;overflow:hidden">
+        <sc-for list="{{ ramp }}" as="r" hint-placeholder-count="6">
+          <span style="height:6px;background:{{ r.bg }}"></span>
+        </sc-for>
+      </span>
+      <span style="display:flex;flex-direction:column;gap:4px;align-items:flex-start">
+        <span style="display:flex;align-items:center;gap:5px">
+          <span style="width:9px;height:9px;border-radius:2px;background:var(--nodata);background-image:{{ hatch }};background-size:4px 4px;border:1px solid var(--line2)"></span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink2);letter-spacing:.03em">no radar</span>
+        </span>
+        <span style="display:flex;align-items:center;gap:5px">
+          <span style="width:9px;height:9px;border-radius:2px;background:transparent;border:1px dashed var(--line2)"></span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink2);letter-spacing:.03em">dry</span>
+        </span>
+      </span>
+      <span style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:0 3px">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.06em;color:var(--ink3)">KEY</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink3)">+</span>
+      </span>
+    </button>
+  </sc-if>
+
+  <sc-if value="{{ full }}" hint-placeholder-val="{{ true }}">
+    <div style="padding:12px 13px 13px;display:flex;flex-direction:column;gap:11px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.06em;color:var(--ink3)">MM/H</span>
+        <sc-if value="{{ collapsible }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ toggle }}" title="Minimise the legend" aria-label="Minimise the legend" style="margin-left:auto;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--ink3);font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.05em;min-height:26px;padding:0 8px;border-radius:7px;display:flex;align-items:center;gap:6px" style-hover="background:var(--sunk);color:var(--ink)" style-focus="outline:2px solid var(--ink);outline-offset:-2px"><span>HIDE</span><span style="font-size:11px">−</span></button>
+        </sc-if>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="flex:none;width:13px;height:13px;border-radius:3px;background:{{ r.bg }};background-image:{{ r.hatch }};background-size:5px 5px;border:1px solid {{ r.border }}"></span>
+            <span style="font-size:11px;color:var(--ink2);white-space:nowrap">{{ r.label }}</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink3);margin-left:auto;white-space:nowrap;font-variant-numeric:tabular-nums">{{ r.range }}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:6px">
+        <sc-for list="{{ nonRain }}" as="n" hint-placeholder-count="2">
+          <div style="display:flex;align-items:flex-start;gap:8px">
+            <span style="flex:none;width:13px;height:13px;border-radius:3px;background:{{ n.bg }};background-image:{{ n.hatch }};background-size:5px 5px;border:1px {{ n.borderStyle }} var(--line2);margin-top:1px"></span>
+            <span style="display:flex;flex-direction:column;gap:1px;min-width:0">
+              <span style="font-size:11px;color:var(--ink)">{{ n.label }}</span>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;line-height:1.5;color:var(--ink3)">{{ n.sub }}</span>
+            </span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:220,&quot;height&quot;:320},&quot;density&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;full&quot;,&quot;compact&quot;],&quot;default&quot;:&quot;full&quot;,&quot;tsType&quot;:&quot;'full'|'compact'&quot;},&quot;collapsible&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;''|'light'|'dark'&quot;}}">
+// MapLegend — the legend at MAP scale, which is a different problem from the
+// legend under a list.
+//
+// WHAT COLLAPSES AND WHAT DOES NOT. Collapsed, this keeps a 6-band vertical
+// spine and drops the band NAMES — the ramp is learnable, and anyone who knows
+// yr's map already reads it. What it never drops is the two NON-RAIN states,
+// because those are the ones nobody can guess: "no radar" and "dry" look like
+// absence, and absence is exactly what byge refuses to leave ambiguous. So the
+// compact form is a colour spine plus two labelled squares, and the words that
+// survive are the honest ones rather than the pretty ones.
+//
+// MINIMISABLE, and it remembers. The trigger is labelled KEY when collapsed and
+// HIDE when open, because a bare + over a map is not an affordance — it is a dot.
+// Default follows the measured pane rather than the device: a full legend is
+// ~240 px, and over a short map it covers the thing it explains.
+class Component extends DCLogic {
+  state = {};
+  componentDidMount() {
+    if (!window.BYGE) this._t = setInterval(() => { if (window.BYGE) { clearInterval(this._t); this.forceUpdate(); } }, 40);
+    // Scoped per density context: one remembered "open" must not force the full
+    // 240 px key onto a phone map that asked for the spine. A choice made where
+    // there is room should not be applied where there is not.
+    try {
+      const k = 'byge.maplegend.' + ((this.props.density ?? 'full') === 'compact' ? 'compact' : 'full');
+      const v = localStorage.getItem(k);
+      if (v !== null) this.setState({ open: v === '1' });
+    } catch (e) {}
+  }
+  componentWillUnmount() { clearInterval(this._t); }
+  renderVals() {
+    const B = window.BYGE, theme = this.props.theme ?? '';
+    const th = theme === 'dark' ? 'dark' : 'light';
+    const dense = (this.props.density ?? 'full') === 'compact';
+    // forceCollapsed is for specimens: the stored preference is real behaviour,
+    // but a documentation page must be able to show BOTH states regardless of what
+    // this browser happens to remember.
+    const open = this.props.forceCollapsed ? false : (this.state.open ?? !dense);
+    const bands = B ? B.BANDS : [];
+    return {
+      theme, compact: !open, full: open,
+      collapsible: this.props.collapsible ?? true,
+      width: open ? '186px' : 'auto',
+      hatch: B ? B.HATCH : 'none',
+      ramp: bands.map(b => ({ bg: th === 'dark' ? b.dark : b.light })),
+      rows: bands.map(b => ({
+        bg: th === 'dark' ? b.dark : b.light, hatch: 'none', border: 'transparent',
+        label: b.label, range: b.range
+      })),
+      nonRain: [
+        { bg: 'transparent', hatch: 'none', borderStyle: 'dashed', label: 'Dry', sub: 'Radar sees it and sees no rain — basemap left untouched.' },
+        { bg: 'var(--nodata)', hatch: B ? B.HATCH : 'none', borderStyle: 'solid', label: 'No radar coverage', sub: 'Not dry. No claim either way.' }
+      ],
+      toggle: () => { const n = !open; this.setState({ open: n }); try { localStorage.setItem('byge.maplegend.' + (dense ? 'compact' : 'full'), n ? '1' : '0'); } catch (e) {} }
+    };
+  }
+}
+
+</script>
+</body>
+</html>
