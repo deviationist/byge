@@ -26,8 +26,8 @@
   },
   "install": {
     "body": "Keep byge one tap away — add it to your home screen. Works offline with the last verdict.",
-    "action": "Install",
-    "dismiss": "Not now"
+    "add": "Add",
+    "notNow": "Not now"
   },
   "stale": {
     "offline": "Showing the verdict from {{age}} min ago — you are offline. It will refresh the moment you are back."
@@ -44,5 +44,33 @@
     "met": "MET Norway",
     "nlod": "NLOD 2.0",
     "ccBy": "CC BY 4.0"
+  },
+  "refresh": {
+    "action": "Refresh",
+    "checking": "Checking for a newer analysis…",
+    "updated": "Updated.",
+    "updatedAge": "Updated — radar {{age}} min old.",
+    "latest": "Already the latest.",
+    "latestAge": "Already the latest — radar {{age}} min old."
+  },
+  "coverage": {
+    "blindTitle": "No radar coverage — we cannot see this place.",
+    "blindBody": "That is not the same as dry: we have no observation at all, so byge makes no claim either way.",
+    "partial": "Radar sees only {{percent}}% of your area — the rest is outside coverage and not included either way."
+  },
+  "error": {
+    "title": "Could not reach the radar",
+    "body": "You are online — the request to MET Norway failed. There is no saved answer for this place yet, so byge has nothing to show. It will not guess.",
+    "inline": "Refresh failed — this is still the answer from before.",
+    "retry": "Try again"
+  },
+  "legend": {
+    "title": "Reading the list",
+    "filled": "Filled",
+    "filledBody": "Raining there right now. The colour is how hard.",
+    "outline": "Outline",
+    "outlineBody": "Dry now, but a spell is on the way within the next two hours.",
+    "hatched": "Hatched",
+    "hatchedBody": "Outside radar coverage — we have no observation at all."
   }
 }

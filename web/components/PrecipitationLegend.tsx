@@ -1,4 +1,6 @@
+import type { TFunction } from "i18next";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Pressable, Text, View } from "react-native";
 import { bandOf, colorOf, legend } from "../lib/scale";
 import { MONO } from "../theme/tokens";
@@ -30,26 +32,18 @@ export type PrecipitationLegendProps = {
 };
 
 /** The three shapes. `dry` lives in the ramp below, where the absence belongs. */
-const STATES: { mode: SwatchMode; rate: number; label: string; body: string }[] = [
-  {
-    mode: "now",
-    rate: 3,
-    label: "Filled",
-    body: "Raining there right now. The colour is how hard.",
-  },
-  {
-    mode: "later",
-    rate: 3,
-    label: "Outline",
-    body: "Dry now, but a spell is on the way within the next two hours.",
-  },
-  {
-    mode: "blind",
-    rate: 0,
-    label: "Hatched",
-    body: "Outside radar coverage — we have no observation at all.",
-  },
-];
+// Built at RENDER rather than as a module constant: a constant would call t()
+// at import time, which can precede i18n init and would pin English into a
+// value no language switch could reach.
+function statesOf(
+  t: TFunction,
+): { mode: SwatchMode; rate: number; label: string; body: string }[] {
+  return [
+    { mode: "now", rate: 3, label: t("legend.filled"), body: t("legend.filledBody") },
+    { mode: "later", rate: 3, label: t("legend.outline"), body: t("legend.outlineBody") },
+    { mode: "blind", rate: 0, label: t("legend.hatched"), body: t("legend.hatchedBody") },
+  ];
+}
 
 function Row({ children }: { children: React.ReactNode }) {
   return <View style={{ flexDirection: "row", alignItems: "center", gap: 9 }}>{children}</View>;
@@ -60,7 +54,9 @@ export function PrecipitationLegend({
   defaultOpen = false,
   onToggle,
 }: PrecipitationLegendProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(defaultOpen);
+  const states = statesOf(t);
 
   function toggle() {
     const next = !open;
@@ -81,7 +77,7 @@ export function PrecipitationLegend({
     >
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Reading the list"
+        accessibilityLabel={t("legend.title")}
         aria-expanded={open}
         onPress={toggle}
         style={{
@@ -93,7 +89,7 @@ export function PrecipitationLegend({
         }}
       >
         <Text className="text-ink2" style={{ fontSize: 13 }}>
-          Reading the list
+          {t("legend.title")}
         </Text>
         <Text style={[micro, { fontSize: 12 }]}>{open ? "−" : "+"}</Text>
       </Pressable>
@@ -101,7 +97,7 @@ export function PrecipitationLegend({
       {open ? (
         <View testID="legend-body" style={{ gap: 18, paddingBottom: 18, paddingTop: 2 }}>
           <View style={{ gap: 12 }}>
-            {STATES.map((s) => (
+            {states.map((s) => (
               <Row key={s.mode}>
                 <Swatch mode={s.mode} rate={s.rate} size={16} theme={theme} />
                 <View style={{ flex: 1, gap: 1 }}>

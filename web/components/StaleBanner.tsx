@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 
 /**
@@ -25,6 +26,7 @@ export type StaleBannerProps = {
 };
 
 export function StaleBanner({ ageMin }: StaleBannerProps) {
+  const { t } = useTranslation();
   // Never "0 min ago". The banner exists to say the answer is old, and a zero
   // reads as fresh — it would contradict the sentence it sits inside.
   const age = Math.max(1, Math.round(ageMin));
@@ -49,8 +51,7 @@ export function StaleBanner({ ageMin }: StaleBannerProps) {
         ⌁
       </Text>
       <Text className="text-ink2" style={{ flex: 1, fontSize: 12.5, lineHeight: 20 }}>
-        Showing the verdict from {age} min ago — you are offline. It will refresh the moment you
-        are back.
+        {t("stale.offline", { age })}
       </Text>
     </View>
   );

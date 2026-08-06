@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 import type { Theme } from "../theme/useTheme";
 import { Swatch } from "./Swatch";
@@ -54,6 +55,7 @@ export function observedPercent(observed: number): number {
 }
 
 export function CoverageNotice({ observed, theme }: CoverageNoticeProps) {
+  const { t } = useTranslation();
   const form = coverageFormOf(observed);
   if (form === "full") return null;
 
@@ -88,19 +90,17 @@ export function CoverageNotice({ observed, theme }: CoverageNoticeProps) {
               className="text-ink"
               style={{ fontSize: 14, lineHeight: 20 }}
             >
-              No radar coverage — we cannot see this place.
+              {t("coverage.blindTitle")}
             </Text>
             {/* The single most important sentence in this component. Without it
                 a reader fills the silence with "so it must be fine". */}
             <Text className="text-ink2" style={{ fontSize: 12.5, lineHeight: 20 }}>
-              That is not the same as dry: we have no observation at all, so byge makes no claim
-              either way.
+              {t("coverage.blindBody")}
             </Text>
           </>
         ) : (
           <Text className="text-ink2" style={{ fontSize: 12.5, lineHeight: 20 }}>
-            Radar sees only {observedPercent(observed)}% of your area — the rest is outside
-            coverage and not included either way.
+            {t("coverage.partial", { percent: observedPercent(observed) })}
           </Text>
         )}
       </View>
