@@ -3,7 +3,7 @@ import type { Verdict } from "../lib/forecast";
 import type { Theme } from "../theme/useTheme";
 import { Location } from "./Location";
 import { LocationStatusText, statusLine } from "./LocationStatusText";
-import { Swatch, swatchModeOf, swatchRateOf } from "./Swatch";
+import { SWATCH, Swatch, swatchModeOf, swatchRateOf } from "./Swatch";
 
 /**
  * A saved place and its answer — the list row, and the map marker popup.
@@ -72,7 +72,12 @@ export function LocationCard({
 
   const body = (
     <>
-      <Swatch mode={mode} rate={rate} size={isRow ? (tight ? 11 : 13) : 12} theme={theme} />
+      <Swatch
+        mode={mode}
+        rate={rate}
+        size={isRow ? (tight ? SWATCH.rowCompact : SWATCH.row) : SWATCH.popup}
+        theme={theme}
+      />
 
       <View style={{ flex: 1, minWidth: 0, gap: tight ? 3 : 4 }}>
         <Location

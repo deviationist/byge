@@ -49,7 +49,7 @@ describe("PrecipitationLegend disclosure", () => {
 describe("PrecipitationLegend content", () => {
   it("shows the three swatch states at real size", () => {
     render(<PrecipitationLegend theme="light" defaultOpen />);
-    for (const label of ["Filled", "Outline", "Hatched"]) {
+    for (const label of ["Raining now", "Rain on the way", "No radar coverage"]) {
       expect(screen.getByText(label)).toBeTruthy();
     }
     // filled / outline / hatched, each rendered by the same Swatch component.
