@@ -1,8 +1,8 @@
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Text, useWindowDimensions, View } from "react-native";
-import { ErrorState } from "../components/ErrorState";
+import { ErrorScreen } from "../components/ErrorScreen";
 import { LocationCard } from "../components/LocationCard";
 import { MapCanvas } from "../components/MapCanvas";
 import { MapLegend } from "../components/MapLegend";
@@ -56,6 +56,7 @@ function isOpenEndedAtHorizon(v: Verdict): boolean {
 
 export function RadarMapScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
+  const router = useRouter();
   const { t } = useTranslation();
   const theme = useResolvedTheme();
   const goBack = useBack("/");
@@ -106,14 +107,18 @@ export function RadarMapScreen() {
     return () => clearInterval(id);
   }, [playing, frameCount]);
 
+  // A deep link to a place that has since been removed — the one dead end whose
+  // cause we actually know, so it is the one that names it. It does not offer to
+  // restore: byge keeps places locally and holds no copy, so restoring would
+  // mean inventing a coordinate.
   if (!location) {
     return (
-      <Screen>
-        <NavBar onBack={goBack} backLabel={t("nav.backToPlaces")}>
-          <View />
-        </NavBar>
-        <ErrorState variant="inline" detail={t("verdict.notSaved")} />
-      </Screen>
+      <ErrorScreen
+        kind="deleted"
+        path={id ? `/location/${id}/map` : undefined}
+        onPrimary={() => router.replace("/")}
+        onSecondary={() => router.replace("/add")}
+      />
     );
   }
 

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { View } from "react-native";
 import "../global.css";
 import "../i18n";
+import { CrashBoundary } from "../components/CrashBoundary";
 import { ToastHost } from "../components/ToastHost";
 import { useServiceWorker } from "../hooks/useServiceWorker";
 import { ThemeProvider, useResolvedTheme } from "../theme/ThemeProvider";
@@ -52,9 +53,14 @@ export default function RootLayout() {
   );
 
   return (
+    // The boundary is OUTSIDE the navigator and inside the providers: it must
+    // survive whatever the routed tree does, but it renders a screen that needs
+    // the theme and the string table to say anything at all.
     <QueryClientProvider client={client}>
       <ThemeProvider>
-        <Navigator />
+        <CrashBoundary>
+          <Navigator />
+        </CrashBoundary>
       </ThemeProvider>
     </QueryClientProvider>
   );
