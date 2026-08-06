@@ -276,7 +276,20 @@ native backend because it exposes `getItemSync`. This also fixed a live bug —
 theme choice early-returned `"system"` off web, so an explicit choice never
 survived a restart on native.
 
-### Native gaps still open
+### Native gaps — closed 2026-08-06
+
+Both fixed with the same platform-suffix seam `kv` uses, so the record below is
+history rather than a to-do. `Hatch.native.tsx` composes the pattern from
+rotated views while `Hatch.tsx` renders nothing (web's gradient already painted
+it), and both derive from `HATCH_PATTERN` so the two renderings cannot drift.
+`ExternalLink` is an anchor on web and `Linking.openURL` on native. Web DOM is
+unchanged and the built bundle carries no reference to either native file.
+
+Still true, and still only cosmetic: `boxShadow` and the `outline*` focus ring
+are web-only, so menus render flat and the scrubber loses its focus indicator on
+native.
+
+### The gaps as they were found
 
 Found by auditing web-only style properties after the migration. Neither is a
 styling problem — `className` solved that — and neither can be verified until a
