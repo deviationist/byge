@@ -1,4 +1,5 @@
-import { Text, View } from "react-native";
+import i18next from "i18next";
+import { Text, type TextStyle, View } from "react-native";
 import { durationMin, isBlindVerdict, isOpenEnded, type Verdict } from "../lib/forecast";
 import type { Theme } from "../theme/useTheme";
 
@@ -59,8 +60,20 @@ export type Headline = {
   bound: string | null;
   /** Detail after the bound. */
   tail: string;
+  /**
+   * Clock time for the primary spell's boundary — "around 18:15", "17:55-18:20".
+   *
+   * NULL FOR AN OPEN-ENDED SPELL, and that absence is load-bearing: it is the
+   * fifth redundant signal that we cannot name an end, alongside the grammar
+   * swap, the dotted bound, the arrow and the footnote. Never synthesise one
+   * from the horizon — that would put a time on the thing we are saying we
+   * cannot time.
+   */
+  clock: string | null;
   /** A second spell, deliberately subordinate — never equal billing. */
   secondary: string | null;
+  /** Clock time for the second spell. Same rule: null when it is open-ended. */
+  secondClock: string | null;
   /** Why we cannot say more. */
   note: string | null;
 };
@@ -89,6 +102,26 @@ function nearestKmOf(v: Verdict): number {
 }
 
 /**
+ * Wall-clock time of a moment N minutes after the analysis.
+ *
+ * Derived from `frames[0].time` rather than `Date.now()`, so the clock agrees
+ * with the data rather than with how long the page has been open. Formatted
+ * through Intl in the active language and pinned to h23: "around 24:05" is not
+ * a time anyone recognises, and a 12-hour clock would need am/pm to be
+ * unambiguous, which is more words than the line can carry.
+ */
+function clockAt(v: Verdict, minutes: number): string | null {
+  const base = v.frames[0]?.time;
+  if (!base) return null;
+  const at = new Date(base.getTime() + minutes * 60_000);
+  return new Intl.DateTimeFormat(i18next.language, {
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(at);
+}
+
+/**
  * The second spell.
  *
  * Dropping it turns "clears at 6, more at 6:30" into "clears at 6" — true, and
@@ -97,7 +130,7 @@ function nearestKmOf(v: Verdict): number {
  * The dry GAP is stated explicitly: that gap is the whole reason the second
  * spell matters.
  */
-function secondaryOf(v: Verdict): string | null {
+function secondaryOf(v: Verdict): { text: string; clock: string | null } | null {
   const cur = v.current;
   const n = v.next;
   if (!v.rainingNow || !cur || !n) return null;
@@ -109,7 +142,16 @@ function secondaryOf(v: Verdict): string | null {
 
   const gap = cur.endMin === null ? null : n.startMin - cur.endMin;
   const between = gap !== null && gap > 0 ? ` — about ${gap} min of dry in between` : "";
-  return `Then more from about ${n.startMin} min${between}, ${tail}.`;
+
+  // Leads with the RELATIVE time, matching the primary spell. It used to lead
+  // with the clock ("Then more from 19:15"), which made the second spell the
+  // only place in the app where a time was absolute — the clock now sits
+  // beneath, in the same treatment the primary uses.
+  const text = `Then more in about ${n.startMin} min${between}, ${tail}.`;
+  const end = n.endMin;
+  const clock =
+    isOpenEnded(n) || end === null ? null : `${clockAt(v, n.startMin)}-${clockAt(v, end)}`;
+  return { text, clock };
 }
 
 /** Every number below is derived from the Verdict. Nothing here is a constant. */
@@ -124,14 +166,18 @@ export function headlineOf(v: Verdict): Headline {
       body: "We cannot see this place.",
       bound: null,
       tail: "",
+      clock: null,
       secondary: null,
+      secondClock: null,
       note:
         'This is not "dry". We have no observation at all for this coordinate — so byge ' +
         "makes no claim. Dry means we looked and saw nothing falling.",
     };
   }
 
-  const secondary = secondaryOf(v);
+  const second = secondaryOf(v);
+  const secondary = second?.text ?? null;
+  const secondClock = second?.clock ?? null;
 
   if (v.rainingNow && v.current) {
     const s = v.current;
@@ -161,7 +207,10 @@ export function headlineOf(v: Verdict): Headline {
         body: "",
         bound: "No end in sight",
         tail: ` within the next ${horizonPhrase(v.horizonMin)}.`,
+        // No clock. Naming a time here would contradict the sentence.
+        clock: null,
         secondary,
+        secondClock,
         note: edgeNote ? `${edgeNote} ${openNote}` : openNote,
       };
     }
@@ -172,7 +221,9 @@ export function headlineOf(v: Verdict): Headline {
       body: `Stops in about ${s.endMin} min.`,
       bound: null,
       tail: "",
+      clock: s.endMin === null ? null : `around ${clockAt(v, s.endMin)}`,
       secondary,
+      secondClock,
       note: edgeNote,
     };
   }
@@ -190,7 +241,9 @@ export function headlineOf(v: Verdict): Headline {
         // number bare would turn a floor into a forecast.
         bound: `at least ${dur} min`,
         tail: ".",
+        clock: null,
         secondary: null,
+        secondClock: null,
         note:
           `${dur} min is a floor, not a forecast: the band is still overhead when our ` +
           `${horizonPhrase(v.horizonMin)} view ends. It could be twice that.`,
@@ -203,7 +256,9 @@ export function headlineOf(v: Verdict): Headline {
       body: `Rain in about ${s.startMin} min, lasting about ${dur} min.`,
       bound: null,
       tail: "",
+      clock: s.endMin === null ? null : `${clockAt(v, s.startMin)}-${clockAt(v, s.endMin)}`,
       secondary: null,
+      secondClock: null,
       note: null,
     };
   }
@@ -214,7 +269,9 @@ export function headlineOf(v: Verdict): Headline {
     body: "Nothing approaching.",
     bound: null,
     tail: "",
+    clock: null,
     secondary: null,
+    secondClock: null,
     // Two claims of very different strength, kept as two sentences on purpose.
     // "No rain for 115 min" collapses an observation and an extrapolation into
     // one flat assertion; the near term is solid, the tail is indicative. The
@@ -297,6 +354,21 @@ export function LocationStatusText({
 
   const line = { fontSize: size, lineHeight: size * 1.04, letterSpacing: size * -0.015 };
 
+  // Clock is 0.28x the headline, floored at 11 px. The floor matters: the old
+  // 0.22x/9.5 px made it caption-sized, and this is something people plan
+  // around. `tabular-nums` so a column of times does not jitter as digits
+  // change width.
+  const clockSize = Math.max(11, Math.round(size * 0.28));
+  const clockStyle = {
+    fontSize: clockSize,
+    lineHeight: Math.round(clockSize * 1.35),
+    marginTop: Math.round(size * 0.26),
+    fontVariant: ["tabular-nums"],
+  } satisfies TextStyle;
+  // Second spell is 0.46x, and its clock is the SAME size as the primary's:
+  // it is the same class of information, so it does not shrink again.
+  const secondSize = Math.max(13, Math.round(size * 0.46));
+
   return (
     <View style={{ gap: 16 }}>
       <View testID="status-headline" accessibilityRole="header">
@@ -337,17 +409,38 @@ export function LocationStatusText({
             {h.tail}
           </Text>
         ) : null}
+
+        {h.clock ? (
+          // Own line at every breakpoint, never inline. Inline would put it in
+          // the same line as the open-ended bound — two subordinate treatments
+          // in one line is where the open-ended signal starts to blur — and it
+          // would wrap first in Norwegian, whose relative phrases run longer.
+          <Text testID="status-clock" className="text-ink2 font-mono" style={clockStyle}>
+            {h.clock}
+          </Text>
+        ) : null}
       </View>
 
       {h.secondary ? (
         // Subordinate by size and colour, not hidden. See secondaryOf().
-        <Text
-          testID="status-secondary"
-          className="text-ink2 font-display"
-          style={{ fontSize: 15, lineHeight: 22 }}
-        >
-          {h.secondary}
-        </Text>
+        <View>
+          <Text
+            testID="status-secondary"
+            className="text-ink2 font-display"
+            style={{ fontSize: secondSize, lineHeight: Math.round(secondSize * 1.45) }}
+          >
+            {h.secondary}
+          </Text>
+          {h.secondClock ? (
+            <Text
+              testID="status-second-clock"
+              className="text-ink2 font-mono"
+              style={{ ...clockStyle, marginTop: Math.round(clockSize * 0.5) }}
+            >
+              {h.secondClock}
+            </Text>
+          ) : null}
+        </View>
       ) : null}
 
       {h.note ? (
