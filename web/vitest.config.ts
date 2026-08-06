@@ -1,5 +1,5 @@
-import { dirname } from "node:path";
 import { createRequire } from "node:module";
+import { dirname } from "node:path";
 import react from "@vitejs/plugin-react";
 import { uniwind } from "uniwind/vite";
 import { defineConfig } from "vitest/config";
@@ -22,7 +22,9 @@ export default defineConfig({
   // `ReferenceError: __DEV__ is not defined`.
   define: { __DEV__: "true" },
   test: {
-    include: ["{lib,components,layouts,screens,hooks,theme,app,scripts}/**/*.test.{ts,tsx}"],
+    include: [
+      "{lib,components,layouts,screens,hooks,theme,app,scripts,i18n}/**/*.test.{ts,tsx}",
+    ],
     environment: "jsdom",
     globals: true,
     setupFiles: ["./vitest.setup.ts"],
