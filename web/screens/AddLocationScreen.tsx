@@ -1,5 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 import { Button } from "../components/Button";
 import { ConfirmSheet, removeLocationCopy } from "../components/ConfirmSheet";
@@ -27,6 +28,7 @@ const DEFAULT_CENTRE = { lat: 59.9273, lon: 10.7607 };
  */
 export function AddLocationScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const theme = useResolvedTheme();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const { byId, add, update, remove, neighbourOf } = useLocations();
@@ -105,7 +107,7 @@ export function AddLocationScreen() {
         <View />
       </NavBar>
 
-      <Section title={editing ? "Edit place" : "Add a place"}>
+      <Section title={editing ? t("add.titleEdit") : t("add.titleAdd")}>
         <MapField
           value={centre}
           onChange={(v) => setCentre({ lat: clampCoord(v.lat), lon: clampCoord(v.lon) })}
@@ -114,31 +116,31 @@ export function AddLocationScreen() {
         />
       </Section>
 
-      <Section title="How far to watch">
+      <Section title={t("add.howFar")}>
         <RadiusField value={radiusKm} onChange={setRadiusKm} />
       </Section>
 
-      <Section title="Name it">
+      <Section title={t("add.nameIt")}>
         <TextField
-          label="Name"
+          label={t("add.nameLabel")}
           value={name}
           onChangeText={setName}
-          placeholder="Home"
-          hint="Shown in your list of places."
+          placeholder={t("add.namePlaceholder")}
+          hint={t("add.nameHint")}
         />
       </Section>
 
       <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap", paddingTop: 8 }}>
         <Button
-          label={editing ? "Save changes" : "Save place"}
+          label={editing ? t("add.saveChanges") : t("add.save")}
           onPress={save}
           disabled={!canSave}
         />
         {editing ? (
           <Button
-            label="Remove place"
+            label={t("add.remove")}
             variant="secondary"
-            hint="Cannot be undone"
+            hint={t("add.removeHint")}
             onPress={() => setConfirming(true)}
           />
         ) : null}

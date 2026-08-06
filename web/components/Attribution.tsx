@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 import { ExternalLink } from "./ExternalLink";
 
@@ -26,6 +27,7 @@ const NLOD = "https://data.norge.no/nlod/en/2.0";
 const CC_BY = "https://creativecommons.org/licenses/by/4.0/";
 
 export function Attribution() {
+  const { t } = useTranslation();
   const base = {
     fontSize: 9.5,
     lineHeight: 15,
@@ -42,17 +44,17 @@ export function Attribution() {
       }}
     >
       <Text className="text-ink3" style={base}>
-        Data from{" "}
+        {t("attribution.dataFrom")}{" "}
         <ExternalLink href={MET} className="text-ink3" style={link}>
-          MET Norway
+          {t("attribution.met")}
         </ExternalLink>{" "}
         ·{" "}
         <ExternalLink href={NLOD} className="text-ink3" style={link}>
-          NLOD 2.0
+          {t("attribution.nlod")}
         </ExternalLink>{" "}
         /{" "}
         <ExternalLink href={CC_BY} className="text-ink3" style={link}>
-          CC BY 4.0
+          {t("attribution.ccBy")}
         </ExternalLink>
       </Text>
     </View>

@@ -1,4 +1,5 @@
 import { useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 import { Attribution } from "../components/Attribution";
 import { BrandMark } from "../components/BrandMark";
@@ -25,6 +26,7 @@ const THEME_OPTIONS = [
  */
 export function AboutScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { choice, choose } = useThemeContext();
 
   const body = { fontSize: 14, lineHeight: 23 } as const;
@@ -36,7 +38,7 @@ export function AboutScreen() {
 
   return (
     <Screen>
-      <NavBar onBack={() => router.back()} backLabel="Back to places">
+      <NavBar onBack={() => router.back()} backLabel={t("nav.backToPlaces")}>
         <View />
       </NavBar>
 
@@ -52,9 +54,9 @@ export function AboutScreen() {
         is raining, and for how long. Nothing else.
       </Text>
 
-      <Section title="Appearance">
+      <Section title={t("about.appearanceSection")}>
         <SegmentedControl
-          label="Appearance"
+          label={t("about.appearance")}
           labelHidden
           options={THEME_OPTIONS}
           value={choice}
@@ -62,26 +64,22 @@ export function AboutScreen() {
         />
       </Section>
 
-      <Section title="How it works">
+      <Section title={t("about.howItWorks")}>
         <Text className="text-ink2" style={body}>
-          Forecast frames are advection-only: the measured rain field slides along measured
-          motion. Cells do not grow or die, so far-out frames are weaker — which is what the
-          confidence marker tells you.
+          {t("about.advection")}
         </Text>
         <Text className="text-ink2" style={body}>
-          The horizon is 115 minutes. When a spell is still going at the horizon, byge reports a
-          lower bound and says so. It will never round an unknown into a number.
+          {t("about.horizon")}
         </Text>
         <Text className="text-ink2" style={body}>
-          Where the radar cannot see, byge says so rather than saying “dry”. Those are different
-          claims.
+          {t("about.blind")}
         </Text>
       </Section>
 
-      <Section title="Data">
+      <Section title={t("about.data")}>
         <Attribution />
         <Text className="text-ink3" style={note}>
-          Not affiliated with, or endorsed by, MET Norway or NRK.
+          {t("about.notAffiliated")}
         </Text>
       </Section>
     </Screen>

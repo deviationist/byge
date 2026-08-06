@@ -1,4 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 import { Attribution } from "../components/Attribution";
 import { Button } from "../components/Button";
@@ -33,6 +34,7 @@ export type LocationsScreenProps = {
 
 export function LocationsScreen({ selectedId, onSelect }: LocationsScreenProps = {}) {
   const router = useRouter();
+  const { t } = useTranslation();
   const theme = useResolvedTheme();
   const { locations } = useLocations();
   const { data: verdicts } = useVerdicts(locations);
@@ -88,7 +90,11 @@ export function LocationsScreen({ selectedId, onSelect }: LocationsScreenProps =
     <Screen>
       <NavBar
         trailing={
-          <Button label="About" variant="ghost" onPress={() => router.push("/about")} />
+          <Button
+            label={t("nav.about")}
+            variant="ghost"
+            onPress={() => router.push("/about")}
+          />
         }
       >
         <View />
@@ -113,7 +119,7 @@ export function LocationsScreen({ selectedId, onSelect }: LocationsScreenProps =
         empty={empty}
         footer={
           <Button
-            label="+ Add a place"
+            label={t("nav.addPlace")}
             variant="secondary"
             block
             onPress={() => router.push("/add")}

@@ -37,7 +37,12 @@
     "what": "byge reads MET Norway’s radar nowcast for your exact coordinate and tells you whether it is raining, and for how long. Nothing else.",
     "appearance": "Appearance",
     "data": "Data",
-    "notAffiliated": "Not affiliated with, or endorsed by, MET Norway or NRK."
+    "notAffiliated": "Not affiliated with, or endorsed by, MET Norway or NRK.",
+    "howItWorks": "How it works",
+    "advection": "Forecast frames are advection-only: the measured rain field slides along measured motion. Cells do not grow or die, so far-out frames are weaker — which is what the confidence marker tells you.",
+    "horizon": "The horizon is 115 minutes. When a spell is still going at the horizon, byge reports a lower bound and says so. It will never round an unknown into a number.",
+    "blind": "Where the radar cannot see, byge says so rather than saying “dry”. Those are different claims.",
+    "appearanceSection": "Appearance"
   },
   "attribution": {
     "dataFrom": "Data from",
@@ -51,7 +56,8 @@
     "updated": "Updated.",
     "updatedAge": "Updated — radar {{age}} min old.",
     "latest": "Already the latest.",
-    "latestAge": "Already the latest — radar {{age}} min old."
+    "latestAge": "Already the latest — radar {{age}} min old.",
+    "hint": "Check MET Norway for a newer radar analysis"
   },
   "coverage": {
     "blindTitle": "No radar coverage — we cannot see this place.",
@@ -99,5 +105,42 @@
     "editHint": "Name, coordinates and radius",
     "remove": "Remove place",
     "removeHint": "Cannot be undone"
+  },
+  "add": {
+    "titleAdd": "Add a place",
+    "titleEdit": "Edit place",
+    "howFar": "How far to watch",
+    "nameIt": "Name it",
+    "nameLabel": "Name",
+    "namePlaceholder": "Home",
+    "nameHint": "Shown in your list of places.",
+    "save": "Save place",
+    "saveChanges": "Save changes",
+    "remove": "Remove place",
+    "removeHint": "Cannot be undone"
+  },
+  "verdict": {
+    "notSaved": "This place is not saved on this device.",
+    "unreachable": "MET Norway did not answer, and nothing is cached for this place yet.",
+    "edit": "Edit place",
+    "editHint": "coordinate, radius and name",
+    "remove": "Remove place",
+    "removeHint": "cannot be undone"
+  },
+  "map": {
+    "pick": "Pick a place — pan the map to move the marker",
+    "attribution": "© Kartverket",
+    "selectedPoint": "Selected point",
+    "locate": "Use my location",
+    "locating": "Finding you…",
+    "locateHint": "Centres the map on your device. You still confirm the place.",
+    "blockedTitle": "Location is blocked for this site",
+    "blockedBody": "Your browser will not ask again from here. On iOS: Settings › Safari › Location. On Android and desktop: the padlock in the address bar. Meanwhile you can pan the map or type the coordinates.",
+    "unsupportedTitle": "This device cannot report a location",
+    "unsupportedBody": "Pan the map or type the coordinates instead.",
+    "failedTitle": "Could not get a fix",
+    "failedBody": "The device did not answer in time. Try again, or pan the map instead.",
+    "outsideTitle": "Outside the radar grid",
+    "outsideBody": "The Nordic radar does not reach here, so this place would have no answer to give — not a dry one, none. Pan the marker back inside the grid."
   }
 }
