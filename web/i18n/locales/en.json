@@ -193,5 +193,12 @@
     "shortHours": "{{count}}h",
     "shortMins": "{{count}}m",
     "shortHoursMins": "{{hours}}h{{mins}}m"
+  },
+  "toast": {
+    "saved": "Saved {{name}}.",
+    "savedShowing": "Saved {{name}}. Showing it now.",
+    "removed": "Removed {{name}}.",
+    "removedShowing": "Removed {{name}}. Showing {{showing}}.",
+    "dismiss": "{{message}} Tap to dismiss."
   }
 }

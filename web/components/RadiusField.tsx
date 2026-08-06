@@ -1,8 +1,8 @@
+import i18next from "i18next";
 import { useId, useState } from "react";
 import type { LayoutChangeEvent, TextStyle } from "react-native";
-import i18next from "i18next";
-import { MONO } from "../theme/tokens";
 import { Pressable, Text, View } from "react-native";
+import { MONO } from "../theme/tokens";
 
 /**
  * The per-location watch radius, in km. Feeds the circle in `MapField`.

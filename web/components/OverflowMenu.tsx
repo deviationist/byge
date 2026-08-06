@@ -209,7 +209,11 @@ export function OverflowMenu({
   }, [open, active, enabled, firstEnabled, lastEnabled, close, select]);
 
   return (
-    <View ref={wrapRef} style={{ position: "relative" }}>
+    // The wrapper is raised too, so the panel outranks its own row-mates — the
+    // trigger's neighbours in a nav bar or a list row. It cannot escape an
+    // ancestor's stacking context, though; see the note in NavBar for why any
+    // container holding this needs its own z-index.
+    <View ref={wrapRef} style={{ position: "relative", zIndex: 20 }}>
       <MoreButton
         ref={triggerRef}
         label={label}

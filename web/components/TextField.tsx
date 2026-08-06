@@ -1,9 +1,9 @@
 import i18next from "i18next";
 import { useId } from "react";
 import type { KeyboardTypeOptions, TextStyle } from "react-native";
-import { MONO } from "../theme/tokens";
 import { Text, TextInput, View } from "react-native";
 import { clampCoord } from "../lib/grid";
+import { MONO } from "../theme/tokens";
 
 /**
  * Label, value, hint, error.

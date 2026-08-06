@@ -1,8 +1,10 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { useState } from "react";
+import { View } from "react-native";
 import "../global.css";
 import "../i18n";
+import { ToastHost } from "../components/ToastHost";
 import { useServiceWorker } from "../hooks/useServiceWorker";
 import { ThemeProvider, useResolvedTheme } from "../theme/ThemeProvider";
 import { BG } from "../theme/tokens";
@@ -17,9 +19,15 @@ import { BG } from "../theme/tokens";
 function Navigator() {
   const theme = useResolvedTheme();
   return (
-    <Stack
-      screenOptions={{ headerShown: false, contentStyle: { backgroundColor: BG[theme] } }}
-    />
+    // The host sits OUTSIDE the Stack and as its sibling, so a route change
+    // does not unmount it — which is the entire reason a receipt emitted by the
+    // screen you are leaving can be read on the screen you arrive at.
+    <View style={{ flex: 1 }}>
+      <Stack
+        screenOptions={{ headerShown: false, contentStyle: { backgroundColor: BG[theme] } }}
+      />
+      <ToastHost />
+    </View>
   );
 }
 

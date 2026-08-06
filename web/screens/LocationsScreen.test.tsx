@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { noteRemoval, type SavedLocation, saveLocations } from "../lib/storage";
 import { ThemeProvider } from "../theme/ThemeProvider";
 import { LocationsScreen } from "./LocationsScreen";
 
@@ -17,8 +18,17 @@ import { LocationsScreen } from "./LocationsScreen";
  * passed throughout.
  */
 
-// Mutable so each test can put the screen on a different route.
-let params: { removed?: string } = {};
+// The screen reads no params of its own any more — mutation receipts moved out
+// of the URL entirely — but expo-router still has to be stubbed.
+let params: Record<string, string> = {};
+
+const place = (id: string, name: string): SavedLocation => ({
+  id,
+  name,
+  lat: 59.9273,
+  lon: 10.7607,
+  radiusKm: 3,
+});
 
 vi.mock("expo-router", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
@@ -38,6 +48,8 @@ function renderScreen() {
 beforeEach(() => {
   params = {};
   localStorage.clear();
+  // The ephemeral name is module state, so it outlives a test otherwise.
+  noteRemoval("");
 });
 
 describe("LocationsScreen — the two empty states", () => {
@@ -47,19 +59,23 @@ describe("LocationsScreen — the two empty states", () => {
   });
 
   it("confirms the deletion after the last place is removed", () => {
-    // The name arrives as a route param because this screen remounts on
-    // navigation. This is the assertion the original bug failed.
-    params = { removed: "Cabin" };
+    // Both facts come from module state now, not from a route param: the sticky
+    // flag says "this device has had places", the ephemeral name says which one
+    // just went. This is the assertion the original bug failed.
+    saveLocations([place("a", "Cabin")]);
+    noteRemoval("Cabin");
+    saveLocations([]);
     renderScreen();
     expect(screen.getByText("Cabin removed.")).toBeInTheDocument();
     expect(screen.queryByText("Nowhere saved yet")).not.toBeInTheDocument();
   });
 
-  it("still uses the removal tone when the name did not survive the trip", () => {
-    // A blank name must not silently fall back to the first-run pitch — that is
-    // the wrong copy for the wrong reason, so the branch keys on the param
-    // being present rather than on it being truthy.
-    params = { removed: "" };
+  it("keeps the removal tone after a reload, when the name is gone", () => {
+    // The name is deliberately not persisted, so a reload loses it — but the
+    // sticky flag survives, and falling back to the first-run pitch for someone
+    // who has emptied their list is the wrong copy for the wrong reason.
+    saveLocations([place("a", "Cabin")]);
+    saveLocations([]);
     renderScreen();
     expect(screen.getByText("Removed.")).toBeInTheDocument();
     expect(screen.queryByText("Nowhere saved yet")).not.toBeInTheDocument();

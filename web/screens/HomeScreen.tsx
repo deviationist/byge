@@ -1,8 +1,8 @@
 import { useLocalSearchParams } from "expo-router";
-import { Text, useWindowDimensions, View } from "react-native";
 import { useState } from "react";
+import { Text, useWindowDimensions, View } from "react-native";
 import { useLocations } from "../hooks/useLocations";
-import { TwoPane, TWO_PANE_BREAKPOINT } from "../layouts/TwoPane";
+import { TWO_PANE_BREAKPOINT, TwoPane } from "../layouts/TwoPane";
 import { LocationsScreen } from "./LocationsScreen";
 import { VerdictScreen } from "./VerdictScreen";
 
