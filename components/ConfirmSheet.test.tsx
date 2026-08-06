@@ -38,6 +38,14 @@ describe("ConfirmSheet", () => {
     expect(onCancel).toHaveBeenCalledOnce();
   });
 
+  it("opens with focus on the safe option, not the destructive one", () => {
+    // An inherited Return should keep your place, never delete it. Focus also
+    // has to move INTO the dialog at all — leaving it on the trigger behind the
+    // scrim makes a keyboard user hunt for the thing that just took the screen.
+    render(<ConfirmSheet {...base} onConfirm={() => {}} onCancel={() => {}} />);
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Keep it" }));
+  });
+
   it("Escape never confirms", () => {
     // The keyboard escape hatch must always land on the safe outcome.
     const onConfirm = vi.fn();

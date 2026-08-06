@@ -61,7 +61,10 @@ export function AddLocationScreen() {
     const next = neighbourOf(existing.id);
     remove(existing.id);
     setConfirming(false);
-    router.replace(next ? `/location/${next.id}` : "/");
+    // Same as the verdict screen: the last removal lands on the list, and the
+    // name has to travel with it so the list confirms rather than welcomes.
+    if (next) router.replace(`/location/${next.id}`);
+    else router.replace({ pathname: "/", params: { removed: existing.name } });
   }
 
   const copy = existing
