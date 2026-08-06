@@ -238,7 +238,11 @@ export function OverflowMenu({
             zIndex: 50,
             borderWidth: 1,
             borderRadius: 12,
-            paddingVertical: 6,
+            // No vertical padding, and the corners clip. With padding, hovering
+            // the first row left a strip of panel above it and the last row a
+            // strip below — the highlight has to run corner to corner or it
+            // reads as a misaligned row rather than a hovered one.
+            overflow: "hidden",
             ...({
               boxShadow:
                 theme === "dark"

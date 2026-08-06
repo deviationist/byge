@@ -17,7 +17,7 @@ import { RefreshControl } from "../components/RefreshControl";
 import { StaleBanner } from "../components/StaleBanner";
 import { useLocations } from "../hooks/useLocations";
 import { useRefresh, useVerdict } from "../hooks/useVerdict";
-import { Screen } from "../layouts/Screen";
+import { pagePadFor, Screen } from "../layouts/Screen";
 import { isBlindVerdict } from "../lib/forecast";
 import { toast } from "../lib/toast";
 import { useResolvedTheme } from "../theme/ThemeProvider";
@@ -111,8 +111,17 @@ export function VerdictScreen({ id: idProp, showBack = true }: VerdictScreenProp
   const blind = verdict ? isBlindVerdict(verdict) : false;
   const hasReading = !!verdict && !blind;
 
+  // The design's vertical rhythm, measured off the specimen. It is deliberately
+  // NOT uniform: the argument is answer → what it feels like → how sure → shape
+  // of the next two hours, and the gaps widen down the page so each block reads
+  // as a further step away from the headline rather than as another paragraph
+  // of it. A single `gap` on Screen would flatten exactly that.
+  const gapAfterHead = phone ? 26 : 40;
+  const gapAfterHeadline = phone ? 26 : 34;
+  const gapAfterBadge = phone ? 30 : 42;
+
   return (
-    <Screen measure={phone ? null : 620}>
+    <Screen measure={phone ? null : 620} pad={pagePadFor(width)}>
       <NavBar
         // No back control in the two-pane detail pane: the list is beside it,
         // so there is nowhere to go back TO. A back button that returns you to
@@ -173,6 +182,8 @@ export function VerdictScreen({ id: idProp, showBack = true }: VerdictScreenProp
         />
       </NavBar>
 
+      <View style={{ height: gapAfterHead }} />
+
       {isError && !verdict ? (
         <ErrorState
           variant="inline"
@@ -200,6 +211,7 @@ export function VerdictScreen({ id: idProp, showBack = true }: VerdictScreenProp
             <>
               <View
                 style={{
+                  marginTop: gapAfterHeadline,
                   flexDirection: "row",
                   flexWrap: "wrap",
                   alignItems: "center",
@@ -210,7 +222,9 @@ export function VerdictScreen({ id: idProp, showBack = true }: VerdictScreenProp
                 <PrecipitationConfidence verdict={verdict} theme={theme} />
               </View>
 
-              <PrecipitationGraph frames={verdict.frames} theme={theme} />
+              <View style={{ marginTop: gapAfterBadge }}>
+                <PrecipitationGraph frames={verdict.frames} theme={theme} />
+              </View>
             </>
           ) : null}
         </>
