@@ -183,7 +183,10 @@
     "secondClosedGap": "Then more in about {{start}} — about {{gap}} of dry in between, lasting about {{dur}}.",
     "secondClosedNoGap": "Then more in about {{start}}, lasting about {{dur}}.",
     "secondOpenGap": "Then more in about {{start}} — about {{gap}} of dry in between, and no end in sight after that.",
-    "secondOpenNoGap": "Then more in about {{start}}, and no end in sight after that."
+    "secondOpenNoGap": "Then more in about {{start}}, and no end in sight after that.",
+    "incomingEdgeBound": "right at the edge of what we can see",
+    "incomingEdgeTail": ".",
+    "incomingEdgeNote": "The spell starts in the very last frame radar gives us. We can say it arrives, and nothing at all about how long it lasts — not even a floor."
   },
   "compact": {
     "blind": "No radar coverage — we cannot see here",
@@ -196,7 +199,8 @@
     "incoming": "rain in about {{start}}, about {{dur}}",
     "incomingOpen": "rain in about {{start}}, at least {{dur}} →",
     "clear": "Dry · nothing approaching",
-    "separator": " · "
+    "separator": " · ",
+    "incomingEdge": "rain in about {{start}}, at the edge →"
   },
   "duration": {
     "hours_one": "{{count}} hour",
