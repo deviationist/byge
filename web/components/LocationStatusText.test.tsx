@@ -100,7 +100,19 @@ describe("state 1 — raining, end visible", () => {
     const v = view(raining);
     expect(v.queryByTestId("status-bound")).toBeNull();
     expect(v.queryByTestId("status-bound-mark")).toBeNull();
-    expect(v.queryByTestId("status-note")).toBeNull();
+    // A note IS present, and it is not the open-ended one. It says where the
+    // radar run stops — because "Stops in about 25 min" with nothing after it
+    // reads as an account of the rest of the day.
+    expect(text(v.getByTestId("status-note"))).not.toMatch(/no end|outlives/i);
+  });
+
+  it("says how far it can see, so the silence after the spell is not a claim", () => {
+    // The sentence is sound; the IMPLICATURE runs past the end of the data.
+    // Someone reading the radar map can see a band three hours out that this
+    // verdict never had a view of.
+    const note = text(view(raining).getByTestId("status-note"));
+    expect(note).toMatch(/radar run stops/i);
+    expect(note).toContain("2 hours");
   });
 });
 
@@ -163,7 +175,10 @@ describe("states 1 and 2 are unmistakably different", () => {
     // Three structural signals present in one and absent in the other.
     expect(closed.queryByTestId("status-bound")).toBeNull();
     expect(closed.queryByTestId("status-bound-mark")).toBeNull();
-    expect(closed.queryByTestId("status-note")).toBeNull();
+    // Both carry a note now, so the note alone no longer distinguishes them —
+    // what it SAYS does. Only the open-ended one explains a missing end.
+    expect(text(closed.getByTestId("status-note"))).not.toMatch(/no end|outlives/i);
+    expect(text(open.getByTestId("status-note"))).toMatch(/outlives/i);
     expect(open.queryByTestId("status-bound")).not.toBeNull();
     expect(open.queryByTestId("status-bound-mark")).not.toBeNull();
     expect(open.queryByTestId("status-note")).not.toBeNull();
@@ -219,7 +234,12 @@ describe("state 5 — dry, nothing approaching", () => {
     expect(headlineOf(clear).state).toBe("clear");
     const h = headline(clear);
     expect(h).toContain("Dry.");
-    expect(h).toContain("Nothing approaching.");
+    // BOUNDED, never bare. "Nothing approaching." is a claim about the future
+    // and we hold 115 minutes of it — a reader looking at the radar map can see
+    // a band that will plainly arrive in three hours, and the sentence has to
+    // be either false for them or bounded.
+    expect(h).toContain("Nothing approaching within 2 hours.");
+    expect(h).not.toContain("Nothing approaching.");
   });
 
   it("splits the claim in two: the near term is confident, the tail is not", () => {
@@ -345,7 +365,7 @@ describe("compact variant", () => {
       [rainingOpen, /Raining · no end in sight/],
       [incoming, /Dry · rain in about 40m, about 25m/],
       [incomingOpen, /Dry · rain in about 40m, at least 1h15m/],
-      [clear, /Dry · nothing approaching/],
+      [clear, /Dry · nothing within 2 hours/],
       [blind, /No radar coverage — we cannot see here/],
       [edgeOnly, /Rain within 8 km · not on you yet/],
       [twoSpells, /then more from about 40m/],
@@ -501,5 +521,49 @@ describe("a spell that starts at the very edge of the horizon", () => {
   it("does not state a zero floor in the compact register either", () => {
     expect(statusLine(atEdge)).not.toMatch(/0m\b/);
     expect(statusLine(atEdge)).not.toMatch(/at least 0/);
+  });
+});
+
+/**
+ * THE RULE, rather than the four sentences that happen to follow it.
+ *
+ * MET's run is 115 minutes. Any sentence whose plain reading extends past that
+ * is a claim we are not in a position to make — and the reader can catch us at
+ * it, because the radar map shows them a band four hours out that no verdict
+ * ever had a view of. Extending the forecast is not the fix: the nowcast is
+ * advection-only, so going further would mean inventing weather past the end of
+ * somebody else's measurement.
+ *
+ * So every state that says nothing more is coming has to say how far "more"
+ * reaches. This walks all of them rather than trusting four separate tests to be
+ * updated when a fifth state appears.
+ */
+describe("no verdict claims more future than we hold", () => {
+  const states: [string, Verdict][] = [
+    ["raining", raining],
+    ["raining-open", rainingOpen],
+    ["incoming", incoming],
+    ["incoming-open", incomingOpen],
+    ["clear", clear],
+  ];
+
+  it.each(states)("%s names the horizon somewhere on screen", (_name, v) => {
+    const rendered = view(v);
+    const all = text(rendered.container);
+    // "2 hours", or the exact "1 hour and 55 min" the footnotes use.
+    expect(all).toMatch(/2 hours|1 hour and 55 min/);
+  });
+
+  it.each(states)("%s never asserts an empty future without a bound", (_name, v) => {
+    const all = text(view(v).container);
+    // The bare forms, each of which reads as "and that is the end of it".
+    for (const bare of [
+      "Nothing approaching.",
+      "Nothing more.",
+      "It will not rain.",
+      "No rain today",
+    ]) {
+      expect(all).not.toContain(bare);
+    }
   });
 });
