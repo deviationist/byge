@@ -104,20 +104,32 @@ function joinNotes(a: string | null, b: string | null): string | null {
 }
 
 /**
- * "2 hours" reads better than "115 min" in a headline, and the exact horizon is
- * always restated in the footnote — so the prose can round without the claim
- * getting looser than the data. Only rounds when it is within 10 min of a whole
- * hour; otherwise it stays in minutes rather than inventing a tidy number.
+ * The horizon, as a phrase — and it NEVER ROUNDS UP.
+ *
+ * Every caller uses this as a BOUND: "nothing approaching within X", "no end in
+ * sight within X". So the direction of the rounding is not a matter of taste.
+ * MET's run is 115 minutes, and rounding that to "2 hours" claims five minutes
+ * of clear sky we do not have — which is the same overclaim as the bare
+ * "Nothing approaching." this replaced, one order of magnitude smaller and
+ * therefore easier to leave in.
+ *
+ * It is worse than five minutes in practice. Frame 0 is the ANALYSIS moment,
+ * not the moment somebody is reading, and MET publishes 5–15 minutes late — so
+ * a reader typically has 100–110 minutes ahead of them, never 120. The nav bar
+ * carries that gap separately as "radar N min old".
+ *
+ * So it rounds only when rounding cannot overstate: when the horizon is at or
+ * past the whole hour. 120 min becomes "2 hours"; 115 stays "1 hour and 55 min",
+ * which is longer to read and is the number we can actually stand behind.
  */
 function horizonPhrase(min: number): string {
-  const h = Math.round(min / 60);
-  // i18next plural rules rather than an inline ternary: English needs two forms
-  // here and other languages need more, which a `${n === 1 ? "" : "s"}` cannot
-  // express at all.
-  if (h >= 1 && Math.abs(min - h * 60) <= 10)
-    return i18next.t("status.horizonHours", { count: h });
-  // Not near a whole hour, so say it exactly — but still as hours and minutes
-  // ("1 hour and 35 min"), not as a raw minute count.
+  const h = Math.floor(min / 60);
+  // Only when the remainder is small AND the hour has actually elapsed, so the
+  // phrase is never longer than the data. i18next plural rules rather than an
+  // inline ternary: English needs two forms and other languages need more.
+  if (h >= 1 && min - h * 60 <= 10) return i18next.t("status.horizonHours", { count: h });
+  // Otherwise say it exactly — as hours and minutes ("1 hour and 55 min"), not
+  // as a raw minute count.
   return durationLong(min);
 }
 
@@ -242,7 +254,15 @@ export function headlineOf(v: Verdict): Headline {
         // sentence. The grammar changes, not just the value.
         body: "",
         bound: i18next.t("status.noEndBound"),
-        tail: i18next.t("status.noEndTail", { horizon: horizonPhrase(v.horizonMin) }),
+        // NO NUMBER AT ALL, and that is the point of this state. It used to end
+        // "within the next 2 hours" — a bound rounded outward. The exact figure
+        // is "1 hour and 55 min", which is honest and reads as a DURATION,
+        // sitting next to the one sentence whose whole claim is that we have
+        // none. So the tail names the run rather than its length, and the
+        // footnote below carries the precise horizon, which is where machinery
+        // belongs. It avoids "ends" too: two endings in one line, one of them
+        // the thing we are saying we cannot see, is a muddle.
+        tail: i18next.t("status.noEndTail"),
         // No clock. Naming a time here would contradict the sentence.
         clock: null,
         secondary,
