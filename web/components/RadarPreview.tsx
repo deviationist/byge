@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable, Text, View } from "react-native";
-import { useRadarField } from "../hooks/useRadarField";
+import { useRadarTiles } from "../hooks/useRadarTiles";
 import { MONO } from "../theme/tokens";
 import type { Theme } from "../theme/useTheme";
 import { MapCanvas, metersPerPixel } from "./MapCanvas";
-import { RadarGL } from "./RadarGL";
+import { RadarTilesGL } from "./RadarTilesGL";
 
 /**
  * The radar behind the sentence, small enough to stay behind it.
@@ -20,17 +20,20 @@ import { RadarGL } from "./RadarGL";
  * a 150-pixel strip at the bottom of the page cannot compete with a 54-point
  * headline for attention. If it ever starts to, it is too big.
  *
- * ONE FRAME, NOT TWENTY-FOUR. It asks `/field` for `frames=1` — the quantised
- * band field, gzipped, a couple of kilobytes for a window this size. The
- * anchored map screen fetches all 24 because it plays them; a still that says
- * "here is now" needs exactly one, and paying for an animation nobody can see
- * on every verdict view would be the version of this that deserves the design's
- * original objection.
+ * ONE FRAME, NOT TWENTY-FOUR. It asks for a single still — a few tiles, a couple
+ * of kilobytes gzipped. The map screen fetches the whole run because it plays
+ * it; a picture that says "here is now" needs exactly one frame, and paying for
+ * an animation nobody can see on every verdict view would be the version of
+ * this that deserves the design's original objection.
  *
- * THE SAME RENDERER AS THE FULL SCREEN, deliberately. `RadarGL` and `MapCanvas`,
- * not a simplified stand-in — so the field you tap cannot disagree with the
- * field you arrive at. A preview that paints its bands by a second set of rules
- * is a preview of something else.
+ * IT SHARES THE MAP'S CACHE, which is the quiet benefit of tiles: the squares
+ * this downloads are the squares the full map wants, so tapping through finds
+ * frame 0 already in memory and paints instantly.
+ *
+ * THE SAME RENDERER AS THE FULL SCREEN, deliberately — the same MapCanvas and
+ * the same tiled GL layer, not a simplified stand-in, so the field you tap
+ * cannot disagree with the field you arrive at. A preview that paints its bands
+ * by a second set of rules is a preview of something else.
  *
  * NOT INTERACTIVE. `MapCanvas` gets `interactive={false}`, which is what makes
  * the whole surface a link instead of a map that also happens to be one:
@@ -86,7 +89,7 @@ export function RadarPreview({
   // has been measured.
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
 
-  const { data: field } = useRadarField(
+  const { tiles, depth, version } = useRadarTiles(
     size ? { lat, lon, zoom: PREVIEW_ZOOM, width: size.width, height: size.height } : null,
     1,
   );
@@ -132,9 +135,10 @@ export function RadarPreview({
           // to carry it however small the surface is.
           attribution={t("radarMap.attribution")}
           overlay={(v) =>
-            field ? (
-              <RadarGL
-                field={field}
+            depth > 0 ? (
+              <RadarTilesGL
+                tiles={tiles}
+                version={version}
                 frame={0}
                 originX={v.originX}
                 originY={v.originY}

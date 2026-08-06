@@ -63,8 +63,8 @@ func (h *Handler) Routes() http.Handler {
 	mux.HandleFunc("OPTIONS /analysis", h.preflight)
 	mux.HandleFunc("GET /slab", h.slab)
 	mux.HandleFunc("OPTIONS /slab", h.preflight)
-	mux.HandleFunc("GET /field", h.field)
-	mux.HandleFunc("OPTIONS /field", h.preflight)
+	mux.HandleFunc("GET /tiles", h.tiles)
+	mux.HandleFunc("OPTIONS /tiles", h.preflight)
 	mux.HandleFunc("GET /geocode", h.geocode)
 	mux.HandleFunc("OPTIONS /geocode", h.preflight)
 	return mux
