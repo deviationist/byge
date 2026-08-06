@@ -115,7 +115,7 @@ export function RadarMapScreen() {
     return (
       <ErrorScreen
         kind="deleted"
-        path={id ? `/location/${id}/map` : undefined}
+        path={id ? `/map/${id}` : undefined}
         onPrimary={() => router.replace("/")}
         onSecondary={() => router.replace("/add")}
       />
