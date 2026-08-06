@@ -1,11 +1,12 @@
 import { useLocalSearchParams } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Text, useWindowDimensions, View } from "react-native";
 import { ErrorState } from "../components/ErrorState";
 import { LocationCard } from "../components/LocationCard";
 import { MapCanvas } from "../components/MapCanvas";
 import { NavBar } from "../components/NavBar";
+import { PlaybackControl } from "../components/PlaybackControl";
 import { PrecipitationGraph } from "../components/PrecipitationGraph";
 import { RadarLayer } from "../components/RadarLayer";
 import { RadarLegend } from "../components/RadarLegend";
@@ -54,6 +55,39 @@ export function RadarMapScreen() {
   // Frame index, not minutes. The graph speaks in indices and so does the
   // grid, and converting between them in two places is how they drift apart.
   const [frame, setFrame] = useState(0);
+  const [playing, setPlaying] = useState(false);
+
+  const frameCount = verdict?.frames.length ?? 0;
+
+  // Advance while playing, and stop at the horizon rather than looping.
+  //
+  // A loop is what every radar map does, and it is wrong here: it turns a
+  // two-hour forecast into wallpaper, and it quietly hides the moment that
+  // matters most — the END, where the data runs out and byge starts saying "no
+  // end in sight". Playing to the horizon and stopping puts the reader at that
+  // edge and leaves them there.
+  useEffect(() => {
+    if (!playing || frameCount === 0) return;
+    const reduced =
+      typeof matchMedia === "function" &&
+      matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const id = setInterval(
+      () => {
+        setFrame((f) => {
+          if (f >= frameCount - 1) {
+            setPlaying(false);
+            return f;
+          }
+          return f + 1;
+        });
+      },
+      // Slow enough to follow for anyone who asked for less motion. The control
+      // stays either way: stepping through frames is how this screen is read,
+      // so removing it would remove the screen's point rather than its motion.
+      reduced ? 900 : 220,
+    );
+    return () => clearInterval(id);
+  }, [playing, frameCount]);
 
   if (!location) {
     return (
@@ -184,13 +218,26 @@ export function RadarMapScreen() {
         ) : null}
 
         {frames.length > 0 ? (
-          <PrecipitationGraph
-            frames={frames}
-            theme={theme}
-            density="expanded"
-            selectedIndex={frame}
-            onScrub={setFrame}
-          />
+          <>
+            <PlaybackControl
+              playing={playing}
+              onToggle={() => setPlaying((p) => !p)}
+              minutes={frames[frame]?.minutes ?? 0}
+            />
+            <PrecipitationGraph
+              frames={frames}
+              theme={theme}
+              density="expanded"
+              selectedIndex={frame}
+              // Touching the scrubber stops playback. Fighting an animation for
+              // control of the thing you are dragging is the worst version of
+              // both, and the reader has just said which frame they want.
+              onScrub={(i) => {
+                setPlaying(false);
+                setFrame(i);
+              }}
+            />
+          </>
         ) : null}
 
         <Text
