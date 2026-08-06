@@ -80,9 +80,13 @@ describe("locale bundles", () => {
       .filter((k) => !k.startsWith("attribution."))
       .filter(
         (k) =>
-          !["appearance.system", "language.system", "about.data", "map.attribution"].includes(
-            k,
-          ),
+          ![
+            "appearance.system",
+            "language.system",
+            "about.data",
+            "map.attribution",
+            "radarMap.attribution",
+          ].includes(k),
       );
 
     expect(untranslated).toEqual([]);

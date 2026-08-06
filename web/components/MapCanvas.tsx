@@ -50,6 +50,20 @@ export type LatLon = { lat: number; lon: number };
  */
 export type Basemap = KartverketLayer;
 
+/**
+ * The viewport an overlay must align to: the top-left corner in absolute Web
+ * Mercator world pixels, and the INTEGER zoom those pixels belong to. Integer
+ * because tiles only exist at whole zooms — an overlay drawn at the fractional
+ * one would drift against the map under it.
+ */
+export type MapViewport = {
+  originX: number;
+  originY: number;
+  z: number;
+  width: number;
+  height: number;
+};
+
 export type MapCanvasProps = {
   /** Controlled — the parent owns the centre, this reports where it wants to go. */
   center: LatLon;
@@ -65,6 +79,11 @@ export type MapCanvasProps = {
   interactive?: boolean;
   /** Accessible name — a bare map surface is meaningless without one. */
   label?: string;
+  /**
+   * Drawn between the tiles and the chrome, with the viewport the tiles were
+   * chosen with. See the note at the call site.
+   */
+  overlay?: (viewport: MapViewport) => ReactNode;
   /** Basemap credit. Required by most tile providers, so it is a first-class prop. */
   attribution?: string;
   /** Overlays — markers, rings, legends. Rendered centred over the surface. */
@@ -163,6 +182,7 @@ export function MapCanvas({
   label = "Map",
   attribution,
   children,
+  overlay,
 }: MapCanvasProps) {
   const surfaceRef = useRef<View | null>(null);
 
@@ -329,14 +349,34 @@ export function MapCanvas({
       ]}
     >
       {size ? (
-        <TileLayer
-          layer={basemap}
-          z={tileZoom}
-          originX={tilePx.x - size.width / 2}
-          originY={tilePx.y - size.height / 2}
-          width={size.width}
-          height={size.height}
-        />
+        <>
+          <TileLayer
+            layer={basemap}
+            z={tileZoom}
+            originX={tilePx.x - size.width / 2}
+            originY={tilePx.y - size.height / 2}
+            width={size.width}
+            height={size.height}
+          />
+          {/*
+            Between the basemap and the chrome, which is the design's layer
+            order: basemap, then data, then anything unclipped on top.
+
+            A render prop rather than a plain node, because an overlay that has
+            to line up with the tiles needs the same viewport the tiles were
+            chosen with — the rounded tile zoom, and the origin derived from it.
+            Handing it out keeps ONE owner of what a pixel is worth; letting a
+            caller recompute it is how a radar field ends up half a tile off the
+            coastline it is supposed to sit on.
+          */}
+          {overlay?.({
+            originX: tilePx.x - size.width / 2,
+            originY: tilePx.y - size.height / 2,
+            z: tileZoom,
+            width: size.width,
+            height: size.height,
+          })}
+        </>
       ) : (
         // Before the first layout there is no viewport to cover, so the
         // graticule stands in for one frame. It also survives as the offline
