@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Text, useWindowDimensions, View } from "react-native";
+import { Pressable, Text, useWindowDimensions, View } from "react-native";
 import { Attribution } from "../components/Attribution";
 import { ConfirmSheet, removeLocationCopy } from "../components/ConfirmSheet";
 import { CoverageNotice } from "../components/CoverageNotice";
@@ -21,6 +21,7 @@ import { pagePadFor, Screen } from "../layouts/Screen";
 import { isBlindVerdict } from "../lib/forecast";
 import { toast } from "../lib/toast";
 import { useResolvedTheme } from "../theme/ThemeProvider";
+import { MONO } from "../theme/tokens";
 
 /**
  * The answer.
@@ -231,6 +232,36 @@ export function VerdictScreen({ id: idProp, showBack = true }: VerdictScreenProp
       ) : null}
 
       <View style={{ marginTop: "auto", paddingTop: 28, gap: 16 }}>
+        {/*
+          A line of text, not a button and not a thumbnail. The design is
+          explicit that the map is a confirmation layer you go looking for — it
+          is never the landing view and never the biggest thing here, because
+          the answer is the sentence above. Sizing this like an action would
+          make the screen look as though it were leading somewhere.
+
+          Hidden for a blind verdict: there is no field to show, and offering to
+          explain a non-answer is worse than not offering.
+        */}
+        {hasReading ? (
+          <Pressable
+            testID="see-why"
+            accessibilityRole="link"
+            accessibilityLabel={t("radarMap.seeWhy")}
+            onPress={() => router.push(`/location/${location.id}/map`)}
+            className="border-b-line2"
+            style={({ pressed }) => ({
+              alignSelf: "flex-start",
+              borderBottomWidth: 1,
+              paddingBottom: 2,
+              opacity: pressed ? 0.6 : 1,
+            })}
+          >
+            <Text className="text-ink2" style={{ fontSize: 12.5 }}>
+              {t("radarMap.seeWhy")} <Text style={{ fontFamily: MONO }}>→</Text>
+            </Text>
+          </Pressable>
+        ) : null}
+
         <RefreshControl
           status={busy ? "refreshing" : (outcome ?? "idle")}
           radarAgeMin={verdict ? Math.round(verdict.analysisAgeMin) : undefined}

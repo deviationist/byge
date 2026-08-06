@@ -53,11 +53,52 @@ export type Probe = {
   threshold: number;
   analysis: Analysis;
   frames: Frame[];
+  /**
+   * The raw cells, kept only when `keepGrid` was asked for.
+   *
+   * Everything else here is a REDUCTION of this — max, mean, coverage, nearest
+   * — because a verdict is a sentence and a sentence needs numbers, not a
+   * field. The radar map is the one screen that needs the field itself: it
+   * exists to show WHY the sentence says what it says, and a picture of the
+   * band is the only thing that can do that.
+   *
+   * Off by default, and deliberately so. The cube is already fetched and then
+   * discarded on every verdict; holding it costs memory per saved place for a
+   * screen most sessions never open.
+   */
+  grid?: RadarGrid;
+};
+
+/**
+ * A window of radar cells over time, in grid space.
+ *
+ * Rows and columns are indices into MET's Lambert Conformal Conic grid, NOT
+ * degrees — `cellCentre` in lib/grid.ts turns one into a projected metre
+ * coordinate, and `unproject` turns that into lat/lon. Keeping them as indices
+ * here means the layer that draws them decides how to project, and this stays
+ * the shape MET actually sent.
+ */
+export type RadarGrid = {
+  /** Top-left cell of the window. */
+  row0: number;
+  col0: number;
+  width: number;
+  height: number;
+  /**
+   * `values[t * width * height + i * width + j]` — mm/h, or >= FILL_THRESHOLD
+   * where the mosaic cannot see. The fill value is left IN rather than mapped
+   * to zero: "no radar here" and "no rain here" are the distinction this whole
+   * app turns on, and flattening it in the data would make the map draw dry
+   * ground over the ocean.
+   */
+  values: Float64Array | number[];
 };
 
 export type ProbeOptions = {
   radiusKm?: number;
   threshold?: number;
+  /** Keep the raw cells as well as the summary. See `Probe.grid`. */
+  keepGrid?: boolean;
   analysis?: Analysis;
   signal?: AbortSignal;
 };
@@ -143,7 +184,17 @@ export async function probe(lat: number, lon: number, opts: ProbeOptions = {}): 
     });
   }
 
-  return { lat, lon, radiusKm, threshold, analysis, frames };
+  return {
+    lat,
+    lon,
+    radiusKm,
+    threshold,
+    analysis,
+    frames,
+    grid: opts.keepGrid
+      ? { row0: r0, col0: c0, width: w, height: h, values: cube.values }
+      : undefined,
+  };
 }
 
 export { HORIZON_MIN };

@@ -23,7 +23,8 @@
     "back": "Tilbake",
     "backToPlaces": "Tilbake til stedene",
     "addPlace": "+ Legg til et sted",
-    "aboutByge": "Om byge"
+    "aboutByge": "Om byge",
+    "backToVerdict": "Tilbake til svaret"
   },
   "install": {
     "body": "Ha byge ett trykk unna — legg den til på hjemskjermen. Virker uten nett med det siste svaret.",
@@ -90,7 +91,8 @@
     "dryFeels": "vi så etter, ingenting faller",
     "dryRange": "observert",
     "notObserved": "IKKE OBSERVERT",
-    "notObservedBody": "Dette er ikke et nivå av regn, og det er ikke opphold. Det betyr at radarmosaikken ikke ser det stedet i det hele tatt, så byge påstår ingenting hverken den ene eller andre veien. Opphold betyr at vi så etter og ingenting falt; ingen dekning betyr at vi ikke fikk se."
+    "notObservedBody": "Dette er ikke et nivå av regn, og det er ikke opphold. Det betyr at radarmosaikken ikke ser det stedet i det hele tatt, så byge påstår ingenting hverken den ene eller andre veien. Opphold betyr at vi så etter og ingenting falt; ingen dekning betyr at vi ikke fikk se.",
+    "dryRange2": "ikke observert"
   },
   "field": {
     "coordHint": "Maks fire desimaler — MET avviser alt finere. Det er omtrent 11 m, godt innenfor én radarcelle på 1 km, så ingenting går tapt."
@@ -314,5 +316,16 @@
     "observed": "−{{min}} observert",
     "forecast": "{{min}} varsel",
     "frame": "{{at}} — {{what}}"
+  },
+  "radarMap": {
+    "mmh": "MM/T",
+    "subtitle": "FASE 2 · bekreftelseslag — setningen er fortsatt svaret",
+    "label": "Radar rundt {{name}}",
+    "attribution": "© Kartverket · radar: MET Norway",
+    "footnote": "Skravert bakke er utenfor radardekning — ikke opphold, men uobservert. Grensen følger rekkevidden til hver enkelt radar, så den er ujevn og ikke et pent polygon.",
+    "darkNote": "Mørk modus: MET lager disse flisene lyse og har ingen mørk variant, så kartet blir stående som et opplyst vindu i mørk ramme i stedet for en tonet versjon av andres data.",
+    "unavailable": "Fikk ikke lastet radarfeltet. Svaret over er upåvirket — det var allerede hentet.",
+    "seeWhy": "Se hvorfor — radarkart",
+    "window": "Den stiplede firkanten viser hvor mye radar vi ba om rundt dette stedet. Utenfor har vi ikke sett etter — som ikke er det samme som klart."
   }
 }

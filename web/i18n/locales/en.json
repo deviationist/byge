@@ -23,7 +23,8 @@
     "back": "Back",
     "backToPlaces": "Back to places",
     "addPlace": "+ Add a place",
-    "aboutByge": "About byge"
+    "aboutByge": "About byge",
+    "backToVerdict": "Back to the verdict"
   },
   "install": {
     "body": "Keep byge one tap away — add it to your home screen. Works offline with the last verdict.",
@@ -90,7 +91,8 @@
     "dryFeels": "we looked, nothing is falling",
     "dryRange": "observed",
     "notObserved": "NOT OBSERVED",
-    "notObservedBody": "This is not a level of rain and it is not dry. It means the radar mosaic cannot see that place at all, so byge makes no claim either way. Dry means we looked and saw nothing falling; no coverage means we could not look."
+    "notObservedBody": "This is not a level of rain and it is not dry. It means the radar mosaic cannot see that place at all, so byge makes no claim either way. Dry means we looked and saw nothing falling; no coverage means we could not look.",
+    "dryRange2": "not observed"
   },
   "field": {
     "coordHint": "Four decimals max — MET rejects anything finer. That is about 11 m, far inside a single 1 km radar cell, so nothing is lost."
@@ -314,5 +316,16 @@
     "observed": "−{{min}} observed",
     "forecast": "{{min}} forecast",
     "frame": "{{at}} — {{what}}"
+  },
+  "radarMap": {
+    "mmh": "MM/H",
+    "subtitle": "PHASE 2 · confirmation layer — the sentence is still the answer",
+    "label": "Radar around {{name}}",
+    "attribution": "© Kartverket · radar: MET Norway",
+    "footnote": "Hatched ground is outside radar coverage — not dry, unobserved. The boundary follows individual radar ranges, so it is ragged rather than a tidy polygon.",
+    "darkNote": "Dark mode: MET renders these tiles light and has no dark equivalent, so the map stays a lit window inside dark chrome rather than a tinted version of someone else's data.",
+    "unavailable": "Could not load the radar field. The verdict above is unaffected — it was already fetched.",
+    "seeWhy": "See why — radar map",
+    "window": "The dashed rectangle is how much radar we asked for around this place. Beyond it we have not looked — which is not the same as clear."
   }
 }
