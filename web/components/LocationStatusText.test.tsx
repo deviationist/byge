@@ -468,7 +468,6 @@ describe("the clock line", () => {
   });
 });
 
-
 describe("a spell that starts at the very edge of the horizon", () => {
   // startMin lands in the LAST frame, so the lower bound is zero. Found live:
   // the headline read "lasting at least 0 min" and the footnote explained that

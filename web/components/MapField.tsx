@@ -5,7 +5,17 @@ import { cellOf, clampCoord, OutsideGridError } from "../lib/grid";
 import { MONO } from "../theme/tokens";
 import type { Theme } from "../theme/useTheme";
 import { Button } from "./Button";
-import { type Basemap, type LatLon, MapCanvas, metersPerPixel } from "./MapCanvas";
+import {
+  type Basemap,
+  type LatLon,
+  MAX_ZOOM,
+  MapCanvas,
+  MIN_ZOOM,
+  metersPerPixel,
+} from "./MapCanvas";
+import { BASEMAP_OPTIONS, SegmentedControl } from "./SegmentedControl";
+import type { KartverketLayer } from "./TileLayer";
+import { ZoomControl } from "./ZoomControl";
 
 /**
  * The add-a-place picker.
@@ -77,6 +87,26 @@ export function MapField({
 }: MapFieldProps) {
   const { t } = useTranslation();
   const [status, setStatus] = useState<LocateStatus>("idle");
+  // Owned here rather than lifted to the screen: which map you find easiest to
+  // recognise a place on is a property of looking at the map, not of the place
+  // being saved. Nothing about the verdict depends on it, so it does not belong
+  // in `SavedLocation`.
+  const [layer, setLayer] = useState<KartverketLayer>(basemap);
+
+  // Zoom is uncontrolled unless a caller asks to hear about it. Both screens
+  // that embed a map want zoom buttons and neither wants to own the number, so
+  // making the prop mandatory would have meant identical boilerplate twice —
+  // and it is how the buttons came to render nowhere at all: they were gated on
+  // `onZoomChange`, which nobody passed.
+  const [ownZoom, setOwnZoom] = useState(zoom);
+  const currentZoom = onZoomChange ? zoom : ownZoom;
+  const setZoom = useCallback(
+    (z: number) => {
+      setOwnZoom(z);
+      onZoomChange?.(z);
+    },
+    [onZoomChange],
+  );
 
   // getCurrentPosition can answer long after the screen is gone.
   const mounted = useRef(true);
@@ -123,18 +153,18 @@ export function MapField({
 
   // The ring is drawn in real-world units, so it has to ask the projection how
   // big a pixel currently is rather than assume a scale.
-  const ringPx = (2 * radiusKm * 1000) / metersPerPixel(value.lat, zoom);
+  const ringPx = (2 * radiusKm * 1000) / metersPerPixel(value.lat, currentZoom);
 
   return (
     <View style={{ gap: 12 }}>
       <View style={{ height: 300 }}>
         <MapCanvas
           center={value}
-          zoom={zoom}
+          zoom={currentZoom}
           onMove={commit}
           onMoveEnd={commit}
-          onZoomChange={onZoomChange}
-          basemap={basemap}
+          onZoomChange={setZoom}
+          basemap={layer}
           theme={theme}
           label={t("map.pick")}
           attribution={t("map.attribution")}
@@ -155,8 +185,25 @@ export function MapField({
             }}
           />
           <Marker />
+          <ZoomControl zoom={currentZoom} min={MIN_ZOOM} max={MAX_ZOOM} onChange={setZoom} />
         </MapCanvas>
       </View>
+
+      {/*
+        Under the map, not floating over it. The map pane is 300 px tall and
+        already carries a crosshair, a radius ring, an attribution line and the
+        zoom buttons; a fifth thing on top of the imagery is where a picker
+        stops being a picker. `labelHidden` because "Map style" beside four
+        style names is a caption stating the obvious — but the name stays in the
+        accessibility tree, where a radiogroup with no name is a puzzle.
+      */}
+      <SegmentedControl<KartverketLayer>
+        label={t("basemap.label")}
+        labelHidden
+        options={BASEMAP_OPTIONS}
+        value={layer}
+        onChange={setLayer}
+      />
 
       <View
         style={{ flexDirection: "row", gap: 10, alignItems: "flex-start", flexWrap: "wrap" }}

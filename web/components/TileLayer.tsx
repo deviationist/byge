@@ -31,9 +31,22 @@ export const KARTVERKET_LAYERS = {
   // the precipitation palette for attention.
   grey: "topograatone",
   topo: "topo",
+  // The scanned 1:50 000-style sheet. Denser contours and real relief where
+  // `topo` goes flat — in a city the two are near-identical, but out in terrain
+  // this is the one that shows you the valley your cabin sits in.
+  detailed: "toporaster",
   // Genuinely useful in a country where a great many saved places are coastal.
   nautical: "sjokartraster",
 } as const;
+
+/**
+ * No aerial or satellite layer, and not for want of trying. Kartverket's open
+ * WMTS cache advertises exactly four layers, all of them maps; Norge i bilder
+ * (the national orthophoto) sits behind a signed agreement, the old
+ * `opencache.statkart.no` gateway no longer resolves, and the WebAtlas tiles
+ * answer 403 without a key. So "satellite" and "hybrid" are not features that
+ * were skipped — they are not available to an app with no vendor account.
+ */
 
 export type KartverketLayer = keyof typeof KARTVERKET_LAYERS;
 

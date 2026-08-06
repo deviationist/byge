@@ -155,7 +155,9 @@
     "failedTitle": "Could not get a fix",
     "failedBody": "The device did not answer in time. Try again, or pan the map instead.",
     "outsideTitle": "Outside the radar grid",
-    "outsideBody": "The Nordic radar does not reach here, so this place would have no answer to give — not a dry one, none. Pan the marker back inside the grid."
+    "outsideBody": "The Nordic radar does not reach here, so this place would have no answer to give — not a dry one, none. Pan the marker back inside the grid.",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out"
   },
   "status": {
     "horizonHours_one": "{{count}} hour",
@@ -227,5 +229,15 @@
     "offlineAge": "last updated {{age}} min ago · offline",
     "checking": "checking…",
     "caption": "{{places}} · {{freshness}}"
+  },
+  "basemap": {
+    "label": "Map style",
+    "grey": "Muted",
+    "greyHint": "Quiet, so the circle carries",
+    "topo": "Terrain",
+    "detailed": "Detailed",
+    "detailedHint": "Contours and relief",
+    "nautical": "Nautical",
+    "nauticalHint": "Sea charts and depths"
   }
 }

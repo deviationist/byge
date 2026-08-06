@@ -143,6 +143,7 @@ function clampZoom(z: number): number {
 const BASEMAP: Record<Basemap, string> = {
   grey: "#e9e6e0",
   topo: "#eef0e8",
+  detailed: "#f0ece2",
   nautical: "#dfe8ee",
 };
 

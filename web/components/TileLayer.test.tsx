@@ -30,8 +30,27 @@ describe("tileUrl", () => {
   });
 
   it("maps every basemap to a layer that exists in the open cache", () => {
-    // Verified live: ortofoto/flyfoto/satellitt 400, these three 200.
-    expect(Object.values(KARTVERKET_LAYERS)).toEqual(["topograatone", "topo", "sjokartraster"]);
+    // Verified against the live WMTSCapabilities document, which advertises
+    // exactly these four and nothing else. A typo here yields a 400 for every
+    // tile — a blank map, not an error anyone sees in a log.
+    expect(Object.values(KARTVERKET_LAYERS)).toEqual([
+      "topograatone",
+      "topo",
+      "toporaster",
+      "sjokartraster",
+    ]);
+  });
+
+  it("offers no aerial layer, because there is not one to offer", () => {
+    // Guards against someone re-adding the design's sketched "satellite" and
+    // "hybrid" options. Norge i bilder needs a signed agreement, the old
+    // statkart opencache gateway no longer resolves, and WebAtlas answers 403
+    // without a key — so those names would render a blank pane, which reads as
+    // a broken map rather than an unavailable one.
+    const names = Object.values(KARTVERKET_LAYERS).join(" ");
+    for (const aerial of ["orto", "foto", "satellitt", "nib"]) {
+      expect(names).not.toContain(aerial);
+    }
   });
 });
 
