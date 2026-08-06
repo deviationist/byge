@@ -1,5 +1,6 @@
 import { useId, useRef } from "react";
 import type { TextStyle, View as ViewType } from "react-native";
+import { MONO } from "../theme/tokens";
 import { Pressable, Text, View } from "react-native";
 import type { ThemeChoice } from "../theme/useTheme";
 
@@ -109,7 +110,7 @@ export function nextIndex(key: string, current: number, count: number): number |
 }
 
 const LABEL: TextStyle = {
-  fontFamily: "'IBM Plex Mono', monospace",
+  fontFamily: MONO,
   fontSize: 9.5,
   letterSpacing: 0.5,
   textTransform: "uppercase",

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { useId } from "react";
 import type { TextStyle } from "react-native";
+import { MONO } from "../theme/tokens";
 import { Text, View } from "react-native";
 
 /**
@@ -20,7 +21,7 @@ export type SectionProps = {
 };
 
 const TITLE = {
-  fontFamily: "'IBM Plex Mono', monospace",
+  fontFamily: MONO,
   fontSize: 9.5,
   letterSpacing: 0.5,
   // Uppercased in CSS rather than in the string, so the accessible name stays
@@ -39,7 +40,7 @@ export function Section({ title, children, hint, gap = 9 }: SectionProps) {
         <Text
           className="text-ink3"
           style={{
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: MONO,
             fontSize: 10,
             lineHeight: 16,
           }}

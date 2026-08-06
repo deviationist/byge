@@ -300,17 +300,17 @@ export function LocationStatusText({
   return (
     <View style={{ gap: 16 }}>
       <View testID="status-headline" accessibilityRole="header">
-        <Text testID="status-lead" className="text-ink" style={line}>
+        <Text testID="status-lead" className="text-ink font-display" style={line}>
           {h.lead}
         </Text>
 
         {h.body || h.bound ? (
-          <Text testID="status-body" className="text-ink2" style={line}>
+          <Text testID="status-body" className="text-ink2 font-display" style={line}>
             {h.body}
             {h.bound ? (
               <Text
                 testID="status-bound"
-                className="text-ink border-ink3"
+                className="text-ink border-ink3 font-display"
                 style={{
                   borderBottomWidth: 2,
                   borderStyle: "dotted",
@@ -343,7 +343,7 @@ export function LocationStatusText({
         // Subordinate by size and colour, not hidden. See secondaryOf().
         <Text
           testID="status-secondary"
-          className="text-ink2"
+          className="text-ink2 font-display"
           style={{ fontSize: 15, lineHeight: 22 }}
         >
           {h.secondary}
