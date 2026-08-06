@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import type { DimensionValue } from "react-native";
 import { Pressable, Text, View } from "react-native";
 import { isWet } from "../lib/forecast";
@@ -86,16 +87,16 @@ export function isOpenEndedSeries(frames: Frame[]): boolean {
 /** One word for the shape of the series, shown beside the header. */
 export function shapeCaptionOf(frames: Frame[]): string {
   if (frames.length === 0) return "";
-  if (frames.every(isBlind)) return "not observed";
-  if (isOpenEndedSeries(frames)) return "runs past the horizon";
-  if (isWet(frames[0])) return "easing";
-  return frames.some(isWet) ? "one band" : "clear";
+  if (frames.every(isBlind)) return i18next.t("graph.notObserved");
+  if (isOpenEndedSeries(frames)) return i18next.t("graph.openEnded");
+  if (isWet(frames[0])) return i18next.t("graph.easing");
+  return frames.some(isWet) ? i18next.t("graph.oneBand") : i18next.t("graph.clear");
 }
 
 function atLabel(min: number): string {
-  if (min === 0) return "now";
+  if (min === 0) return i18next.t("graph.now");
   // U+2212 minus, not a hyphen — these sit next to "+30" and have to line up.
-  return min < 0 ? `−${-min} min` : `+${min} min`;
+  return min < 0 ? i18next.t("graph.behind", { min: -min }) : i18next.t("graph.ahead", { min });
 }
 
 /**
@@ -109,8 +110,13 @@ export function axisTicks(frames: Frame[]): string[] {
   const last = frames[frames.length - 1].minutes;
   // The marker says the series does not end here, it just stops being visible.
   const end = isOpenEndedSeries(frames) ? `+${last} ⇥` : `+${last}`;
-  if (first < 0) return [`−${-first} observed`, "now", `${end} forecast`];
-  const out = ["now"];
+  if (first < 0)
+    return [
+      i18next.t("graph.observed", { min: -first }),
+      i18next.t("graph.now"),
+      i18next.t("graph.forecast", { min: end }),
+    ];
+  const out = [i18next.t("graph.now")];
   for (let m = 30; m < last; m += 30) out.push(`+${m}`);
   out.push(end);
   return out;
@@ -137,13 +143,19 @@ function barOf(f: Frame, theme: Theme): Bar {
       className: "bg-nodata",
       backgroundImage: HATCH,
       opacity: 1,
-      label: `${atLabel(f.minutes)} — not observed`,
+      label: i18next.t("graph.frame", {
+        at: atLabel(f.minutes),
+        what: i18next.t("graph.notObserved"),
+      }),
     };
   }
 
   const band = bandOf(f.maxRate);
   const past = f.minutes < 0 ? 0.55 : 1;
-  const label = `${atLabel(f.minutes)} — ${describeRate(f.maxRate)}`;
+  const label = i18next.t("graph.frame", {
+    at: atLabel(f.minutes),
+    what: describeRate(f.maxRate),
+  });
 
   if (band.index === 0) {
     return { pct: DRY_PCT, className: "bg-dry", opacity: past, label };
@@ -178,7 +190,8 @@ export function PrecipitationGraph({
   const d = DENSITY[density];
   const openEnded = isOpenEndedSeries(frames);
   const ticks = axisTicks(frames);
-  const header = label ?? (density === "compact" ? "NEXT 2 HOURS" : "RADAR TIMELINE");
+  const header =
+    label ?? i18next.t(density === "compact" ? "graph.headerCompact" : "graph.headerExpanded");
   const selected = selectedIndex !== undefined ? frames[selectedIndex] : undefined;
   const right =
     caption ??

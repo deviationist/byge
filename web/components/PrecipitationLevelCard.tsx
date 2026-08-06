@@ -1,7 +1,8 @@
+import i18next from "i18next";
 import { Text, View } from "react-native";
 import type { Verdict } from "../lib/forecast";
 import { isBlindVerdict } from "../lib/forecast";
-import { bandOf, NOTICEABLE } from "../lib/scale";
+import { bandFeelsLike, bandLabel, bandOf, NOTICEABLE } from "../lib/scale";
 import { MONO } from "../theme/tokens";
 import type { Theme } from "../theme/useTheme";
 import { SWATCH, Swatch, swatchModeOf, swatchRateOf } from "./Swatch";
@@ -31,11 +32,11 @@ export type LevelCopy = { label: string; feelsLike: string; rate: string };
 export function levelCardCopy(v: Verdict): LevelCopy {
   if (isBlindVerdict(v)) {
     return {
-      label: "not observed",
-      feelsLike: "outside radar coverage — no claim either way",
+      label: i18next.t("level.notObserved"),
+      feelsLike: i18next.t("level.notObservedFeels"),
       // Not "0.0 mm/h". We do not have a measurement here; printing one would be
       // the single most confident wrong thing this component could say.
-      rate: "—",
+      rate: i18next.t("level.noRate"),
     };
   }
 
@@ -47,26 +48,31 @@ export function levelCardCopy(v: Verdict): LevelCopy {
       // With the any-touch rule a wide radius reports rain from a cell kilometres
       // away. "heavy rain / soaked in minutes" would be a promise about the user
       // that the data does not make.
-      label: v.edgeOnly ? `nearby: ${band.label}` : band.label,
-      feelsLike: v.edgeOnly ? "falling inside your radius, not on you" : band.feelsLike,
-      rate: `${v.nowRate.toFixed(1)} mm/h`,
+      label: v.edgeOnly
+        ? i18next.t("level.nearby", { label: bandLabel(band) })
+        : bandLabel(band),
+      feelsLike: v.edgeOnly ? i18next.t("level.nearbyFeels") : bandFeelsLike(band),
+      rate: i18next.t("level.rate", { rate: v.nowRate.toFixed(1) }),
     };
   }
 
   if (peak >= NOTICEABLE) {
     return {
-      label: `incoming: ${band.label}`,
-      feelsLike: band.feelsLike,
-      rate: `peak ${peak.toFixed(1)} mm/h`,
+      label: i18next.t("level.incoming", { label: bandLabel(band) }),
+      feelsLike: bandFeelsLike(band),
+      rate: i18next.t("level.peak", { rate: peak.toFixed(1) }),
     };
   }
 
   return {
-    label: "dry",
-    feelsLike: "nothing falling, and we can see that",
+    label: i18next.t("level.dry"),
+    feelsLike: i18next.t("level.dryFeels"),
     // A flat "0.0 mm/h" beside a note about a trace at +80 min reads as a
     // contradiction. Sub-threshold moisture is real; it is just not rain.
-    rate: peak > 0 ? `<${TRACE_CEIL.toFixed(1)} mm/h` : "0.0 mm/h",
+    rate:
+      peak > 0
+        ? i18next.t("level.under", { rate: TRACE_CEIL.toFixed(1) })
+        : i18next.t("level.rate", { rate: "0.0" }),
   };
 }
 

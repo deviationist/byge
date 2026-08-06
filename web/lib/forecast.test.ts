@@ -13,7 +13,7 @@ import {
 } from "./forecast";
 import { NFRAMES, STEP_S } from "./grid";
 import type { Frame } from "./radar";
-import { BANDS, bandOf, legend, NOTICEABLE } from "./scale";
+import { BANDS, bandLabel, bandOf, legend, NOTICEABLE } from "./scale";
 
 /**
  * Ported from the Python spike's tests/test_forecast.py. These guard the
@@ -297,7 +297,7 @@ suite("scale", () => {
     [10.0, "heavy rain"],
     [50.0, "torrential"],
   ])("%f mm/h reads as %s", (rate, label) => {
-    expect(bandOf(rate).label).toBe(label);
+    expect(bandLabel(bandOf(rate))).toBe(label);
   });
 
   it("band boundaries are inclusive at the floor", () => {
@@ -306,7 +306,7 @@ suite("scale", () => {
 
   it("'noticeable' is band 3 — bands 1-2 are moisture nobody calls rain", () => {
     expect(NOTICEABLE).toBe(BANDS[3].floor);
-    expect(bandOf(NOTICEABLE).label).toBe("light rain");
+    expect(bandLabel(bandOf(NOTICEABLE))).toBe("light rain");
   });
 
   it("the legend covers every band except dry, with an open top", () => {

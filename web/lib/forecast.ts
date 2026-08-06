@@ -15,7 +15,7 @@
 
 import { OutsideGridError } from "./grid";
 import { type Frame, HORIZON_MIN, isBlind, probe } from "./radar";
-import { bandOf, describeRate, NOTICEABLE } from "./scale";
+import { bandLabel, bandOf, describeRate, NOTICEABLE } from "./scale";
 
 /** A dry gap shorter than this is drizzle flicker, not the end of the rain. */
 export const BRIDGE_MIN = 10;
@@ -298,7 +298,7 @@ export function describe(v: Verdict): string {
   } else {
     const s = v.next;
     lines.push(
-      `No — dry now, but rain arrives in about ${s.startMin} min (${bandOf(s.peakRate).label}).`,
+      `No — dry now, but rain arrives in about ${s.startMin} min (${bandLabel(bandOf(s.peakRate))}).`,
     );
     if (isOpenEnded(s)) {
       lines.push(

@@ -1,3 +1,4 @@
+import i18next from "i18next";
 /**
  * Precipitation intensity scale, matched to yr.no's own colour bands.
  *
@@ -19,8 +20,15 @@ export type Band = {
   /** dark-theme equivalent: same hue order, luminance inverted so intensity
    *  still reads as "brighter". Not a tint of `light`. */
   dark: string;
-  label: string;
-  feelsLike: string;
+  /**
+   * The i18n key stem for this band's name and sensation — `band.heavy` and
+   * `band.heavyFeels`. NOT the words themselves: a band is a physical fact (a
+   * floor in mm/h and a colour) and facts do not translate, only the words for
+   * them do. Storing English here made the entire scale monolingual on a screen
+   * the reader had switched to Norwegian, and nothing about a colour ramp looks
+   * like copy, so it went unnoticed.
+   */
+  key: string;
 };
 
 export const BANDS: readonly Band[] = [
@@ -29,56 +37,49 @@ export const BANDS: readonly Band[] = [
     floor: 0,
     light: "transparent",
     dark: "transparent",
-    label: "dry",
-    feelsLike: "no rain",
+    key: "dry",
   },
   {
     index: 1,
     floor: 0.03,
     light: "#91E4FF",
     dark: "#1F4A5A",
-    label: "trace",
-    feelsLike: "barely detectable",
+    key: "trace",
   },
   {
     index: 2,
     floor: 0.055,
     light: "#5ED7FF",
     dark: "#2A6B82",
-    label: "drizzle",
-    feelsLike: "mist on your glasses",
+    key: "drizzle",
   },
   {
     index: 3,
     floor: 0.195,
     light: "#00AAFF",
     dark: "#3A9BC4",
-    label: "light rain",
-    feelsLike: "umbrella optional",
+    key: "light",
   },
   {
     index: 4,
     floor: 1.0,
     light: "#0080FF",
     dark: "#55AEF5",
-    label: "moderate rain",
-    feelsLike: "you'll want a jacket",
+    key: "moderate",
   },
   {
     index: 5,
     floor: 5.7,
     light: "#0055FF",
     dark: "#7EC0FF",
-    label: "heavy rain",
-    feelsLike: "soaked in minutes",
+    key: "heavy",
   },
   {
     index: 6,
     floor: 23.7,
     light: "#7A0087",
     dark: "#E8BCF4",
-    label: "torrential",
-    feelsLike: "seek shelter",
+    key: "torrential",
   },
 ] as const;
 
@@ -127,11 +128,32 @@ export function colorOf(band: Band, theme: "light" | "dark"): string {
   return theme === "dark" ? band.dark : band.light;
 }
 
+/**
+ * The band's name, and what that much rain feels like.
+ *
+ * Resolved through i18next at CALL time rather than stored on the band. A band
+ * is a physical fact — a floor in mm/h and a colour — and those do not
+ * translate; only the words for them do. Keeping the words in the table meant
+ * the whole scale was English, including on a screen the reader had set to
+ * Norwegian, because nothing about a colour ramp looks like copy.
+ */
+export function bandLabel(b: Band): string {
+  return b.index === 0 ? i18next.t("band.dry") : i18next.t(`band.${b.key}`);
+}
+
+export function bandFeelsLike(b: Band): string {
+  return b.index === 0 ? i18next.t("legend.dryFeels") : i18next.t(`band.${b.key}Feels`);
+}
+
 /** e.g. "6.0 mm/h — heavy rain (soaked in minutes)" */
 export function describeRate(rate: number): string {
   const b = bandOf(rate);
-  if (b.index === 0) return "dry";
-  return `${rate.toFixed(1)} mm/h — ${b.label} (${b.feelsLike})`;
+  if (b.index === 0) return i18next.t("band.dry");
+  return i18next.t("band.describe", {
+    rate: rate.toFixed(1),
+    label: bandLabel(b),
+    feels: bandFeelsLike(b),
+  });
 }
 
 export type LegendRow = {
@@ -151,13 +173,16 @@ export function legend(): LegendRow[] {
     const b = BANDS[i];
     const next = i + 1 < BANDS.length ? BANDS[i + 1].floor : null;
     out.push({
-      label: b.label,
+      label: bandLabel(b),
       light: b.light,
       dark: b.dark,
       from: b.floor,
       to: next,
-      range: next === null ? `${b.floor}+ mm/h` : `${b.floor}–${next} mm/h`,
-      feelsLike: b.feelsLike,
+      range:
+        next === null
+          ? i18next.t("band.rangeFrom", { from: b.floor })
+          : i18next.t("band.rangeBetween", { from: b.floor, to: next }),
+      feelsLike: bandFeelsLike(b),
     });
   }
   return out;

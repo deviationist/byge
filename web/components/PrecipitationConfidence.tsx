@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { Text, View } from "react-native";
 import {
   type Confidence,
@@ -33,9 +34,9 @@ const FILLED: Record<Confidence, number> = { high: 3, moderate: 2, low: 1 };
 
 /** What the confidence is a statement *about*. */
 export function confidenceSubject(v: Verdict): string {
-  if (v.rainingNow) return "reading now";
-  if (v.next) return `+${leadMin(v)} min out`;
-  return "clear field";
+  if (v.rainingNow) return i18next.t("confidence.readingNow");
+  if (v.next) return i18next.t("confidence.leadOut", { min: leadMin(v) });
+  return i18next.t("confidence.clearField");
 }
 
 export function PrecipitationConfidence({ verdict }: PrecipitationConfidenceProps) {
@@ -46,7 +47,12 @@ export function PrecipitationConfidence({ verdict }: PrecipitationConfidenceProp
 
   const level = confidenceOf(verdict);
   const n = FILLED[level];
-  const text = `${level} confidence · ${confidenceSubject(verdict)}`;
+  // Two whole phrases joined, not "{{level}} confidence" — Norwegian puts the
+  // qualifier the same way round here, but the separator is a shared token and
+  // the level word has to come from the table or it stays English on a screen
+  // that is otherwise entirely translated. That is exactly how it survived: a
+  // template literal reads as code, not as copy.
+  const text = `${i18next.t(`confidence.${level}`)}${i18next.t("compact.separator")}${confidenceSubject(verdict)}`;
 
   return (
     <View
