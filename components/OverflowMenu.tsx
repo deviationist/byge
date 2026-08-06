@@ -223,6 +223,7 @@ export function OverflowMenu({
           role="menu"
           aria-label={menuLabel ?? label}
           aria-orientation="vertical"
+          className="bg-surface border-line2"
           style={{
             position: "absolute",
             top: "100%",
@@ -230,9 +231,7 @@ export function OverflowMenu({
             ...(align === "end" ? { right: 0 } : { left: 0 }),
             minWidth: 200,
             zIndex: 50,
-            backgroundColor: "var(--color-surface)",
             borderWidth: 1,
-            borderColor: "var(--color-line2)",
             borderRadius: 12,
             paddingVertical: 6,
             ...({
@@ -257,6 +256,7 @@ export function OverflowMenu({
               // Hovering moves the active item so pointer and keyboard cannot
               // disagree about which row is current.
               onHoverIn={() => !item.disabled && setActive(i)}
+              className={i === active && !item.disabled ? "bg-sunk" : "bg-transparent"}
               style={({ pressed }) => ({
                 minHeight: 44,
                 justifyContent: "center",
@@ -264,14 +264,14 @@ export function OverflowMenu({
                 paddingVertical: 8,
                 gap: 2,
                 opacity: item.disabled ? 0.4 : 1,
-                backgroundColor:
-                  i === active && !item.disabled ? "var(--color-sunk)" : "transparent",
                 ...(pressed ? { opacity: 0.7 } : null),
               })}
             >
-              <Text style={{ fontSize: 14.5, color: "var(--color-ink)" }}>{item.label}</Text>
+              <Text className="text-ink" style={{ fontSize: 14.5 }}>
+                {item.label}
+              </Text>
               {item.hint ? (
-                <Text style={{ fontSize: 11.5, lineHeight: 16, color: "var(--color-ink3)" }}>
+                <Text className="text-ink3" style={{ fontSize: 11.5, lineHeight: 16 }}>
                   {item.hint}
                 </Text>
               ) : null}

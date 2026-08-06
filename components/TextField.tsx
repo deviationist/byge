@@ -63,7 +63,6 @@ const LABEL: TextStyle = {
   fontSize: 9.5,
   letterSpacing: 0.5,
   textTransform: "uppercase",
-  color: "var(--color-ink3)",
 };
 
 const NOTE: TextStyle = {
@@ -117,7 +116,7 @@ export function TextField({
 
   return (
     <View style={{ gap: 9 }}>
-      <Text nativeID={labelId} style={LABEL}>
+      <Text nativeID={labelId} className="text-ink3" style={LABEL}>
         {label}
       </Text>
 
@@ -138,18 +137,16 @@ export function TextField({
         // inputmode that reliably offers a decimal separator on a phone.
         keyboardType={keyboardType ?? (coordinate ? "decimal-pad" : "default")}
         autoCapitalize={autoCapitalize ?? (coordinate ? "none" : "sentences")}
+        // The invalid border is a *weight* change into full-strength ink. A red
+        // here would be the only alarm colour in the app and would read as a
+        // system fault rather than "check this number".
+        className={`bg-surface text-ink `}
         style={{
           minHeight: MIN_TARGET,
           paddingHorizontal: 15,
           paddingVertical: 13,
           borderWidth: 1,
           borderRadius: 10,
-          backgroundColor: "var(--color-surface)",
-          color: "var(--color-ink)",
-          // The invalid border is a *weight* change into full-strength ink.
-          // A red here would be the only alarm colour in the app and would read
-          // as a system fault rather than "check this number".
-          borderColor: invalid ? "var(--color-ink)" : "var(--color-line2)",
           ...(coordinate
             ? { fontFamily: "'IBM Plex Mono', monospace", fontSize: 14 }
             : { fontSize: 15 }),
@@ -157,13 +154,13 @@ export function TextField({
       />
 
       {invalid ? (
-        <Text nativeID={errorId} role="alert" style={{ ...NOTE, color: "var(--color-ink)" }}>
+        <Text nativeID={errorId} role="alert" className="text-ink" style={NOTE}>
           {error}
         </Text>
       ) : null}
 
       {shownHint ? (
-        <Text nativeID={hintId} style={{ ...NOTE, color: "var(--color-ink3)" }}>
+        <Text nativeID={hintId} className="text-ink3" style={NOTE}>
           {shownHint}
         </Text>
       ) : null}
