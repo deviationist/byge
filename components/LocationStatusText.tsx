@@ -287,7 +287,8 @@ export function LocationStatusText({
     return (
       <Text
         testID="status-compact"
-        style={{ fontSize: 13.5, lineHeight: 18, color: "var(--color-ink2)" }}
+        className="text-ink2"
+        style={{ fontSize: 13.5, lineHeight: 18 }}
       >
         {statusLine(verdict)}
       </Text>
@@ -299,21 +300,20 @@ export function LocationStatusText({
   return (
     <View style={{ gap: 16 }}>
       <View testID="status-headline" accessibilityRole="header">
-        <Text testID="status-lead" style={[line, { color: "var(--color-ink)" }]}>
+        <Text testID="status-lead" className="text-ink" style={line}>
           {h.lead}
         </Text>
 
         {h.body || h.bound ? (
-          <Text testID="status-body" style={[line, { color: "var(--color-ink2)" }]}>
+          <Text testID="status-body" className="text-ink2" style={line}>
             {h.body}
             {h.bound ? (
               <Text
                 testID="status-bound"
+                className="text-ink border-ink3"
                 style={{
-                  color: "var(--color-ink)",
                   borderBottomWidth: 2,
                   borderStyle: "dotted",
-                  borderColor: "var(--color-ink3)",
                 }}
               >
                 {h.bound}
@@ -325,8 +325,9 @@ export function LocationStatusText({
               <Text
                 testID="status-bound-mark"
                 aria-hidden
+                className="text-ink3"
                 style={[
-                  { fontSize: Math.round(size * 0.3), color: "var(--color-ink3)" },
+                  { fontSize: Math.round(size * 0.3) },
                   { verticalAlign: "super" } as object,
                 ]}
               >
@@ -342,7 +343,8 @@ export function LocationStatusText({
         // Subordinate by size and colour, not hidden. See secondaryOf().
         <Text
           testID="status-secondary"
-          style={{ fontSize: 15, lineHeight: 22, color: "var(--color-ink2)" }}
+          className="text-ink2"
+          style={{ fontSize: 15, lineHeight: 22 }}
         >
           {h.secondary}
         </Text>
@@ -350,11 +352,8 @@ export function LocationStatusText({
 
       {h.note ? (
         <View testID="status-note" style={{ flexDirection: "row", gap: 10, maxWidth: 420 }}>
-          <View
-            style={{ width: 2, borderRadius: 1, backgroundColor: "var(--color-line2)" }}
-            aria-hidden
-          />
-          <Text style={{ flex: 1, fontSize: 11.5, lineHeight: 19, color: "var(--color-ink2)" }}>
+          <View className="bg-line2" style={{ width: 2, borderRadius: 1 }} aria-hidden />
+          <Text className="text-ink2" style={{ flex: 1, fontSize: 11.5, lineHeight: 19 }}>
             {h.note}
           </Text>
         </View>
