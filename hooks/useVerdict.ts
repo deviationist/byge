@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { skipToken, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { type Verdict, verdict } from "../lib/forecast";
 import { latestAnalysis } from "../lib/opendap";
@@ -18,8 +18,12 @@ export function verdictKey(loc: Pick<SavedLocation, "lat" | "lon" | "radiusKm">)
 export function useVerdict(loc: SavedLocation | undefined) {
   return useQuery({
     queryKey: loc ? verdictKey(loc) : ["verdict", "none"],
-    enabled: !!loc,
-    queryFn: ({ signal }) => verdict(loc!.lat, loc!.lon, { radiusKm: loc!.radiusKm, signal }),
+    // skipToken rather than `enabled: !!loc`: it disables the query AND narrows
+    // `loc` inside the closure, so the fetch needs no non-null assertions to
+    // restate a guard the type system cannot otherwise see.
+    queryFn: loc
+      ? ({ signal }) => verdict(loc.lat, loc.lon, { radiusKm: loc.radiusKm, signal })
+      : skipToken,
     // Render the cached answer instantly, refresh underneath.
     staleTime: FIVE_MIN,
     refetchInterval: FIVE_MIN,

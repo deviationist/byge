@@ -220,7 +220,6 @@ export function OverflowMenu({
 
       {open ? (
         <View
-          // biome-ignore lint/a11y/useSemanticElements: RN View, not DOM
           role="menu"
           aria-label={menuLabel ?? label}
           aria-orientation="vertical"
@@ -250,7 +249,6 @@ export function OverflowMenu({
               ref={(r) => {
                 itemRefs.current[i] = r;
               }}
-              // biome-ignore lint/a11y/useSemanticElements: RN View, not DOM
               role="menuitem"
               aria-disabled={item.disabled || undefined}
               tabIndex={i === active ? 0 : -1}

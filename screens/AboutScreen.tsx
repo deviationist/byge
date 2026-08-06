@@ -25,7 +25,7 @@ const THEME_OPTIONS = [
  */
 export function AboutScreen() {
   const router = useRouter();
-  const { theme, choice, choose } = useThemeContext();
+  const { choice, choose } = useThemeContext();
 
   const body = { fontSize: 14, lineHeight: 23, color: "var(--color-ink2)" } as const;
   const note = {

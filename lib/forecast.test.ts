@@ -24,7 +24,6 @@ import { BANDS, bandOf, legend, NOTICEABLE } from "./scale";
  * stop.
  */
 
-const HORIZON = ((NFRAMES - 1) * STEP_S) / 60; // 115
 const WET = 1;
 const DRY = 0;
 

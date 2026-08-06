@@ -1,4 +1,4 @@
-import { act, render, renderHook, screen } from "@testing-library/react";
+import { render, renderHook, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 import { ThemeProvider, useResolvedTheme } from "./ThemeProvider";
 import { resolveTheme } from "./useTheme";

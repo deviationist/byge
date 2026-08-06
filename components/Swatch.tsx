@@ -83,7 +83,6 @@ export function Swatch({ mode, rate = 0, size = 13, theme }: SwatchProps) {
   return (
     <View
       accessibilityLabel={TITLES[mode]}
-      // biome-ignore lint/a11y/useSemanticElements: RN View, not DOM
       role="img"
       style={[
         { width: size, height: size, borderRadius: radius, flexShrink: 0 },
