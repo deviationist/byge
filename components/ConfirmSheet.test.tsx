@@ -71,7 +71,10 @@ describe("ConfirmSheet", () => {
     // reads as an error rather than a choice.
     render(<ConfirmSheet {...base} onConfirm={() => {}} onCancel={() => {}} />);
     const confirm = screen.getByRole("button", { name: "Remove Cabin" });
-    expect(confirm.style.backgroundColor).toContain("--color-ink");
+    // The class contract, not the resolved pixel: jsdom does not resolve var(),
+    // and colour now arrives via Uniwind rather than an inline style. `bg-ink`
+    // is the token, and the token is what carries "no alarm colour".
+    expect(confirm.className).toContain("bg-ink");
   });
 });
 

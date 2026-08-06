@@ -57,10 +57,13 @@ export const Button = forwardRef<View, ButtonProps>(function Button(
   ref,
 ) {
   const hintId = hint ? `byge-btn-hint-${++hintSeq}` : undefined;
+  // Colour via className so Uniwind compiles it for web AND native. An inline
+  // `var(--…)` only resolves in a browser: on native it reaches a view with no
+  // CSS engine, and Uniwind never sees it because it only reads className.
   const palette = {
-    primary: { bg: "var(--color-ink)", fg: "var(--color-bg)", border: "var(--color-ink)" },
-    secondary: { bg: "transparent", fg: "var(--color-ink)", border: "var(--color-line2)" },
-    ghost: { bg: "transparent", fg: "var(--color-ink2)", border: "transparent" },
+    primary: { box: "bg-ink border-ink", text: "text-bg" },
+    secondary: { box: "bg-transparent border-line2", text: "text-ink" },
+    ghost: { box: "bg-transparent border-transparent", text: "text-ink2" },
   }[variant];
 
   return (
@@ -72,6 +75,7 @@ export const Button = forwardRef<View, ButtonProps>(function Button(
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
+      className={palette.box}
       style={({ pressed }) => [
         {
           minHeight: MIN_TARGET,
@@ -80,14 +84,16 @@ export const Button = forwardRef<View, ButtonProps>(function Button(
           alignItems: "center",
           borderRadius: 10,
           borderWidth: 1,
-          backgroundColor: palette.bg,
-          borderColor: palette.border,
+          // Numbers stay inline: a computed press/disabled state has no static
+          // class, and numbers cross to native untouched.
           opacity: disabled ? 0.4 : pressed ? 0.7 : 1,
         },
         block ? { alignSelf: "stretch" } : { alignSelf: "flex-start" },
       ]}
     >
-      <Text style={{ color: palette.fg, fontSize: 15, fontWeight: "500" }}>{label}</Text>
+      <Text className={palette.text} style={{ fontSize: 15, fontWeight: "500" }}>
+        {label}
+      </Text>
       {hint ? (
         <Text nativeID={hintId} style={OFFSCREEN}>
           {hint}
