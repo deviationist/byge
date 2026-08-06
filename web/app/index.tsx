@@ -1,3 +1,3 @@
-import { LocationsScreen } from "../screens/LocationsScreen";
+import { HomeScreen } from "../screens/HomeScreen";
 
-export default LocationsScreen;
+export default HomeScreen;

@@ -5,6 +5,7 @@ import { Button } from "../components/Button";
 import { EmptyState } from "../components/EmptyState";
 import { InstallPrompt } from "../components/InstallPrompt";
 import { LocationsList } from "../components/LocationsList";
+import { Notice } from "../components/Notice";
 import { NavBar } from "../components/NavBar";
 import { PrecipitationLegend } from "../components/PrecipitationLegend";
 import { useInstallPrompt } from "../hooks/useInstallPrompt";
@@ -20,7 +21,17 @@ import { useResolvedTheme } from "../theme/ThemeProvider";
  * attribution line is a legal obligation with a legal-sized affordance, and
  * must not be doing double duty as navigation.
  */
-export function LocationsScreen() {
+export type LocationsScreenProps = {
+  /** Highlighted row in two-pane. Undefined on phone, where nothing is selected. */
+  selectedId?: string;
+  /**
+   * Two-pane swaps the detail pane instead of navigating, so selecting a row
+   * must not push a route. Phone leaves this undefined and gets navigation.
+   */
+  onSelect?: (id: string) => void;
+};
+
+export function LocationsScreen({ selectedId, onSelect }: LocationsScreenProps = {}) {
   const router = useRouter();
   const theme = useResolvedTheme();
   const { locations } = useLocations();
@@ -29,11 +40,35 @@ export function LocationsScreen() {
   // Set by whichever screen removed your last place. It has to arrive as a
   // route param: this screen remounts on navigation, so local state would
   // always be empty here and the cleared state could never fire.
-  const { removed } = useLocalSearchParams<{ removed?: string }>();
+  //
+  // `removed` names what went, `showing` names what the detail pane re-pointed
+  // to (two-pane only), `saved` and `edited` cover the other mutations. All
+  // arrive as route params rather than state because this screen remounts on
+  // navigation — local state would always be empty here, which is exactly how
+  // the cleared empty state was unreachable until 2026-08-05.
+  const { removed, showing, saved } = useLocalSearchParams<{
+    removed?: string;
+    showing?: string;
+    saved?: string;
+  }>();
 
-  const items = locations
-    .map((l) => (verdicts?.[l.id] ? { ...l, verdict: verdicts[l.id] } : null))
-    .filter((x): x is NonNullable<typeof x> => x !== null);
+  // Two-pane names both facts because both changed — the row is gone AND the
+  // detail pane is a different place. Phone names one, because one changed.
+  const notice = removed
+    ? showing
+      ? `Removed ${removed}. Showing ${showing}.`
+      : `Removed ${removed}.`
+    : saved
+      ? showing
+        ? `Saved ${saved}. Showing it now.`
+        : `Saved ${saved}.`
+      : undefined;
+
+  // Rows come from the SAVED LIST, not from the verdicts. A verdict merges in
+  // when it arrives; until then the row is present and says it is checking.
+  // Deriving rows from verdicts made every saved place disappear behind the
+  // first-run welcome until the first fetch resolved.
+  const items = locations.map((l) => ({ ...l, verdict: verdicts?.[l.id] }));
 
   // Two distinct empty states. First run is a welcome; the one after removing
   // your last place confirms what you did and makes no pitch.
@@ -63,10 +98,18 @@ export function LocationsScreen() {
         <InstallPrompt theme={theme} onInstall={install.prompt} onDismiss={install.dismiss} />
       ) : null}
 
+      {/*
+        Above the list, because the list is where the change is visible. When
+        the list is EMPTY the cleared state already says what happened, so
+        stacking a notice on top of it would say it twice.
+      */}
+      {items.length > 0 ? <Notice text={notice} /> : null}
+
       <LocationsList
         items={items}
         theme={theme}
-        onSelect={(id) => router.push(`/location/${id}`)}
+        selectedId={selectedId}
+        onSelect={onSelect ?? ((id) => router.push(`/location/${id}`))}
         empty={empty}
         footer={
           <Button

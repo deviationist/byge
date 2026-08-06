@@ -49,10 +49,20 @@ export function AddLocationScreen() {
     const payload = { name, lat: centre.lat, lon: centre.lon, radiusKm };
     if (editing && existing) {
       update(existing.id, payload);
+      // An edit lands on that place's VERDICT, not the list — an edit changes
+      // the answer, and the answer is what was being adjusted. Widening 3 km to
+      // 15 km can turn "Dry" into "Rain within 8 km", so the list would hide
+      // the consequence of the edit.
       router.replace(`/location/${existing.id}`);
     } else {
+      // A new place confirms on the LIST, where the new row is visible. On
+      // two-pane it also becomes the detail pane: unlike a removal there is no
+      // risk in showing it, because it is the place you just asked for.
       const created = add(payload);
-      router.replace(`/location/${created.id}`);
+      router.replace({
+        pathname: "/",
+        params: { saved: created.name, showing: created.name, select: created.id },
+      });
     }
   }
 
@@ -61,10 +71,25 @@ export function AddLocationScreen() {
     const next = neighbourOf(existing.id);
     remove(existing.id);
     setConfirming(false);
-    // Same as the verdict screen: the last removal lands on the list, and the
-    // name has to travel with it so the list confirms rather than welcomes.
-    if (next) router.replace(`/location/${next.id}`);
-    else router.replace({ pathname: "/", params: { removed: existing.name } });
+    // ALWAYS the list, never the neighbour's verdict.
+    //
+    // Following the neighbour is tempting — you were reading a verdict, so you
+    // get a verdict — and it is what this did until Design ruled on it. It
+    // loses on two counts. It shows an answer about a place you did not ask
+    // about, which is the one thing byge must never do. And it hides the only
+    // evidence the removal worked, because the list is where the change is
+    // visible. It also silently turns a destructive action into navigation, so
+    // a mis-tap leaves you reading Work while believing you are on Cabin.
+    //
+    // `showing` is passed for two-pane, where the detail pane DOES re-point and
+    // the notice has to name both facts. Phone ignores it.
+    router.replace({
+      pathname: "/",
+      params: {
+        removed: existing.name,
+        ...(next ? { showing: next.name, select: next.id } : null),
+      },
+    });
   }
 
   const copy = existing

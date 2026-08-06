@@ -23,7 +23,15 @@ export type LocationCardProps = {
   place?: string;
   lat?: number;
   lon?: number;
-  verdict: Verdict;
+  /**
+   * Absent while the first fetch is still in flight.
+   *
+   * The row stays on screen without it. Dropping rows until their verdict
+   * arrives makes a person's saved places vanish on a slow network and shows
+   * the first-run welcome in their place — which reads as "everything is gone"
+   * rather than "still loading".
+   */
+  verdict?: Verdict;
   theme: Theme;
   variant?: LocationCardVariant;
   /** Highlighted as the current selection in a two-pane layout. */
@@ -46,12 +54,12 @@ export function LocationCard({
   onPress,
 }: LocationCardProps) {
   const isRow = variant === "row";
-  const status = statusLine(verdict);
+  const status = verdict ? statusLine(verdict) : "Checking\u2026";
 
   // Derived, never reimplemented — the swatch's meaning is defined once in
   // Swatch.tsx and four call sites depend on it agreeing.
-  const mode = swatchModeOf(verdict);
-  const rate = swatchRateOf(verdict);
+  const mode = verdict ? swatchModeOf(verdict) : "dry";
+  const rate = verdict ? swatchRateOf(verdict) : 0;
 
   const body = (
     <>
@@ -66,7 +74,13 @@ export function LocationCard({
           theme={theme}
           variant={isRow ? "row" : "popup"}
         />
-        <LocationStatusText verdict={verdict} theme={theme} variant="compact" />
+        {verdict ? (
+          <LocationStatusText verdict={verdict} theme={theme} variant="compact" />
+        ) : (
+          <Text className="text-ink3" style={{ fontSize: 13.5, lineHeight: 18 }}>
+            {status}
+          </Text>
+        )}
       </View>
 
       {isRow ? (

@@ -18,7 +18,7 @@ export type LocationsListItem = {
   place?: string;
   lat?: number;
   lon?: number;
-  verdict: Verdict;
+  verdict?: Verdict;
 };
 
 export type LocationsListProps = {
