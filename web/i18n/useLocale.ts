@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { getItem, removeItem, setItem } from "../lib/kv";
-import { deviceLanguage, SUPPORTED, type Language } from "./index";
+import { deviceLanguage, type Language, SUPPORTED } from "./index";
 
 export type LanguageChoice = Language | "system";
 

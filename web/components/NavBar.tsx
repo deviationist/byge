@@ -63,6 +63,19 @@ export function NavBar({
         alignItems: "center",
         gap: 8,
         minHeight: MIN_TARGET + 8,
+        // Above everything that follows it, because `trailing` is where the
+        // overflow menu lives and its panel hangs down over the content below.
+        //
+        // This is not belt-and-braces on top of the panel's own z-index — it is
+        // the only thing that works. react-native-web gives EVERY View
+        // `position: relative; z-index: 0`, and a positioned element with a
+        // numeric z-index creates a stacking context. So the panel's z-index of
+        // 50 is sealed inside its own wrapper and can never outrank anything
+        // outside it. What competes with the headline is this bar, at 0, losing
+        // the tie to a later sibling on DOM order. The menu rendered *under* the
+        // verdict text, which reads as a transparent menu rather than a
+        // misordered one.
+        zIndex: 20,
       }}
     >
       {onBack ? <NavBarButton onPress={onBack} label={backLabel ?? "Back"} /> : null}

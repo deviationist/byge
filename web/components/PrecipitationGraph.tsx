@@ -4,8 +4,8 @@ import { isWet } from "../lib/forecast";
 import { type Frame, isBlind } from "../lib/radar";
 import { BANDS, bandOf, colorOf, describeRate, NOTICEABLE } from "../lib/scale";
 import { HATCH, MONO } from "../theme/tokens";
-import { Hatch } from "./Hatch";
 import type { Theme } from "../theme/useTheme";
+import { Hatch } from "./Hatch";
 
 /**
  * The frame strip — ONE component at two densities.

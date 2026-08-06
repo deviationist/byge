@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import { useId } from "react";
 import type { TextStyle } from "react-native";
-import { MONO } from "../theme/tokens";
 import { Text, View } from "react-native";
+import { MONO } from "../theme/tokens";
 
 /**
  * A titled group with consistent spacing.

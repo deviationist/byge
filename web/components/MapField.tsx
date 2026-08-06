@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
-import { MONO } from "../theme/tokens";
 import { cellOf, clampCoord, OutsideGridError } from "../lib/grid";
+import { MONO } from "../theme/tokens";
 import type { Theme } from "../theme/useTheme";
 import { Button } from "./Button";
 import { type Basemap, type LatLon, MapCanvas, metersPerPixel } from "./MapCanvas";

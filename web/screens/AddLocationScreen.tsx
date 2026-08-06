@@ -13,6 +13,7 @@ import { Screen } from "../layouts/Screen";
 import { Section } from "../layouts/Section";
 import { clampCoord } from "../lib/grid";
 import { DEFAULT_RADIUS_KM } from "../lib/storage";
+import { toast } from "../lib/toast";
 import { useResolvedTheme } from "../theme/ThemeProvider";
 
 /** Oslo, as a starting view for a brand-new place. */
@@ -61,10 +62,11 @@ export function AddLocationScreen() {
       // two-pane it also becomes the detail pane: unlike a removal there is no
       // risk in showing it, because it is the place you just asked for.
       const created = add(payload);
-      router.replace({
-        pathname: "/",
-        params: { saved: created.name, showing: created.name, select: created.id },
-      });
+      // The receipt goes to the toast store, NOT the URL — see lib/toast.ts.
+      // `select` stays, because which place the detail pane shows is real state
+      // rather than an expiring message.
+      toast(t("toast.savedShowing", { name: created.name }));
+      router.replace({ pathname: "/", params: { select: created.id } });
     }
   }
 
@@ -83,15 +85,14 @@ export function AddLocationScreen() {
     // visible. It also silently turns a destructive action into navigation, so
     // a mis-tap leaves you reading Work while believing you are on Cabin.
     //
-    // `showing` is passed for two-pane, where the detail pane DOES re-point and
-    // the notice has to name both facts. Phone ignores it.
-    router.replace({
-      pathname: "/",
-      params: {
-        removed: existing.name,
-        ...(next ? { showing: next.name, select: next.id } : null),
-      },
-    });
+    // Two-pane names both facts because both changed — the row is gone AND the
+    // detail pane is a different place. Phone names one, because one changed.
+    toast(
+      next
+        ? t("toast.removedShowing", { name: existing.name, showing: next.name })
+        : t("toast.removed", { name: existing.name }),
+    );
+    router.replace({ pathname: "/", params: next ? { select: next.id } : {} });
   }
 
   const copy = existing

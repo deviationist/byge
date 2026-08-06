@@ -2,8 +2,8 @@ import { View } from "react-native";
 import type { Verdict } from "../lib/forecast";
 import { bandOf, colorOf, NOTICEABLE } from "../lib/scale";
 import { HATCH } from "../theme/tokens";
-import { Hatch } from "./Hatch";
 import type { Theme } from "../theme/useTheme";
+import { Hatch } from "./Hatch";
 
 /**
  * The list glyph.

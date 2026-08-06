@@ -21,6 +21,7 @@ export type SavedLocation = {
 };
 
 const KEY = "byge:locations:v1";
+const EVER_KEY = "byge:ever-saved:v1";
 
 /** 3 km keeps the verdict about *you*. See RadiusField for why the wide end saturates. */
 export const DEFAULT_RADIUS_KM = 3;
@@ -67,6 +68,42 @@ export function loadLocations(): SavedLocation[] {
 
 export function saveLocations(list: SavedLocation[]): void {
   setItem(KEY, JSON.stringify(list));
+  // Sticky, and deliberately never cleared. It is what tells an empty list
+  // apart from a first run — "Nothing saved yet" is the wrong copy for someone
+  // who just removed their last place, and the right copy for someone who has
+  // never had one. This used to be carried by a `?removed=` route param, which
+  // meant the distinction died on reload and travelled in the address bar.
+  if (list.length > 0) setItem(EVER_KEY, "1");
+}
+
+/** Has this device ever held a saved place? See saveLocations. */
+export function hasEverSaved(): boolean {
+  return getItem(EVER_KEY) === "1";
+}
+
+/**
+ * The name of the place removed most recently, for the cleared empty state.
+ *
+ * DELIBERATELY NOT PERSISTED. It survives the navigation from the screen that
+ * removed to the list that reports it, and dies on reload — which is exactly
+ * the lifetime the copy wants. "Cabin removed." is right in the seconds after
+ * you did it; a week later it would be a stale claim about a place that no
+ * longer exists anywhere. After a reload the list falls back to the nameless
+ * removal tone, still not the first-run pitch, because `hasEverSaved` persists
+ * and this does not.
+ *
+ * Not in `localStorage` for a second reason: a place name is the most personal
+ * thing byge holds, and there is no cause to write it to a second key that
+ * nothing ever cleans up.
+ */
+let lastRemovedName: string | undefined;
+
+export function noteRemoval(name: string): void {
+  lastRemovedName = name;
+}
+
+export function lastRemoved(): string | undefined {
+  return lastRemovedName;
 }
 
 export function newId(): string {

@@ -1,4 +1,4 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 import { Attribution } from "../components/Attribution";
@@ -6,13 +6,13 @@ import { Button } from "../components/Button";
 import { EmptyState } from "../components/EmptyState";
 import { InstallPrompt } from "../components/InstallPrompt";
 import { LocationsList } from "../components/LocationsList";
-import { Notice } from "../components/Notice";
 import { NavBar } from "../components/NavBar";
 import { PrecipitationLegend } from "../components/PrecipitationLegend";
 import { useInstallPrompt } from "../hooks/useInstallPrompt";
 import { useLocations } from "../hooks/useLocations";
 import { useVerdicts } from "../hooks/useVerdict";
 import { Screen } from "../layouts/Screen";
+import { hasEverSaved, lastRemoved } from "../lib/storage";
 import { useResolvedTheme } from "../theme/ThemeProvider";
 
 /**
@@ -39,32 +39,6 @@ export function LocationsScreen({ selectedId, onSelect }: LocationsScreenProps =
   const { locations } = useLocations();
   const { data: verdicts } = useVerdicts(locations);
   const install = useInstallPrompt();
-  // Set by whichever screen removed your last place. It has to arrive as a
-  // route param: this screen remounts on navigation, so local state would
-  // always be empty here and the cleared state could never fire.
-  //
-  // `removed` names what went, `showing` names what the detail pane re-pointed
-  // to (two-pane only), `saved` and `edited` cover the other mutations. All
-  // arrive as route params rather than state because this screen remounts on
-  // navigation — local state would always be empty here, which is exactly how
-  // the cleared empty state was unreachable until 2026-08-05.
-  const { removed, showing, saved } = useLocalSearchParams<{
-    removed?: string;
-    showing?: string;
-    saved?: string;
-  }>();
-
-  // Two-pane names both facts because both changed — the row is gone AND the
-  // detail pane is a different place. Phone names one, because one changed.
-  const notice = removed
-    ? showing
-      ? `Removed ${removed}. Showing ${showing}.`
-      : `Removed ${removed}.`
-    : saved
-      ? showing
-        ? `Saved ${saved}. Showing it now.`
-        : `Saved ${saved}.`
-      : undefined;
 
   // Rows come from the SAVED LIST, not from the verdicts. A verdict merges in
   // when it arrives; until then the row is present and says it is checking.
@@ -76,12 +50,12 @@ export function LocationsScreen({ selectedId, onSelect }: LocationsScreenProps =
   // your last place confirms what you did and makes no pitch.
   const empty = (
     <EmptyState
-      // Presence of the param, not its truthiness: a place saved with a blank
-      // name still got removed, and EmptyState has copy for a nameless removal
-      // ("Removed."). Testing truthiness would show the first-run welcome —
-      // the wrong copy for the wrong reason.
-      reason={removed !== undefined ? "removed-last" : "first-run"}
-      removedName={removed}
+      // Derived from a sticky flag rather than a `?removed=` param. The param
+      // named the place, which read better — but it also meant the distinction
+      // evaporated on reload and rode along in the address bar. The name is not
+      // lost: the toast carries it, which is where the receipt belongs.
+      reason={hasEverSaved() ? "removed-last" : "first-run"}
+      removedName={lastRemoved()}
       onAdd={() => router.push("/add")}
     />
   );
@@ -103,13 +77,6 @@ export function LocationsScreen({ selectedId, onSelect }: LocationsScreenProps =
       {install.available ? (
         <InstallPrompt theme={theme} onInstall={install.prompt} onDismiss={install.dismiss} />
       ) : null}
-
-      {/*
-        Above the list, because the list is where the change is visible. When
-        the list is EMPTY the cleared state already says what happened, so
-        stacking a notice on top of it would say it twice.
-      */}
-      {items.length > 0 ? <Notice text={notice} /> : null}
 
       <LocationsList
         items={items}

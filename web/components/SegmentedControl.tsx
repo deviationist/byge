@@ -1,8 +1,8 @@
 import i18next from "i18next";
 import { useId, useRef } from "react";
 import type { TextStyle, View as ViewType } from "react-native";
-import { MONO } from "../theme/tokens";
 import { Pressable, Text, View } from "react-native";
+import { MONO } from "../theme/tokens";
 import type { ThemeChoice } from "../theme/useTheme";
 
 /**

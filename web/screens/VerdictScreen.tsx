@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useTranslation } from "react-i18next";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useWindowDimensions, View } from "react-native";
 import { Attribution } from "../components/Attribution";
 import { ConfirmSheet, removeLocationCopy } from "../components/ConfirmSheet";
@@ -19,6 +19,7 @@ import { useLocations } from "../hooks/useLocations";
 import { useRefresh, useVerdict } from "../hooks/useVerdict";
 import { Screen } from "../layouts/Screen";
 import { isBlindVerdict } from "../lib/forecast";
+import { toast } from "../lib/toast";
 import { useResolvedTheme } from "../theme/ThemeProvider";
 
 /**
@@ -88,15 +89,15 @@ export function VerdictScreen({ id: idProp, showBack = true }: VerdictScreenProp
     // visible. It also silently turns a destructive action into navigation, so
     // a mis-tap leaves you reading Work while believing you are on Cabin.
     //
-    // `showing` is passed for two-pane, where the detail pane DOES re-point and
-    // the notice has to name both facts. Phone ignores it.
-    router.replace({
-      pathname: "/",
-      params: {
-        removed: location.name,
-        ...(next ? { showing: next.name, select: next.id } : null),
-      },
-    });
+    // Two-pane names both facts because both changed — the row is gone AND the
+    // detail pane is a different place. Phone names one, because one changed.
+    // The receipt goes to the toast store, not the URL — see lib/toast.ts.
+    toast(
+      next
+        ? t("toast.removedShowing", { name: location.name, showing: next.name })
+        : t("toast.removed", { name: location.name }),
+    );
+    router.replace({ pathname: "/", params: next ? { select: next.id } : {} });
   }
 
   const copy = removeLocationCopy(

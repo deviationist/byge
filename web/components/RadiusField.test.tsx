@@ -4,12 +4,12 @@ import {
   clampRadius,
   RADIUS_COSTLY,
   RADIUS_DEFAULT,
-  radiusHint,
   RADIUS_MAX,
   RADIUS_MIN,
   RADIUS_SATURATES,
   RadiusField,
   radiusFromKey,
+  radiusHint,
   radiusNote,
   radiusValueText,
 } from "./RadiusField";

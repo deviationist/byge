@@ -1,8 +1,8 @@
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Text, View } from "react-native";
 import { MONO } from "../theme/tokens";
-import { type KartverketLayer, TileLayer } from "./TileLayer";
 import type { Theme } from "../theme/useTheme";
+import { type KartverketLayer, TileLayer } from "./TileLayer";
 
 /**
  * The map primitive. ONE component behind BOTH map surfaces:

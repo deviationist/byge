@@ -4,6 +4,7 @@ import {
   loadLocations,
   newId,
   normalise,
+  noteRemoval,
   type SavedLocation,
   saveLocations,
 } from "../lib/storage";
@@ -40,7 +41,13 @@ export function useLocations() {
   }, []);
 
   const remove = useCallback((id: string) => {
-    setLocations((prev) => prev.filter((l) => l.id !== id));
+    setLocations((prev) => {
+      // Recorded here rather than at the call sites so it cannot be forgotten
+      // by one of the two screens that can remove a place.
+      const going = prev.find((l) => l.id === id);
+      if (going) noteRemoval(going.name);
+      return prev.filter((l) => l.id !== id);
+    });
   }, []);
 
   const byId = useCallback(
