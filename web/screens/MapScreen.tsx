@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Text, useWindowDimensions, View } from "react-native";
 import { CellReadout } from "../components/CellReadout";
@@ -48,7 +48,16 @@ export function MapScreen() {
   const { width: winWidth } = useWindowDimensions();
   const phone = winWidth < 720;
 
+  // TWO centres, and the split is the difference between a map that pans and a
+  // map that falls over.
+  //
+  // `centre` follows the finger and drives the render — it changes on every
+  // pointermove. `view` is what the FETCH is keyed on, and it only catches up
+  // when the gesture settles. Wiring the query to `centre` meant a drag minted
+  // a new window every couple of pixels: a request each, and a multi-megabyte
+  // field retained for each. That is what crashed the tab.
   const [centre, setCentre] = useState<LatLon>(START);
+  const [view, setView] = useState<LatLon>(START);
   const [zoom, setZoom] = useState(START_ZOOM);
   const [basemap, setBasemap] = useState<KartverketLayer>("grey");
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -60,7 +69,7 @@ export function MapScreen() {
   // full run replaces it. See useProgressiveField for the measurement.
   const { field, partial, loading } = useProgressiveField(
     size.width > 0
-      ? { lat: centre.lat, lon: centre.lon, zoom, width: size.width, height: size.height }
+      ? { lat: view.lat, lon: view.lon, zoom, width: size.width, height: size.height }
       : null,
   );
 
@@ -94,7 +103,20 @@ export function MapScreen() {
     return () => clearInterval(id);
   }, [playing, frameCount]);
 
-  const onMoveEnd = useCallback((c: LatLon) => setCentre(c), []);
+  // Settles a beat after the gesture stops, so a flick-and-flick-again asks
+  // once rather than twice.
+  const settle = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onMoveEnd = useCallback((c: LatLon) => {
+    setCentre(c);
+    if (settle.current) clearTimeout(settle.current);
+    settle.current = setTimeout(() => setView(c), 180);
+  }, []);
+  useEffect(
+    () => () => {
+      if (settle.current) clearTimeout(settle.current);
+    },
+    [],
+  );
 
   return (
     <Screen measure={null} pad={{ top: 0, horizontal: 0, bottom: 0 }}>

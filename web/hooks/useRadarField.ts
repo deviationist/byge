@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { type BandField, decodeField } from "../lib/fieldFormat";
 import { cellOf, NFRAMES, NX, NY } from "../lib/grid";
 import { API_BASE, CLIENT_KEY, latestAnalysis } from "../lib/opendap";
@@ -61,6 +62,12 @@ export function useRadarField(req: FieldRequest | null, frames: number, enabled 
       return decodeField(await res.arrayBuffer());
     },
     staleTime: 5 * 60 * 1000,
+    // A field is up to 17 MB of cells. React Query keeps unused queries for
+    // five minutes by default, which for anything else is a sensible cache and
+    // here is a leak: a few pans and the tab is holding a hundred megabytes it
+    // will never show again. Sixty seconds is long enough to make a pan back
+    // free and short enough that the heap does not grow with exploration.
+    gcTime: 60 * 1000,
     placeholderData: (prev) => prev,
     retry: 1,
   });
@@ -80,26 +87,43 @@ export function planWindow(req: FieldRequest) {
   const spanRows = Math.ceil((req.height * mpp * 1.5) / 1000);
 
   const { row, col } = safeCell(req.lat, req.lon);
-  const row0 = clamp(row - Math.floor(spanRows / 2), 0, NY - 1);
-  const col0 = clamp(col - Math.floor(spanCols / 2), 0, NX - 1);
 
-  // Full resolution and the full horizon, both, at every zoom.
+  // SNAPPED TO A COARSE LATTICE, which is what makes panning free.
   //
-  // Frames used to be rationed against area, which is why a national view
-  // stopped at +20 min: each frame was a separate slice fetched from MET, so
-  // twenty-four of them was 67 MB for one person looking at one rectangle. The
-  // proxy now holds whole frames and slices them from memory, so asking for all
-  // 24 costs it nothing beyond the bytes — and the bytes are small, because
-  // consecutive frames of a rain field are very alike and gzip together well.
-  return {
-    row0,
-    col0,
-    rows: Math.max(1, spanRows),
-    cols: Math.max(1, spanCols),
-    stride: 1,
-    frames: 24,
-  };
+  // The window is derived from the centre, so without this every couple of
+  // pixels of drag produced a different one — a different query key, a
+  // different request, and another multi-megabyte field retained in cache. A
+  // single drag could mint hundreds. Snapping to 64 km means a pan reuses the
+  // window it already has until it leaves the lattice cell, and the 1.5×
+  // margin covers the edges while the next one loads.
+  const a = snapDown(row - Math.floor(spanRows / 2));
+  const b = snapUp(row + Math.ceil(spanRows / 2));
+  const c = snapDown(col - Math.floor(spanCols / 2));
+  const d = snapUp(col + Math.ceil(spanCols / 2));
+
+  const row0 = clamp(a, 0, NY - 1);
+  const col0 = clamp(c, 0, NX - 1);
+  const rows = clamp(b - row0, 1, NY - row0);
+  const cols = clamp(d - col0, 1, NX - col0);
+
+  // Frames trimmed so the request cannot exceed what the proxy will serve.
+  // Snapping rounds OUTWARD on both edges, so a window can grow by up to two
+  // snap steps per axis — which is exactly how a national view went from
+  // 1157x628 to 1216x704 and started coming back 400. The client should never
+  // send something the server is going to refuse.
+  const frames = clamp(Math.floor(MAX_CELLS / Math.max(1, rows * cols)), 1, NFRAMES);
+
+  return { row0, col0, rows, cols, stride: 1, frames };
 }
+
+/** 32 km. Big enough that ordinary panning rarely crosses one, small enough
+ *  that snapping outward does not inflate the window much. */
+const SNAP = 32;
+
+/** Kept under the proxy's own ceiling, with room for the snap to round up. */
+const MAX_CELLS = 19_000_000;
+const snapDown = (v: number) => Math.floor(v / SNAP) * SNAP;
+const snapUp = (v: number) => Math.ceil(v / SNAP) * SNAP;
 
 /**
  * The grid throws outside its domain, and a map can legitimately be panned into
@@ -135,13 +159,46 @@ function clamp(v: number, lo: number, hi: number) {
  * The cost of the extra request is nothing on a warm store: the first frame is
  * already in memory, so it is a slice and a gzip.
  */
+/** Identifies a window, so superseded ones can be told apart and cancelled. */
+function planKey(p: ReturnType<typeof planWindow>): string {
+  return `${p.row0}:${p.col0}:${p.rows}:${p.cols}`;
+}
+
+function keyOf(k: readonly unknown[]): string {
+  return `${k[1]}:${k[2]}:${k[3]}:${k[4]}`;
+}
+
+/** How many frames this window can actually carry. */
+function plannedFrames(req: FieldRequest | null): number {
+  return req ? planWindow(req).frames : NFRAMES;
+}
+
 export function useProgressiveField(req: FieldRequest | null) {
+  const client = useQueryClient();
+  const plan = req ? planWindow(req) : null;
   const still = useRadarField(req, 1);
   // Held back until the still has landed. Fired together they COMPETE: the run
   // takes the fetch slots, and the one frame somebody is waiting to look at
   // queues behind twenty-three they are not. Measured in the browser, that cost
   // the first paint 1.9 s against 0.48 s on its own.
-  const run = useRadarField(req, NFRAMES, !!still.data);
+  const run = useRadarField(req, plannedFrames(req), !!still.data);
+
+  // Abandon whatever the last window was still downloading.
+  //
+  // React Query does NOT do this for you. When the key changes the old query
+  // merely loses its observer — its request runs to completion and lands in a
+  // cache nobody will read. Verified in the browser: zero of eight superseded
+  // requests aborted on their own. For a national field that is up to a
+  // megabyte of someone else's bandwidth, and a fetch slot on the proxy, spent
+  // on a view the reader has already panned away from.
+  const key = plan ? planKey(plan) : null;
+  useEffect(() => {
+    if (!key) return;
+    void client.cancelQueries({
+      queryKey: ["radar-field"],
+      predicate: (q) => q.queryKey[1] !== undefined && keyOf(q.queryKey) !== key,
+    });
+  }, [key, client]);
 
   return {
     // Whichever is further along. `run` supersedes `still` the moment it
