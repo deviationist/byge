@@ -1,6 +1,7 @@
-import { type ReactNode, useEffect, useRef } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Text, View } from "react-native";
 import { MONO } from "../theme/tokens";
+import { type KartverketLayer, TileLayer } from "./TileLayer";
 import type { Theme } from "../theme/useTheme";
 
 /**
@@ -39,8 +40,15 @@ import type { Theme } from "../theme/useTheme";
 
 export type LatLon = { lat: number; lon: number };
 
-/** Placeholder ids; these become MapLibre style URLs on swap-in. */
-export type Basemap = "grey" | "topo" | "satellite";
+/**
+ * The basemaps Kartverket serves without an agreement, verified live.
+ *
+ * `satellite` was here and is gone: aerial imagery lives in Norge i bilder,
+ * which needs a registered agreement rather than being open, and the open cache
+ * 400s for ortofoto/flyfoto/satellitt. A switcher option that cannot load is
+ * worse than one that is absent.
+ */
+export type Basemap = KartverketLayer;
 
 export type MapCanvasProps = {
   /** Controlled — the parent owns the centre, this reports where it wants to go. */
@@ -135,7 +143,7 @@ function clampZoom(z: number): number {
 const BASEMAP: Record<Basemap, string> = {
   grey: "#e9e6e0",
   topo: "#eef0e8",
-  satellite: "#d8d4cc",
+  nautical: "#dfe8ee",
 };
 
 /** Pixels panned per arrow-key press. Shift multiplies it. */
@@ -263,9 +271,17 @@ export function MapCanvas({
   // Offsetting the graticule by the centre's own pixel position is what makes
   // the surface look panned rather than static. It is also the cheapest honest
   // signal that the placeholder is really moving.
+  const [size, setSize] = useState<{ width: number; height: number } | null>(null);
+
   const px = lonLatToPx(center, zoom);
   const offX = -(((px.x % GRATICULE) + GRATICULE) % GRATICULE);
   const offY = -(((px.y % GRATICULE) + GRATICULE) % GRATICULE);
+
+  // Tile indices are integers, so tiles are placed at a ROUNDED zoom while the
+  // overlays keep the fractional one. Mixing the two would drift the marker off
+  // the map it is pinned to.
+  const tileZoom = Math.max(0, Math.min(18, Math.round(zoom)));
+  const tilePx = lonLatToPx(center, tileZoom);
 
   return (
     <View
@@ -274,6 +290,14 @@ export function MapCanvas({
       aria-label={label}
       aria-roledescription="map"
       tabIndex={interactive ? 0 : -1}
+      // The surface is flex-sized, so its pixel dimensions are only knowable
+      // after layout — and tiles cannot be chosen without them.
+      onLayout={(e) => {
+        const { width, height } = e.nativeEvent.layout;
+        setSize((prev) =>
+          prev && prev.width === width && prev.height === height ? prev : { width, height },
+        );
+      }}
       // The basemap stays light in both themes (see BASEMAP). In dark mode that
       // pane needs a harder edge or it floats untethered on the dark chrome —
       // the design frames it as a lit window, and this is the frame.
@@ -290,21 +314,34 @@ export function MapCanvas({
         interactive ? ({ cursor: "grab", touchAction: "none" } as object) : null,
       ]}
     >
-      <View
-        // The stand-in for tiles. `pointerEvents="none"` keeps it out of the way
-        // of the drag listener on the surface above.
-        pointerEvents="none"
-        style={[
-          { position: "absolute", top: 0, right: 0, bottom: 0, left: 0 },
-          {
-            backgroundImage:
-              "linear-gradient(90deg,rgba(21,24,27,.10) 1px,transparent 1px)," +
-              "linear-gradient(rgba(21,24,27,.10) 1px,transparent 1px)",
-            backgroundSize: `${GRATICULE}px ${GRATICULE}px`,
-            backgroundPosition: `${offX}px ${offY}px`,
-          } as object,
-        ]}
-      />
+      {size ? (
+        <TileLayer
+          layer={basemap}
+          z={tileZoom}
+          originX={tilePx.x - size.width / 2}
+          originY={tilePx.y - size.height / 2}
+          width={size.width}
+          height={size.height}
+        />
+      ) : (
+        // Before the first layout there is no viewport to cover, so the
+        // graticule stands in for one frame. It also survives as the offline
+        // face of the map: tiles are a third-party fetch, and a dead grey box
+        // with no texture reads as broken rather than as unreachable.
+        <View
+          pointerEvents="none"
+          style={[
+            { position: "absolute", top: 0, right: 0, bottom: 0, left: 0 },
+            {
+              backgroundImage:
+                "linear-gradient(90deg,rgba(21,24,27,.10) 1px,transparent 1px)," +
+                "linear-gradient(rgba(21,24,27,.10) 1px,transparent 1px)",
+              backgroundSize: `${GRATICULE}px ${GRATICULE}px`,
+              backgroundPosition: `${offX}px ${offY}px`,
+            } as object,
+          ]}
+        />
+      )}
 
       {/* Overlay plane. Centred, so a child with no positioning of its own lands
           exactly under the map centre — which is what a centre-pinned marker is. */}
