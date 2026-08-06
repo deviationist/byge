@@ -82,11 +82,7 @@ export function Location({
         {withPlace ? (
           // Softer, but on the same line: the place qualifies the name, it is
           // not a second fact about it.
-          <Text
-            testID="location-place"
-            className="text-ink2"
-            style={{ fontWeight: "400" }}
-          >
+          <Text testID="location-place" className="text-ink2" style={{ fontWeight: "400" }}>
             {` · ${place}`}
           </Text>
         ) : null}

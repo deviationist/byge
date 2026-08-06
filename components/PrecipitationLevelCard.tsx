@@ -76,14 +76,13 @@ export function PrecipitationLevelCard({ verdict, theme }: PrecipitationLevelCar
   return (
     <View
       accessibilityLabel={`${copy.label} — ${copy.feelsLike}, ${copy.rate}`}
+      className="bg-surface border-line"
       style={{
         alignSelf: "flex-start",
         flexDirection: "row",
         alignItems: "center",
         gap: 10,
         borderWidth: 1,
-        borderColor: "var(--color-line)",
-        backgroundColor: "var(--color-surface)",
         borderRadius: 999,
         paddingVertical: 7,
         paddingLeft: 9,
@@ -98,20 +97,15 @@ export function PrecipitationLevelCard({ verdict, theme }: PrecipitationLevelCar
       />
 
       <View style={{ gap: 1 }}>
-        <Text style={{ fontSize: 13, fontWeight: "500", color: "var(--color-ink)" }}>
+        <Text className="text-ink" style={{ fontSize: 13, fontWeight: "500" }}>
           {copy.label}
         </Text>
-        <Text style={{ fontSize: 11.5, color: "var(--color-ink2)" }}>{copy.feelsLike}</Text>
+        <Text className="text-ink2" style={{ fontSize: 11.5 }}>
+          {copy.feelsLike}
+        </Text>
       </View>
 
-      <Text
-        style={{
-          fontFamily: MONO,
-          fontSize: 11,
-          color: "var(--color-ink3)",
-          marginLeft: 4,
-        }}
-      >
+      <Text className="text-ink3" style={{ fontFamily: MONO, fontSize: 11, marginLeft: 4 }}>
         {copy.rate}
       </Text>
     </View>

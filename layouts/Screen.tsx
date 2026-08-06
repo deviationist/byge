@@ -52,11 +52,7 @@ export type ScreenProps = {
 
 export function Screen({ children, measure = MEASURE, gap, testID }: ScreenProps) {
   return (
-    <View
-      testID={testID}
-      className="bg-bg"
-      style={[{ flex: 1 }, SAFE_AREA_PADDING]}
-    >
+    <View testID={testID} className="bg-bg" style={[{ flex: 1 }, SAFE_AREA_PADDING]}>
       <View
         testID={testID ? `${testID}-measure` : undefined}
         style={[
