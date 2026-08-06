@@ -273,6 +273,10 @@ export function MapCanvas({
       aria-label={label}
       aria-roledescription="map"
       tabIndex={interactive ? 0 : -1}
+      // The basemap stays light in both themes (see BASEMAP). In dark mode that
+      // pane needs a harder edge or it floats untethered on the dark chrome —
+      // the design frames it as a lit window, and this is the frame.
+      className={theme === "dark" ? "border-line2" : "border-line"}
       style={[
         {
           flex: 1,
@@ -281,10 +285,6 @@ export function MapCanvas({
           backgroundColor: BASEMAP[basemap],
           borderRadius: 12,
           borderWidth: 1,
-          // The basemap stays light in both themes (see BASEMAP). In dark mode
-          // that pane needs a harder edge or it floats untethered on the dark
-          // chrome — the design frames it as a lit window, and this is the frame.
-          borderColor: theme === "dark" ? "var(--color-line2)" : "var(--color-line)",
         },
         interactive ? ({ cursor: "grab", touchAction: "none" } as object) : null,
       ]}
@@ -325,24 +325,20 @@ export function MapCanvas({
       {attribution ? (
         <View
           pointerEvents="none"
+          className="bg-surface border-line"
           style={{
             position: "absolute",
             left: 8,
             bottom: 8,
-            backgroundColor: "var(--color-surface)",
             borderWidth: 1,
-            borderColor: "var(--color-line)",
             borderRadius: 6,
             paddingVertical: 3,
             paddingHorizontal: 6,
           }}
         >
           <Text
-            style={{
-              fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: 9,
-              color: "var(--color-ink3)",
-            }}
+            className="text-ink3"
+            style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9 }}
           >
             {attribution}
           </Text>
