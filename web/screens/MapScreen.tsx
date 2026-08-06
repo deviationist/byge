@@ -11,7 +11,7 @@ import { BASEMAP_OPTIONS, SegmentedControl } from "../components/SegmentedContro
 import type { KartverketLayer } from "../components/TileLayer";
 import { ZoomControl } from "../components/ZoomControl";
 import { useBack } from "../hooks/useBack";
-import { useRadarField } from "../hooks/useRadarField";
+import { useProgressiveField } from "../hooks/useRadarField";
 import { Screen } from "../layouts/Screen";
 import { useResolvedTheme } from "../theme/ThemeProvider";
 import { MONO } from "../theme/tokens";
@@ -56,7 +56,9 @@ export function MapScreen() {
   const [playing, setPlaying] = useState(false);
   const [picked, setPicked] = useState<LatLon | null>(null);
 
-  const { data: field, isFetching } = useRadarField(
+  // Two requests, not one: the still paints in about half a second and the
+  // full run replaces it. See useProgressiveField for the measurement.
+  const { field, partial, loading } = useProgressiveField(
     size.width > 0
       ? { lat: centre.lat, lon: centre.lon, zoom, width: size.width, height: size.height }
       : null,
@@ -206,10 +208,14 @@ export function MapScreen() {
             minutes={frame * 5}
           />
           <Text className="text-ink3" style={{ fontFamily: MONO, fontSize: 10 }}>
-            {isFetching
+            {loading
               ? t("map.loadingField")
               : field
-                ? t("map.sampling", { km: field.stride, frames: field.frames })
+                ? // Says the animation is still arriving rather than showing a
+                  // frame count that is about to change under the reader.
+                  partial
+                  ? t("map.loadingFrames")
+                  : t("map.sampling", { km: field.stride, frames: field.frames })
                 : ""}
           </Text>
         </View>

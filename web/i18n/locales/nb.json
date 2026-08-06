@@ -173,7 +173,8 @@
     "canvasLabel": "Radarkart — dra for å flytte, trykk på en rute for å lese den",
     "loadingField": "laster feltet …",
     "sampling": "hver {{km}}. km · {{frames}} bilder",
-    "footnote": "Hver rute er én kilometer, uansett zoom — oppløsningen radaren faktisk måler. Et vidt utsnitt betaler med BILDER i stedet for detaljer, så det animerer over færre steg. Skravert bakke er utenfor radardekning: ikke opphold, men uobservert."
+    "footnote": "Hver rute er én kilometer, uansett zoom — oppløsningen radaren faktisk måler. Et vidt utsnitt betaler med BILDER i stedet for detaljer, så det animerer over færre steg. Skravert bakke er utenfor radardekning: ikke opphold, men uobservert.",
+    "loadingFrames": "1 km · laster resten av bildene …"
   },
   "status": {
     "horizonHours_one": "{{count}} time",
