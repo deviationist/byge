@@ -112,7 +112,7 @@ export function RefreshControl({
           button and hearing nothing is the same failure as seeing nothing. */}
       <View role="status" style={{ flex: 1, minWidth: 160 }}>
         {message ? (
-          <Text style={{ fontSize: 12, lineHeight: 18, color: "var(--color-ink2)" }}>
+          <Text className="text-ink2" style={{ fontSize: 12, lineHeight: 18 }}>
             {message}
           </Text>
         ) : null}

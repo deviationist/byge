@@ -56,13 +56,12 @@ export function TwoPane({
     <View style={{ flex: 1, flexDirection: "row" }}>
       <View
         testID="twopane-list"
+        className="border-r-line bg-surface"
         style={{
           width: listWidth,
           flexGrow: 0,
           flexShrink: 0,
           borderRightWidth: 1,
-          borderRightColor: "var(--color-line)",
-          backgroundColor: "var(--color-surface)",
         }}
       >
         {list}

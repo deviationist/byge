@@ -32,7 +32,9 @@ export function NavBarButton({
         opacity: pressed ? 0.6 : 1,
       })}
     >
-      <Text style={{ fontSize: 22, lineHeight: 24, color: "var(--color-ink2)" }}>{glyph}</Text>
+      <Text className="text-ink2" style={{ fontSize: 22, lineHeight: 24 }}>
+        {glyph}
+      </Text>
     </Pressable>
   );
 }

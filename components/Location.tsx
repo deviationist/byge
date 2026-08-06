@@ -70,12 +70,12 @@ export function Location({
       <Text
         testID="location-name"
         numberOfLines={1}
+        className="text-ink"
         style={{
           fontSize: d.size,
           lineHeight: d.size * 1.3,
           fontWeight: "500",
           letterSpacing: d.size * -0.01,
-          color: "var(--color-ink)",
         }}
       >
         {name}
@@ -84,7 +84,8 @@ export function Location({
           // not a second fact about it.
           <Text
             testID="location-place"
-            style={{ color: "var(--color-ink2)", fontWeight: "400" }}
+            className="text-ink2"
+            style={{ fontWeight: "400" }}
           >
             {` · ${place}`}
           </Text>
@@ -94,12 +95,8 @@ export function Location({
       {withCoords ? (
         <Text
           testID="location-coords"
-          style={{
-            fontSize: 9.5,
-            lineHeight: 14,
-            letterSpacing: 0.4,
-            color: "var(--color-ink3)",
-          }}
+          className="text-ink3"
+          style={{ fontSize: 9.5, lineHeight: 14, letterSpacing: 0.4 }}
         >
           {formatCoords(lat as number, lon as number)}
         </Text>

@@ -136,7 +136,13 @@ describe("presentation", () => {
         <Location name="Home" place="Oslo" lat={1} lon={2} theme={theme} variant="header" />,
       );
       for (const id of ["location-name", "location-place", "location-coords"]) {
-        expect(v.getByTestId(id).style.color).toContain("var(--color-");
+        const el = v.getByTestId(id);
+        // Colour now arrives as a Uniwind token class. The invariant is
+        // unchanged — a token, never a literal — so it is asserted in the
+        // vocabulary the styles use, plus the absence of any inline colour to
+        // prove a hex has not crept back in alongside it.
+        expect(el.className).toMatch(/\btext-ink[23]?\b/);
+        expect(el.style.color).toBe("");
       }
     }
   });

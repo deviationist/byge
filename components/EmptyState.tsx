@@ -53,11 +53,14 @@ export function EmptyState({ reason, removedName, onAdd }: EmptyStateProps) {
     >
       <Text
         accessibilityRole="header"
-        style={{ fontSize: 24, lineHeight: 30, letterSpacing: -0.3, color: "var(--color-ink)" }}
+        className="text-ink"
+        style={{ fontSize: 24, lineHeight: 30, letterSpacing: -0.3 }}
       >
         {title}
       </Text>
-      <Text style={{ fontSize: 13.5, lineHeight: 22, color: "var(--color-ink2)" }}>{body}</Text>
+      <Text className="text-ink2" style={{ fontSize: 13.5, lineHeight: 22 }}>
+        {body}
+      </Text>
       {onAdd ? (
         <Button
           label="Add a place"

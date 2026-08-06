@@ -39,30 +39,29 @@ export function Attribution() {
   const base = {
     fontSize: 9.5,
     lineHeight: 15,
-    color: "var(--color-ink3)",
   } as const;
   const link = { ...base, textDecorationLine: "underline" as const };
 
   return (
     <View
+      className="border-t-line"
       style={{
         borderTopWidth: 1,
-        borderTopColor: "var(--color-line)",
         paddingTop: 12,
         paddingBottom: 4,
       }}
     >
-      <Text style={base}>
+      <Text className="text-ink3" style={base}>
         Data from{" "}
-        <Link href={MET} hrefAttrs={OPEN_AWAY} accessibilityRole="link" style={link}>
+        <Link href={MET} hrefAttrs={OPEN_AWAY} accessibilityRole="link" className="text-ink3" style={link}>
           MET Norway
         </Link>{" "}
         ·{" "}
-        <Link href={NLOD} hrefAttrs={OPEN_AWAY} accessibilityRole="link" style={link}>
+        <Link href={NLOD} hrefAttrs={OPEN_AWAY} accessibilityRole="link" className="text-ink3" style={link}>
           NLOD 2.0
         </Link>{" "}
         /{" "}
-        <Link href={CC_BY} hrefAttrs={OPEN_AWAY} accessibilityRole="link" style={link}>
+        <Link href={CC_BY} hrefAttrs={OPEN_AWAY} accessibilityRole="link" className="text-ink3" style={link}>
           CC BY 4.0
         </Link>
       </Text>

@@ -28,6 +28,7 @@ export type InstallPromptProps = {
 export function InstallPrompt({ onInstall, onDismiss, theme }: InstallPromptProps) {
   return (
     <View
+      className="bg-surface border-line"
       style={{
         // `position` is stated rather than left to the default so that the
         // no-overlay rule is visible here and asserted in the test.
@@ -36,9 +37,7 @@ export function InstallPrompt({ onInstall, onDismiss, theme }: InstallPromptProp
         alignItems: "center",
         flexWrap: "wrap",
         gap: 14,
-        backgroundColor: "var(--color-surface)",
         borderWidth: 1,
-        borderColor: "var(--color-line)",
         borderRadius: 12,
         paddingVertical: 14,
         paddingHorizontal: 16,
@@ -46,13 +45,8 @@ export function InstallPrompt({ onInstall, onDismiss, theme }: InstallPromptProp
     >
       <BrandMark size={30} theme={theme} />
       <Text
-        style={{
-          flex: 1,
-          minWidth: 180,
-          fontSize: 12.5,
-          lineHeight: 19,
-          color: "var(--color-ink2)",
-        }}
+        className="text-ink2"
+        style={{ flex: 1, minWidth: 180, fontSize: 12.5, lineHeight: 19 }}
       >
         Keep byge one tap away — add it to your home screen. Works offline with the last
         verdict.
