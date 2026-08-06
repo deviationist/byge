@@ -361,3 +361,76 @@ describe("MapCanvas serves both map surfaces", () => {
     expect(() => cellOf(c.lat, c.lon)).not.toThrow();
   });
 });
+
+describe("controls drawn over the map", () => {
+  /**
+   * The zoom buttons sit inside the surface, so their pointerdown bubbles into
+   * the pan listener. That did two things, and the second is the one that bit:
+   * it started a drag, and `setPointerCapture` then redirected every later
+   * pointer event to the surface — so the button never got its pointerup and no
+   * click was ever fired. The buttons depressed and the map slid under them.
+   *
+   * Note what a `.click()` test proves here: nothing. Calling click() directly
+   * dispatches a click and skips hit-testing, capture and bubbling entirely, so
+   * the unit tests for ZoomControl passed throughout while the control was
+   * unusable in a browser. These press the way a finger does.
+   */
+  function withControl() {
+    const onMove = vi.fn();
+    const onZoomChange = vi.fn();
+    const view = render(
+      <MapCanvas
+        center={OSLO}
+        zoom={11}
+        theme="light"
+        onMove={onMove}
+        onZoomChange={onZoomChange}
+      >
+        <button type="button" data-map-control="true" data-testid="overlay-btn">
+          +
+        </button>
+      </MapCanvas>,
+    );
+    return { ...view, onMove, onZoomChange };
+  }
+
+  it("does not pan when the press began on a control", () => {
+    const { getByTestId, onMove } = withControl();
+    const btn = getByTestId("overlay-btn");
+    fireEvent.pointerDown(btn, {
+      clientX: 200,
+      clientY: 150,
+      pointerId: 1,
+      button: 0,
+      bubbles: true,
+    });
+    fireEvent.pointerMove(document, { clientX: 300, clientY: 150, pointerId: 1 });
+    fireEvent.pointerUp(document, { pointerId: 1 });
+    expect(onMove).not.toHaveBeenCalled();
+  });
+
+  it("lets the control receive its own click", () => {
+    // The actual symptom. Capture stole the pointerup, so this never fired.
+    const { getByTestId } = withControl();
+    const btn = getByTestId("overlay-btn");
+    const clicked = vi.fn();
+    btn.addEventListener("click", clicked);
+    fireEvent.pointerDown(btn, {
+      clientX: 200,
+      clientY: 150,
+      pointerId: 1,
+      button: 0,
+      bubbles: true,
+    });
+    fireEvent.pointerUp(btn, { pointerId: 1, bubbles: true });
+    fireEvent.click(btn);
+    expect(clicked).toHaveBeenCalled();
+  });
+
+  it("still pans when the press began on the map itself", () => {
+    // The guard must not disable the gesture it is protecting.
+    const { container, onMove } = withControl();
+    drag(surface(container), 100, 0);
+    expect(onMove).toHaveBeenCalled();
+  });
+});

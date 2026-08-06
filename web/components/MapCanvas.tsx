@@ -190,6 +190,19 @@ export function MapCanvas({
 
     const onDown = (e: PointerEvent) => {
       if (!live.current.interactive || e.button !== 0) return;
+      // A press that began on an overlay control is not a pan.
+      //
+      // The listener is on the surface, so a pointerdown anywhere inside it —
+      // including on a button drawn on top — bubbles to here. Starting a drag
+      // then does more than pan: `setPointerCapture` below redirects every
+      // later pointer event to the surface, so the button never receives its
+      // pointerup and NO CLICK IS EVER FIRED. The zoom buttons depressed and
+      // did nothing while the map slid underneath them.
+      //
+      // The surface owns the gesture, so the surface decides what is not one.
+      // Any control that sits over the map opts out by marking itself, which
+      // also covers whatever phase 2 hangs here — a scrubber, a layer picker.
+      if ((e.target as Element | null)?.closest?.("[data-map-control]")) return;
       const { center: c, zoom: z } = live.current;
       const p = lonLatToPx(c, z);
       // Anchor to the centre as it was at press time and derive every later
