@@ -1,12 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import {
-  BASEMAP_OPTIONS,
-  type Basemap,
-  nextIndex,
-  SegmentedControl,
-  themeOptions,
-} from "./SegmentedControl";
+import { BASEMAP_OPTIONS, nextIndex, SegmentedControl, themeOptions } from "./SegmentedControl";
+import type { KartverketLayer } from "./TileLayer";
 
 const MIN_TARGET = 44;
 
@@ -112,11 +107,11 @@ describe("SegmentedControl", () => {
   it("keeps an accessible name when the visible label is hidden", () => {
     // The map overlay hides the caption; it must not lose the name with it.
     render(
-      <SegmentedControl<Basemap>
+      <SegmentedControl<KartverketLayer>
         label="Basemap"
         labelHidden
         options={BASEMAP_OPTIONS}
-        value="terrain"
+        value="grey"
         onChange={() => {}}
       />,
     );
@@ -127,15 +122,17 @@ describe("SegmentedControl", () => {
   it("serves the basemap choice from the same component", () => {
     const onChange = vi.fn();
     render(
-      <SegmentedControl<Basemap>
+      <SegmentedControl<KartverketLayer>
         label="Basemap"
         options={BASEMAP_OPTIONS}
-        value="terrain"
+        value="grey"
         onChange={onChange}
       />,
     );
-    fireEvent.click(screen.getByRole("radio", { name: "Satellite" }));
-    expect(onChange).toHaveBeenCalledWith("satellite");
+    // Named for the layer, not for a sketch: there is no satellite option
+    // because Kartverket's open cache has no aerial layer to point one at.
+    fireEvent.click(screen.getByRole("radio", { name: /Nautical/ }));
+    expect(onChange).toHaveBeenCalledWith("nautical");
   });
 
   it("carries a spoken hint where the label cannot say enough", () => {

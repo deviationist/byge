@@ -4,6 +4,7 @@ import type { TextStyle, View as ViewType } from "react-native";
 import { Pressable, Text, View } from "react-native";
 import { MONO } from "../theme/tokens";
 import type { ThemeChoice } from "../theme/useTheme";
+import type { KartverketLayer } from "./TileLayer";
 
 /**
  * One component, two uses: the appearance choice in About, and the phase-2
@@ -78,14 +79,32 @@ export const themeOptions = (): readonly SegmentedOption<ThemeChoice>[] => [
   },
 ];
 
-/** Phase 2 — the basemap under the radar overlay. */
-export type Basemap = "terrain" | "street" | "satellite" | "hybrid";
-
-export const BASEMAP_OPTIONS: readonly SegmentedOption<Basemap>[] = [
-  { value: "terrain", label: "Terrain" },
-  { value: "street", label: "Street" },
-  { value: "satellite", label: "Satellite" },
-  { value: "hybrid", label: "Hybrid", hint: "Satellite with place names" },
+/**
+ * The basemap options, which are the layers that actually exist.
+ *
+ * This list used to read `terrain / street / satellite / hybrid` — the design's
+ * sketch of what a map switcher might offer, hardcoded in English and wired to
+ * nothing but its own test. It also declared a second type named `Basemap`,
+ * shadowing the real one in MapCanvas, so the codebase held two contradictory
+ * answers to "what is a basemap" and the wrong one was the one you found first.
+ *
+ * `satellite` and `hybrid` are gone because there is no aerial layer to point
+ * them at: Kartverket's open cache serves four layers and all four are maps.
+ * See the note in TileLayer.
+ */
+export const BASEMAP_OPTIONS: readonly SegmentedOption<KartverketLayer>[] = [
+  { value: "grey", label: i18next.t("basemap.grey"), hint: i18next.t("basemap.greyHint") },
+  { value: "topo", label: i18next.t("basemap.topo") },
+  {
+    value: "detailed",
+    label: i18next.t("basemap.detailed"),
+    hint: i18next.t("basemap.detailedHint"),
+  },
+  {
+    value: "nautical",
+    label: i18next.t("basemap.nautical"),
+    hint: i18next.t("basemap.nauticalHint"),
+  },
 ];
 
 /**
