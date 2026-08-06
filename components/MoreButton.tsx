@@ -60,6 +60,7 @@ export const MoreButton = forwardRef<View, MoreButtonProps>(function MoreButton(
       aria-disabled={disabled || undefined}
       disabled={disabled}
       onPress={onPress}
+      className={labelled ? "border-line2 bg-surface" : undefined}
       style={({ pressed }) => [
         {
           minWidth: MIN_TARGET,
@@ -71,25 +72,17 @@ export const MoreButton = forwardRef<View, MoreButtonProps>(function MoreButton(
           borderRadius: 10,
           opacity: disabled ? 0.4 : pressed ? 0.6 : 1,
         },
-        labelled
-          ? {
-              paddingHorizontal: 14,
-              borderWidth: 1,
-              borderColor: "var(--color-line2)",
-              backgroundColor: "var(--color-surface)",
-            }
-          : null,
+        labelled ? { paddingHorizontal: 14, borderWidth: 1 } : null,
       ]}
     >
       {labelled ? (
-        <Text style={{ fontSize: 14, color: "var(--color-ink)" }}>{text}</Text>
+        <Text className="text-ink" style={{ fontSize: 14 }}>
+          {text}
+        </Text>
       ) : null}
       <Text
-        style={{
-          fontSize: labelled ? 12 : 20,
-          lineHeight: labelled ? 14 : 22,
-          color: "var(--color-ink2)",
-        }}
+        className="text-ink2"
+        style={{ fontSize: labelled ? 12 : 20, lineHeight: labelled ? 14 : 22 }}
       >
         {glyph}
       </Text>

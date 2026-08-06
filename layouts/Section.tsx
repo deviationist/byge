@@ -26,23 +26,22 @@ const TITLE = {
   // Uppercased in CSS rather than in the string, so the accessible name stays
   // the prop's own casing — screen readers spell out shouted words.
   textTransform: "uppercase",
-  color: "var(--color-ink3)",
 } satisfies TextStyle;
 
 export function Section({ title, children, hint, gap = 9 }: SectionProps) {
   const id = useId();
   return (
     <View role="group" aria-labelledby={id} style={{ gap }}>
-      <Text nativeID={id} role="heading" style={TITLE}>
+      <Text nativeID={id} role="heading" className="text-ink3" style={TITLE}>
         {title}
       </Text>
       {hint ? (
         <Text
+          className="text-ink3"
           style={{
             fontFamily: "'IBM Plex Mono', monospace",
             fontSize: 10,
             lineHeight: 16,
-            color: "var(--color-ink3)",
           }}
         >
           {hint}

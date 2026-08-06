@@ -58,21 +58,21 @@ export function PrecipitationConfidence({ verdict }: PrecipitationConfidenceProp
           <View
             key={i}
             testID={i <= n ? "confidence-bar-on" : "confidence-bar-off"}
+            className={i <= n ? "bg-ink2" : "bg-line2"}
             style={{
               width: 14,
               height: 3,
               borderRadius: 2,
-              backgroundColor: i <= n ? "var(--color-ink2)" : "var(--color-line2)",
             }}
           />
         ))}
       </View>
       <Text
+        className="text-ink2"
         style={{
           fontFamily: MONO,
           fontSize: 10,
           letterSpacing: 0.3,
-          color: "var(--color-ink2)",
         }}
       >
         {text}

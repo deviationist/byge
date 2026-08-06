@@ -32,13 +32,12 @@ export function StaleBanner({ ageMin }: StaleBannerProps) {
   return (
     <View
       role="status"
+      className="bg-sunk border-line"
       style={{
         flexDirection: "row",
         alignItems: "flex-start",
         gap: 10,
-        backgroundColor: "var(--color-sunk)",
         borderWidth: 1,
-        borderColor: "var(--color-line)",
         borderRadius: 12,
         paddingVertical: 12,
         paddingHorizontal: 14,
@@ -46,8 +45,10 @@ export function StaleBanner({ ageMin }: StaleBannerProps) {
     >
       {/* The glyph is decoration; the word "offline" in the sentence carries
           the state. Nothing here is signalled by colour alone. */}
-      <Text style={{ fontSize: 13, lineHeight: 20, color: "var(--color-ink3)" }}>⌁</Text>
-      <Text style={{ flex: 1, fontSize: 12.5, lineHeight: 20, color: "var(--color-ink2)" }}>
+      <Text className="text-ink3" style={{ fontSize: 13, lineHeight: 20 }}>
+        ⌁
+      </Text>
+      <Text className="text-ink2" style={{ flex: 1, fontSize: 12.5, lineHeight: 20 }}>
         Showing the verdict from {age} min ago — you are offline. It will refresh the moment you
         are back.
       </Text>

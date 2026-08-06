@@ -53,7 +53,9 @@ describe("Screen", () => {
   it("fills the viewport so a short screen still paints its background", () => {
     render(<Screen testID="s">content</Screen>);
     expect(outer().style.flex).not.toBe("");
-    expect(outer().style.backgroundColor).toBe("var(--color-bg)");
+    // The class contract: colour arrives via Uniwind now, so the token is
+    // asserted by the class that carries it rather than by an inline var().
+    expect(outer().className).toContain("bg-bg");
   });
 
   it("renders its children", () => {
