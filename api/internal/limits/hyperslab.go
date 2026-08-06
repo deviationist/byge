@@ -12,6 +12,7 @@ package limits
 
 import (
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 )
@@ -54,6 +55,14 @@ func Check(rawURL string, maxValues int) error {
 	expr := rawURL[q+1:]
 	if strings.TrimSpace(expr) == "" {
 		return nil
+	}
+	// Decode before parsing. RFC 3986 does not allow bare `[` in a query, so a
+	// correct client sends `%5B` — the browser's own encodeURI does this. Parsing
+	// the raw form would find no brackets at all and reject a perfectly ordinary
+	// window as "unbounded", which is exactly what it did the first time the app
+	// talked to a proxy that had this check.
+	if decoded, err := url.QueryUnescape(expr); err == nil {
+		expr = decoded
 	}
 
 	total := 0
