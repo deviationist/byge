@@ -43,7 +43,8 @@
     "advection": "Forecast frames are advection-only: the measured rain field slides along measured motion. Cells do not grow or die, so far-out frames are weaker — which is what the confidence marker tells you.",
     "horizon": "The horizon is 115 minutes. When a spell is still going at the horizon, byge reports a lower bound and says so. It will never round an unknown into a number.",
     "blind": "Where the radar cannot see, byge says so rather than saying “dry”. Those are different claims.",
-    "appearanceSection": "Appearance"
+    "appearanceSection": "Appearance",
+    "version": "Version {{version}} · offline-capable"
   },
   "attribution": {
     "dataFrom": "Data from",
@@ -249,5 +250,9 @@
     "label": "Search for a place",
     "placeholder": "e.g. Bergen",
     "none": "No match. You can pan the map or type the coordinates instead."
+  },
+  "pane": {
+    "emptyTitle": "Nothing to show.",
+    "emptyBody": "The place that was here is gone. Add one and its answer appears in this pane."
   }
 }
