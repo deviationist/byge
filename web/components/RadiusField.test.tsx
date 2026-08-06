@@ -4,7 +4,7 @@ import {
   clampRadius,
   RADIUS_COSTLY,
   RADIUS_DEFAULT,
-  RADIUS_HINT,
+  radiusHint,
   RADIUS_MAX,
   RADIUS_MIN,
   RADIUS_SATURATES,
@@ -168,8 +168,8 @@ describe("RadiusField", () => {
     // Without this, someone who widens and sees the verdict flip to "raining"
     // will think the widening made it rain.
     render(<RadiusField value={3} onChange={() => {}} />);
-    expect(screen.getByText(RADIUS_HINT)).toBeTruthy();
-    expect(RADIUS_HINT).toMatch(/never turn a wet answer dry/i);
+    expect(screen.getByText(radiusHint())).toBeTruthy();
+    expect(radiusHint()).toMatch(/never turn a wet answer dry/i);
   });
 
   it("keeps quiet at the default and speaks up when wide", () => {

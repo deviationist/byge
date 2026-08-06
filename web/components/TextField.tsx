@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { useId } from "react";
 import type { KeyboardTypeOptions, TextStyle } from "react-native";
 import { MONO } from "../theme/tokens";
@@ -56,8 +57,10 @@ const MIN_TARGET = 44;
  * decimals is ~11 m, which is a hundredth of a 1 km radar cell — there is
  * nothing to lose by rounding and a whole request to lose by not.
  */
-export const COORD_HINT =
-  "Four decimals max — MET rejects anything finer. That is about 11 m, far inside a single 1 km radar cell, so nothing is lost.";
+// A function, not a constant: a constant would call t() at import time, before
+// i18n is initialised, and freeze English into a value the language switch
+// could never reach.
+export const coordHint = () => i18next.t("field.coordHint");
 
 const LABEL: TextStyle = {
   fontFamily: MONO,
@@ -92,7 +95,7 @@ export function TextField({
   const errorId = `${id}-error`;
 
   const coordinate = variant === "coordinate";
-  const shownHint = hint ?? (coordinate ? COORD_HINT : undefined);
+  const shownHint = hint ?? (coordinate ? coordHint() : undefined);
   const invalid = error != null && error !== "";
 
   // Error first: if the field is wrong, that is the thing to hear before the

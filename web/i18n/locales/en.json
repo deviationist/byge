@@ -72,5 +72,32 @@
     "outlineBody": "Dry now, but a spell is on the way within the next two hours.",
     "hatched": "Hatched",
     "hatchedBody": "Outside radar coverage — we have no observation at all."
+  },
+  "field": {
+    "coordHint": "Four decimals max — MET rejects anything finer. That is about 11 m, far inside a single 1 km radar cell, so nothing is lost."
+  },
+  "radius": {
+    "hint": "Any rain touching the circle counts as rain here, so widening only ever adds — it can never turn a wet answer dry. The grid is 1 km, so below 2 km there is nothing finer to see.",
+    "narrower": "Narrower",
+    "wider": "Wider",
+    "wide": "A wide watch area. Some rain somewhere within {{km}} km over the next two hours is very nearly always true in Norway, so the answer stops discriminating. That is what the 3 km default protects.",
+    "costly": "It is also about 350 KB of radar per check at 25 km, against 8 KB at 3 km — a cost, not a limit.",
+    "valueDefault": "{{km}} km — the default",
+    "valueMin": "{{km}} km — as narrow as the 1 km grid supports",
+    "valueWide": "{{km}} km — a wide watch area",
+    "value": "{{km}} km"
+  },
+  "appearance": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "systemHint": "Follows the device appearance setting"
+  },
+  "menu": {
+    "more": "More actions",
+    "edit": "Edit place",
+    "editHint": "Name, coordinates and radius",
+    "remove": "Remove place",
+    "removeHint": "Cannot be undone"
   }
 }

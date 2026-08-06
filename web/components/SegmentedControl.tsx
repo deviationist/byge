@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { useId, useRef } from "react";
 import type { TextStyle, View as ViewType } from "react-native";
 import { MONO } from "../theme/tokens";
@@ -67,10 +68,14 @@ const SR_ONLY = {
   overflow: "hidden",
 } as const;
 
-export const THEME_OPTIONS: readonly SegmentedOption<ThemeChoice>[] = [
-  { value: "light", label: "Light" },
-  { value: "dark", label: "Dark" },
-  { value: "system", label: "System", hint: "Follows the device appearance setting" },
+export const themeOptions = (): readonly SegmentedOption<ThemeChoice>[] => [
+  { value: "light", label: i18next.t("appearance.light") },
+  { value: "dark", label: i18next.t("appearance.dark") },
+  {
+    value: "system",
+    label: i18next.t("appearance.system"),
+    hint: i18next.t("appearance.systemHint"),
+  },
 ];
 
 /** Phase 2 — the basemap under the radar overlay. */

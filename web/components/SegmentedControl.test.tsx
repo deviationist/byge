@@ -5,7 +5,7 @@ import {
   type Basemap,
   nextIndex,
   SegmentedControl,
-  THEME_OPTIONS,
+  themeOptions,
 } from "./SegmentedControl";
 
 const MIN_TARGET = 44;
@@ -41,7 +41,7 @@ describe("SegmentedControl", () => {
     render(
       <SegmentedControl
         label="Appearance"
-        options={THEME_OPTIONS}
+        options={themeOptions()}
         value={value}
         onChange={onChange}
       />,
