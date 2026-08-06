@@ -5,11 +5,11 @@ import { Text, useWindowDimensions, View } from "react-native";
 import { ErrorState } from "../components/ErrorState";
 import { LocationCard } from "../components/LocationCard";
 import { MapCanvas } from "../components/MapCanvas";
+import { MapLegend } from "../components/MapLegend";
 import { NavBar } from "../components/NavBar";
 import { PlaybackControl } from "../components/PlaybackControl";
 import { PrecipitationGraph } from "../components/PrecipitationGraph";
 import { RadarLayer } from "../components/RadarLayer";
-import { RadarLegend } from "../components/RadarLegend";
 import { BASEMAP_OPTIONS, SegmentedControl } from "../components/SegmentedControl";
 import type { KartverketLayer } from "../components/TileLayer";
 import { useBack } from "../hooks/useBack";
@@ -17,6 +17,8 @@ import { useLocations } from "../hooks/useLocations";
 import { useRadarGrid } from "../hooks/useRadarGrid";
 import { useVerdict } from "../hooks/useVerdict";
 import { Screen } from "../layouts/Screen";
+import type { Verdict } from "../lib/forecast";
+import { NOTICEABLE } from "../lib/scale";
 import { useResolvedTheme } from "../theme/ThemeProvider";
 import { MONO } from "../theme/tokens";
 
@@ -39,6 +41,19 @@ import { MONO } from "../theme/tokens";
  * of the next two hours is the thing you drag to move through them, so the
  * control and its own legend are one object.
  */
+/**
+ * Is the spell still running when the frames stop?
+ *
+ * The horizon note is about the DATA ending, not the weather — so it only
+ * belongs when something is still falling at the last frame. Over a clear field
+ * it would invent an open end nobody claimed, which is the exact species of
+ * over-statement the rest of this app is built to avoid.
+ */
+function isOpenEndedAtHorizon(v: Verdict): boolean {
+  const last = v.frames.at(-1);
+  return !!last && last.maxRate >= NOTICEABLE;
+}
+
 export function RadarMapScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
   const { t } = useTranslation();
@@ -55,6 +70,8 @@ export function RadarMapScreen() {
   // Frame index, not minutes. The graph speaks in indices and so does the
   // grid, and converting between them in two places is how they drift apart.
   const [frame, setFrame] = useState(0);
+  // Measured so the legend can decide its own density — see MapLegend.
+  const [size, setSize] = useState({ width: 0, height: 0 });
   const [playing, setPlaying] = useState(false);
 
   const frameCount = verdict?.frames.length ?? 0;
@@ -129,7 +146,13 @@ export function RadarMapScreen() {
         </NavBar>
       </View>
 
-      <View style={{ flex: 1, minHeight: 240, position: "relative" }}>
+      <View
+        style={{ flex: 1, minHeight: 240, position: "relative" }}
+        onLayout={(e) => {
+          const { width, height } = e.nativeEvent.layout;
+          setSize((p) => (p.width === width && p.height === height ? p : { width, height }));
+        }}
+      >
         <MapCanvas
           center={{ lat: location.lat, lon: location.lon }}
           zoom={9}
@@ -198,7 +221,14 @@ export function RadarMapScreen() {
           />
         </View>
 
-        <RadarLegend theme={theme} />
+        {/*
+          Bottom-right, and its density follows the MEASURED pane rather than
+          the device label — a full legend is ~240 px, so over a short map it
+          would cover the thing it explains.
+        */}
+        <View style={{ position: "absolute", right: 12, bottom: 12 }}>
+          <MapLegend theme={theme} paneHeight={size.height} />
+        </View>
       </View>
 
       <View
@@ -221,14 +251,17 @@ export function RadarMapScreen() {
           <>
             <PlaybackControl
               playing={playing}
-              atEnd={frame >= frameCount - 1}
+              index={frame}
+              count={frameCount}
+              minutes={frames[frame]?.minutes ?? 0}
+              // Only when the spell under the reader is still running at the
+              // last frame. Saying it over a clear field would invent an open
+              // end nobody claimed.
+              openEnded={verdict ? isOpenEndedAtHorizon(verdict) : false}
               onToggle={() => {
-                // At the horizon there is nowhere further to go, so play means
-                // start again rather than nothing at all.
                 if (!playing && frame >= frameCount - 1) setFrame(0);
                 setPlaying((p) => !p);
               }}
-              minutes={frames[frame]?.minutes ?? 0}
             />
             <PrecipitationGraph
               frames={frames}

@@ -1,12 +1,13 @@
+import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Text, useWindowDimensions, View } from "react-native";
 import { CellReadout } from "../components/CellReadout";
 import { type LatLon, MAX_ZOOM, MapCanvas, MIN_ZOOM } from "../components/MapCanvas";
+import { MapLegend } from "../components/MapLegend";
 import { NavBar } from "../components/NavBar";
 import { PlaybackControl } from "../components/PlaybackControl";
 import { RadarGL } from "../components/RadarGL";
-import { RadarLegend } from "../components/RadarLegend";
 import { BASEMAP_OPTIONS, SegmentedControl } from "../components/SegmentedControl";
 import type { KartverketLayer } from "../components/TileLayer";
 import { ZoomControl } from "../components/ZoomControl";
@@ -42,6 +43,7 @@ const START_ZOOM = 7;
  * for area and a close view gets all 24.
  */
 export function MapScreen() {
+  const router = useRouter();
   const { t } = useTranslation();
   const theme = useResolvedTheme();
   const goBack = useBack("/");
@@ -198,14 +200,30 @@ export function MapScreen() {
           />
         </View>
 
-        <RadarLegend theme={theme} />
+        {/*
+          Bottom-right, and its density follows the MEASURED pane rather than
+          the device label — a full legend is ~240 px, so over a short map it
+          would cover the thing it explains.
+        */}
+        <View style={{ position: "absolute", right: 12, bottom: 12 }}>
+          <MapLegend theme={theme} paneHeight={size.height} />
+        </View>
 
         {picked ? (
           <CellReadout
             point={picked}
             frame={frame}
+            minutes={frame * 5}
             theme={theme}
             onClose={() => setPicked(null)}
+            // The bridge back to what byge actually does: a reading becomes an
+            // answer only once it has a place attached to it.
+            onSave={() =>
+              router.push({
+                pathname: "/add",
+                params: { lat: picked.lat.toFixed(4), lon: picked.lon.toFixed(4) },
+              })
+            }
           />
         ) : null}
       </View>
@@ -222,12 +240,13 @@ export function MapScreen() {
         <View style={{ flexDirection: "row", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
           <PlaybackControl
             playing={playing}
-            atEnd={frameCount > 0 && frame >= frameCount - 1}
+            index={frame}
+            count={frameCount}
+            minutes={frame * 5}
             onToggle={() => {
               if (!playing && frame >= frameCount - 1) setFrame(0);
               setPlaying((p) => !p);
             }}
-            minutes={frame * 5}
           />
           <Text className="text-ink3" style={{ fontFamily: MONO, fontSize: 10 }}>
             {loading

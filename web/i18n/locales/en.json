@@ -245,7 +245,8 @@
     "updatedAge": "updated {{age}} min ago",
     "offlineAge": "last updated {{age}} min ago · offline",
     "checking": "checking…",
-    "caption": "{{places}} · {{freshness}}"
+    "caption": "{{places}} · {{freshness}}",
+    "radarEntry": "Radar map · look at the weather, no place attached"
   },
   "basemap": {
     "label": "Map style",
@@ -341,6 +342,33 @@
   "cell": {
     "reading": "Reading…",
     "unavailable": "Could not read that square.",
-    "close": "close"
+    "close": "Close reading",
+    "notObserved": "Not observed",
+    "notObservedBody": "This square is outside radar coverage, so there is nothing to report either way.",
+    "dry": "Dry",
+    "dryBody": "Radar sees this square and sees no rain in it.",
+    "rate": "RATE",
+    "frame": "FRAME",
+    "cell": "CELL",
+    "resolution": "RESOLUTION",
+    "resolutionValue": "1 km · 5 min",
+    "disclaimer": "A reading from one radar square — not a forecast for a place. byge only makes a claim about somewhere you have saved, where it knows the radius.",
+    "save": "Save this point as a place"
+  },
+  "mapLegend": {
+    "key": "KEY",
+    "hide": "HIDE",
+    "show": "Show the full legend",
+    "dry": "Dry",
+    "drySub": "Radar sees it and sees no rain — basemap left untouched.",
+    "noRadar": "No radar coverage",
+    "noRadarSub": "Not dry. No claim either way."
+  },
+  "playback": {
+    "clock": "{{when}}  ·  {{time}}",
+    "frame": "FRAME {{i}} OF {{n}}",
+    "playing": "PLAYING · FRAME {{i}} OF {{n}}",
+    "ended": "END OF RUN · REPLAY",
+    "horizon": "This is as far as the radar run goes. Anything still falling here has no known end."
   }
 }

@@ -1,5 +1,6 @@
 import { useRouter } from "expo-router";
-import { View } from "react-native";
+import { useTranslation } from "react-i18next";
+import { Pressable, Text, View } from "react-native";
 import { AddPlaceCard } from "../components/AddPlaceCard";
 import { Attribution } from "../components/Attribution";
 import { EmptyState } from "../components/EmptyState";
@@ -13,6 +14,7 @@ import { useVerdicts } from "../hooks/useVerdict";
 import { Screen } from "../layouts/Screen";
 import { hasEverSaved, lastRemoved } from "../lib/storage";
 import { useResolvedTheme } from "../theme/ThemeProvider";
+import { MONO } from "../theme/tokens";
 
 /**
  * Which of my places is wet?
@@ -33,6 +35,7 @@ export type LocationsScreenProps = {
 
 export function LocationsScreen({ selectedId, onSelect }: LocationsScreenProps = {}) {
   const router = useRouter();
+  const { t } = useTranslation();
   const theme = useResolvedTheme();
   const { locations } = useLocations();
   const { data: verdicts } = useVerdicts(locations);
@@ -106,6 +109,30 @@ export function LocationsScreen({ selectedId, onSelect }: LocationsScreenProps =
 
         {items.length > 0 ? <PrecipitationLegend theme={theme} /> : null}
       </View>
+
+      {/*
+        The way into the radar map, and its weight is the ruling.
+        A line of text UNDER the places — not a card, not an icon, not a tile,
+        and never a tab. The risk Design identified was never that the map
+        exists; it is that the map becomes the front door. So it sits below the
+        thing this screen is about, at the same weight as "See why — radar map"
+        on the verdict, and says plainly that it has no place attached.
+      */}
+      <Pressable
+        testID="radar-entry"
+        accessibilityRole="link"
+        accessibilityLabel={t("list.radarEntry")}
+        onPress={() => router.push("/map")}
+        style={({ pressed }) => ({
+          alignSelf: "flex-start",
+          paddingVertical: 8,
+          opacity: pressed ? 0.6 : 1,
+        })}
+      >
+        <Text className="text-ink2" style={{ fontSize: 12.5 }}>
+          {t("list.radarEntry")} <Text style={{ fontFamily: MONO }}>→</Text>
+        </Text>
+      </Pressable>
 
       <View style={{ marginTop: "auto", paddingTop: 24 }}>
         <Attribution onAbout={() => router.push("/about")} />
