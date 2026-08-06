@@ -259,12 +259,67 @@ here is a CSS var that already switches with the root class". If native theming
 runs through Uniwind's runtime instead, those props become either genuinely
 needed or genuinely removable. Right now they are neither.
 
-**Two more web-only assumptions** surfaced by the same question, both real but
-smaller: `lib/storage.ts` writes saved places straight to `localStorage`, so on
-native nothing would persist; and `theme/useTheme.ts` already early-returns
-`"system"` when `Platform.OS !== "web"`, so the theme choice silently does not
-persist on native today. Both want one small storage abstraction behind the
-existing API. Genuinely web-only and fine to stay that way: `useInstallPrompt`
+### Status, 2026-08-06
+
+**Done.** All 149 `var()` are migrated, across nine commits. Four remain and
+every one is deliberate: two comments, `LocationCard`'s popup shadow, and the
+test pinning it. 25 token utilities are emitted into the real build.
+
+**Persistence is done too.** `lib/kv.ts` is now the only place the app talks to
+storage, with `lib/kv.native.ts` beside it — Metro resolves the suffix, so
+`expo-sqlite` never enters the web bundle. The interface is synchronous by
+necessity, not preference: `loadLocations()` runs inside
+`useState(loadLocations)` so the list is present at first paint, and any
+Promise-based store reintroduces the frame of empty state that reads as "your
+places are gone". That rules out AsyncStorage; `expo-sqlite/kv-store` is the
+native backend because it exposes `getItemSync`. This also fixed a live bug —
+theme choice early-returned `"system"` off web, so an explicit choice never
+survived a restart on native.
+
+### Native gaps still open
+
+Found by auditing web-only style properties after the migration. Neither is a
+styling problem — `className` solved that — and neither can be verified until a
+native project exists.
+
+**1 · The hatch disappears.** `HATCH` is a CSS `repeating-linear-gradient`
+applied through `backgroundImage`, and **React Native has no `backgroundImage`
+property at all**. It is consumed by `Swatch` (blind mode) and
+`PrecipitationGraph` (unobserved bars). On native both would render as a flat
+`bg-nodata` fill.
+
+That is worse than a cosmetic loss. The hatch is one of the redundant signals
+carrying "we cannot see here", and `theme/tokens.ts` exists precisely so the
+mark cannot drift between the four places it appears — its own comment warns
+that inconsistency is how "not observed" eventually gets mistaken for an
+intensity. On native it would not drift; it would vanish, leaving a pale fill
+that reads as a band or as dry. The `aria-label` still distinguishes it, so
+screen readers are unaffected; sighted users lose the distinction entirely.
+
+Fixes, in rough order of preference: draw it as an SVG pattern
+(`react-native-svg`, cross-platform, one implementation); or compose it from a
+few absolutely-positioned stripe `View`s behind `overflow: hidden`, which needs
+no dependency. Either wants a `<Hatch />` component so there is still one
+definition, and both change the DOM shape enough to need the two tests that
+currently assert `backgroundImage` rewritten.
+
+**2 · Attribution links do nothing.** `Attribution` builds its links by casting
+`Text` to accept `href`/`hrefAttrs`, which is a react-native-web affordance. On
+native there is no anchor — tapping MET Norway, NLOD or CC BY would be inert.
+Attribution is a licence obligation, so "renders but does not open" is not an
+acceptable degradation. It needs `Linking.openURL` behind a `Pressable` on the
+native path.
+
+**Cosmetic only, worth knowing:** `boxShadow` (`OverflowMenu`, `LocationCard`)
+and the `outlineWidth`/`outlineOffset` focus ring (`PrecipitationGraph`) are
+web-only, so menus and popups render flat and the scrubber loses its focus
+indicator on native. `cursor` and `touchAction` in `MapCanvas` are ignored
+harmlessly.
+
+**Checked and fine:** `OverflowMenu` guards its `document` listeners with
+`typeof document === "undefined"`, `useServiceWorker` and `applyToDocument`
+both guard on `Platform.OS`, and `textDecorationLine` is supported by React
+Native. Genuinely web-only and correct to stay that way: `useInstallPrompt`
 (`beforeinstallprompt`), `public/sw.js`, and the PWA head injection in
 `scripts/postexport.mjs`.
 
