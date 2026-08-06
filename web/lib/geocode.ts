@@ -1,4 +1,4 @@
-import { CLIENT_KEY, viaProxy } from "./opendap";
+import { apiHeaders, apiUrl } from "./opendap";
 
 /**
  * "Grünerløkka, Oslo" — the line under a place's name.
@@ -19,14 +19,18 @@ import { CLIENT_KEY, viaProxy } from "./opendap";
  * So: OSM for reverse, Kartverket for search. Each where it is actually good,
  * rather than one provider for tidiness.
  *
- * WHY IT GOES THROUGH OUR PROXY, when Nominatim allows browser calls. Two
- * things a browser cannot do. Their usage policy requires a User-Agent naming
- * the application, and `User-Agent` is a forbidden header in fetch — so a
- * direct call could not comply even in principle. And the policy asks for
- * aggressive caching, which is unusually easy here: a fixed coordinate's place
- * name does not change, so every repeat is a cache hit they never see. This
- * adds no privacy surface, because the proxy is already the thing that fetches
- * radar for the same coordinate.
+ * WHY IT GOES THROUGH OUR API, when Nominatim allows browser calls. Two things
+ * a browser cannot do. Their usage policy requires a User-Agent naming the
+ * application, and `User-Agent` is a forbidden header in fetch — so a direct
+ * call could not comply even in principle. And the policy asks for aggressive
+ * caching, which is unusually easy here: a fixed coordinate's place name does
+ * not change, so every repeat is a cache hit they never see. This adds no
+ * privacy surface, because the API is already the thing that fetches radar for
+ * the same coordinate.
+ *
+ * WE SEND TWO NUMBERS, not a URL. The zoom lives on the server for the same
+ * reason the value is chosen at all (see below): if the client could pass it,
+ * anyone could raise it and turn a neighbourhood line into an address lookup.
  *
  * IT RETURNS NULL EASILY AND OFTEN, and that is the design. Out at sea, deep in
  * a forest, over the border, rate-limited, offline, or simply not in OSM — all
@@ -36,15 +40,6 @@ import { CLIENT_KEY, viaProxy } from "./opendap";
  * correct; one that shows "Unknown" is the app admitting a failure the reader
  * did not ask about.
  */
-
-/**
- * zoom=14 is roughly neighbourhood scale.
- *
- * Deliberately not higher: 16+ starts returning buildings and house numbers,
- * which would put a person's street address in local storage as a side effect
- * of dropping a pin. This is a context line, not an address.
- */
-const ZOOM = 14;
 
 type NominatimAddress = {
   suburb?: string;
@@ -87,14 +82,10 @@ export async function reverseGeocode(
   lon: number,
   opts: { signal?: AbortSignal } = {},
 ): Promise<string | null> {
-  const target =
-    "https://nominatim.openstreetmap.org/reverse" +
-    `?lat=${lat}&lon=${lon}&format=jsonv2&zoom=${ZOOM}&addressdetails=1`;
-
   try {
-    const res = await fetch(viaProxy(target), {
+    const res = await fetch(apiUrl("/geocode", { lat, lon }), {
       signal: opts.signal,
-      headers: CLIENT_KEY ? { "X-Byge-Key": CLIENT_KEY } : undefined,
+      headers: apiHeaders(),
     });
     if (!res.ok) return null;
     const body = (await res.json()) as { address?: NominatimAddress };

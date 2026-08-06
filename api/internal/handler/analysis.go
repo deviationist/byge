@@ -27,10 +27,30 @@ const (
 	maxLookback = 8
 )
 
-// AnalysisBase returns the dataset URL for a stamp, without an extension.
-func AnalysisBase(t time.Time) string {
-	return datasetDir + datasetStem + t.UTC().Format("20060102T150405Z")
+// DatasetBase returns the dataset URL for a stamp, ready for an OPeNDAP suffix
+// (`.dds`, `.ascii?…`, `.dods?…`).
+//
+// The `.nc` IS PART OF THE FILENAME, not an extension OPeNDAP strips. Leaving it
+// off produces a URL that is well-formed, allowlisted, and answered by MET with
+// `Error { code = 404; message = "FileNotFound" }` for every stamp ever
+// published — which reads exactly like "the run has not landed yet" and sent the
+// analysis walk back through all eight steps finding nothing. The suffix goes
+// AFTER it: `….20260806T212500Z.nc.dds`.
+//
+// The stamp reaching here has already been validated — by the regex on the way
+// in, or by being formatted from a time.Time — which is what makes this
+// concatenation safe.
+func DatasetBase(stamp string) string {
+	return datasetDir + datasetStem + stamp + ".nc"
 }
+
+// AnalysisBase returns the dataset URL for an analysis time.
+func AnalysisBase(t time.Time) string {
+	return DatasetBase(t.UTC().Format(stampLayout))
+}
+
+/** The stamp format, shared by the formatter and the validating regex. */
+const stampLayout = "20060102T150405Z"
 
 // LatestAnalysis walks back from now until it finds a published analysis.
 //

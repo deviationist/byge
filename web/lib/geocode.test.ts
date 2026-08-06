@@ -56,12 +56,21 @@ describe("reverseGeocode", () => {
     expect(await reverseGeocode(59.9, 10.7)).toBeNull();
   });
 
-  it("asks at neighbourhood zoom, never at building level", async () => {
-    // zoom 16+ starts returning house numbers, which would put a street address
-    // in local storage as a side effect of dropping a pin.
+  it("sends a coordinate and nothing else", async () => {
+    // The zoom used to be sent from here, which meant the precision of the
+    // lookup was a client-side decision — and zoom 16+ returns house numbers,
+    // so anyone could have turned a context line into a street address. It now
+    // lives on the server; this asserts the client no longer has an opinion,
+    // and no longer names a destination at all.
     const spy = vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) });
     vi.stubGlobal("fetch", spy);
     await reverseGeocode(59.9, 10.7);
-    expect(spy.mock.calls[0][0]).toContain(encodeURIComponent("zoom=14"));
+
+    const url = String(spy.mock.calls[0][0]);
+    expect(url).toContain("/geocode?");
+    expect(url).toContain("lat=59.9");
+    expect(url).toContain("lon=10.7");
+    expect(url).not.toContain("zoom");
+    expect(url).not.toContain("nominatim");
   });
 });
