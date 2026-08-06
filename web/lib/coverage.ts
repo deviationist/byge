@@ -20,10 +20,18 @@
  * Measured: at 10 km resolution the mask is ~0.6 KB gzipped and takes ~160 ms
  * to derive. It only changes when a radar goes up or down, so it is safe to
  * cache for hours.
+ *
+ * THERE IS NO LONGER A FETCHER HERE. Deriving the mask meant a strided read of
+ * the entire domain, which was the only request the client made that needed to
+ * name a whole file rather than a window — and the map stopped needing it once
+ * `/field` began carrying "not observed" as a band of its own (fieldFormat's
+ * NO_COVERAGE), which is the same information at the resolution being drawn and
+ * arrives with the data instead of alongside it. What is left is the mask type
+ * and its pure readers, still the right shape if a boundary overlay ever wants
+ * one, with nothing left to build it out of a URL.
  */
 
-import { DX, DY, NX, NY, unproject, X0, Y0 } from "./grid";
-import { type Analysis, FILL_THRESHOLD, fetchVars, latestAnalysis } from "./opendap";
+import { DX, DY, unproject, X0, Y0 } from "./grid";
 
 export type CoverageMask = {
   /** Grid cells per mask cell — 10 means one sample every 10 km. */
@@ -55,32 +63,6 @@ export function observedFraction(mask: CoverageMask): number {
     if ((mask.bits[i >> 3] & (0x80 >> (i & 7))) !== 0) seen++;
   }
   return total ? seen / total : 0;
-}
-
-/** Build a mask from a strided read of one analysis. */
-export async function fetchCoverageMask(
-  stride = 10,
-  analysis?: Analysis,
-  signal?: AbortSignal,
-): Promise<CoverageMask> {
-  const a = analysis ?? (await latestAnalysis(signal));
-  const vars = await fetchVars(
-    a.base,
-    `lwe_precipitation_rate[0:1:0][0:${stride}:${NY - 1}][0:${stride}:${NX - 1}]`,
-    signal,
-  );
-  const cube = vars.get("lwe_precipitation_rate");
-  if (!cube) throw new Error("lwe_precipitation_rate missing from coverage response");
-
-  const height = Math.ceil(NY / stride);
-  const width = Math.ceil(NX / stride);
-  const bits = new Uint8Array(Math.ceil((width * height) / 8));
-  for (let i = 0; i < width * height; i++) {
-    // NaN-safe: `< FILL_THRESHOLD` excludes both fill values and NaN, where
-    // `>= FILL_THRESHOLD` would let NaN through as "observed".
-    if (cube.values[i] < FILL_THRESHOLD) bits[i >> 3] |= 0x80 >> (i & 7);
-  }
-  return { stride, width, height, bits, stamp: a.stamp };
 }
 
 /** Mask cell -> lat/lon of its centre, for drawing the boundary on a map. */

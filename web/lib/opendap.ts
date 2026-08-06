@@ -1,5 +1,16 @@
 /**
- * OPeNDAP client for thredds.met.no.
+ * Reader for the radar slabs byge's own API serves.
+ *
+ * IT NO LONGER KNOWS WHERE THE DATA COMES FROM, and that is the point. This
+ * module used to hold `thredds.met.no`, MET's filename scheme, and a builder
+ * that handed a finished upstream URL to the proxy for forwarding — which made
+ * the proxy an open relay guarded by a prefix check, and duplicated knowledge of
+ * MET's naming on both sides of the wire where it could drift.
+ *
+ * Now the client sends parameters and the server owns the upstream entirely.
+ * What remains here is the half that genuinely belongs in the browser: how to
+ * READ the response. The wire format is still OPeNDAP's `.ascii`, because that
+ * is what our API relays, and parsing it is pure and testable.
  *
  * The `.ascii` response is structured, not soup:
  *
@@ -25,15 +36,10 @@
 
 import { NFRAMES, NX, NY, STEP_S } from "./grid";
 
-export const DODS = "https://thredds.met.no/thredds/dodsC/";
-export const STEM =
-  "radarnowcasting/yrwms-nordic.mos.pcappi-0-rr." +
-  "noclass-clfilter-novpr-clcorr-block.nordiclcc-1000.{}.nc";
-
 /**
- * Everything goes through byge's own proxy, and it is not optional.
+ * Everything goes through byge's own API, and it is not optional.
  *
- * Three things make a direct call from a browser impossible, not merely
+ * Three things make a direct call to MET from a browser impossible, not merely
  * awkward. `thredds.met.no` sends no CORS headers on any of its service paths,
  * so the fetch is blocked outright. MET's terms require an identifying
  * User-Agent, and `User-Agent` is a forbidden header in the Fetch API — a
@@ -41,30 +47,40 @@ export const STEM =
  * in breach even if CORS allowed it. And MET ask that clients not hammer them,
  * which one shared cache satisfies and a thousand browsers cannot.
  *
- * The proxy is a stateless pass-through: it adds the agent, adds CORS, and
- * caches. It stores nothing, so byge's "everything stays on this device" is
- * still true.
+ * The API is stateless: it adds the agent, adds CORS, and caches. It stores
+ * nothing and logs no coordinate, so byge's "everything stays on this device"
+ * is still true.
  */
 export const API_BASE = process.env.EXPO_PUBLIC_API_BASE ?? "https://byge-api.ichiva.no";
 
 /**
- * Shared key for the proxy. Deterrence, not authentication — anyone reading
- * this bundle can lift it, which is understood. It means encountering the API
- * is not the same as being able to consume it, and the real bound on volume is
- * the per-IP rate limit behind it.
+ * Shared key for the API. Deterrence, not authentication — anyone reading this
+ * bundle can lift it, which is understood. It means encountering the API is not
+ * the same as being able to consume it, and the real bound on volume is the
+ * per-IP rate limit behind it.
  */
 export const CLIENT_KEY = process.env.EXPO_PUBLIC_CLIENT_KEY ?? "";
 
-/** Wrap an upstream URL for the proxy's `/fetch` route. */
-export function viaProxy(url: string): string {
-  return `${API_BASE}/fetch?url=${encodeURIComponent(url)}`;
+/**
+ * The one place the key is attached, so no call site can forget it and no call
+ * site can invent a destination. Every argument is a path we wrote.
+ */
+export function apiUrl(path: string, params: Record<string, string | number>): string {
+  const q = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) q.set(k, String(v));
+  const query = q.toString();
+  // No trailing `?` on a bare path: `/analysis` and `/analysis?` are the same
+  // request but different cache keys, in the browser and in anything in front
+  // of it.
+  return query ? `${API_BASE}${path}?${query}` : `${API_BASE}${path}`;
+}
+
+export function apiHeaders(): Record<string, string> | undefined {
+  return CLIENT_KEY ? { "X-Byge-Key": CLIENT_KEY } : undefined;
 }
 
 /** _FillValue is 9.96921e36 — cells the radar mosaic cannot see. NOT zero. */
 export const FILL_THRESHOLD = 1e30;
-
-/** How far back to walk when the newest analyses have not published yet. */
-const MAX_LOOKBACK = 8;
 
 export class OpenDapError extends Error {
   constructor(
@@ -133,42 +149,20 @@ export function parseAscii(body: string): Map<string, Variable> {
   return out;
 }
 
-async function get(url: string, signal?: AbortSignal): Promise<string> {
-  // No User-Agent here on purpose — the browser would drop it and the proxy
-  // sets the real one. See API_BASE.
-  const res = await fetch(viaProxy(url), {
-    signal,
-    headers: CLIENT_KEY ? { "X-Byge-Key": CLIENT_KEY } : undefined,
-  });
-  if (!res.ok) throw new OpenDapError(`${res.status} for ${url}`, res.status);
-  return res.text();
-}
-
-/** Fetch and parse a subset expression, e.g. `lwe_precipitation_rate[0:1:23][…]`. */
-export async function fetchVars(
-  base: string,
-  query: string,
-  signal?: AbortSignal,
-): Promise<Map<string, Variable>> {
-  return parseAscii(await get(`${base}.ascii?${encodeURI(query)}`, signal));
-}
-
 export type Analysis = {
-  /** OPeNDAP base URL, no extension. */
-  base: string;
   /** Valid time of frame 0 — also the filename stamp. */
   time: Date;
   stamp: string;
 };
 
-function stampOf(d: Date): string {
-  const p = (n: number, w = 2) => String(n).padStart(w, "0");
-  return (
-    `${d.getUTCFullYear()}${p(d.getUTCMonth() + 1)}${p(d.getUTCDate())}T` +
-    `${p(d.getUTCHours())}${p(d.getUTCMinutes())}00Z`
-  );
-}
-
+/**
+ * A stamp is the ONLY handle the client has on an upstream file.
+ *
+ * It used to carry a URL alongside it, which is what let the client hand the
+ * proxy a finished destination. Now it is sixteen characters of fixed-width
+ * date that the server validates against a regex before it goes anywhere near a
+ * hostname — so the worst a hostile stamp can do is get a 400.
+ */
 export function analysisFor(stamp: string): Analysis {
   const t = Date.UTC(
     Number(stamp.slice(0, 4)),
@@ -177,58 +171,48 @@ export function analysisFor(stamp: string): Analysis {
     Number(stamp.slice(9, 11)),
     Number(stamp.slice(11, 13)),
   );
-  return { base: DODS + STEM.replace("{}", stamp), time: new Date(t), stamp };
-}
-
-/** The 5-minute marks from `from` backwards, newest first. */
-export function candidateStamps(from: Date = new Date(), count = MAX_LOOKBACK): string[] {
-  const floor = new Date(from);
-  floor.setUTCSeconds(0, 0);
-  floor.setUTCMinutes(floor.getUTCMinutes() - (floor.getUTCMinutes() % 5));
-  const out: string[] = [];
-  for (let k = 0; k < count; k++) {
-    out.push(stampOf(new Date(floor.getTime() - k * STEP_S * 1000)));
-  }
-  return out;
+  return { time: new Date(t), stamp };
 }
 
 /**
- * Resolve the newest published analysis.
+ * Which radar run is current.
  *
- * Filenames are deterministic 5-minute marks, so we probe them directly instead
- * of fetching the 277 KB catalogue (which carries no ETag, Last-Modified or
- * Cache-Control and therefore cannot be cached). A `.dds` probe is ~1 KB and
- * 404s cleanly before publication.
- *
- * Publication lag drifts 0–11 minutes, so never assume `now - 5min` exists.
+ * The walk that finds it — probing five-minute marks backwards until one is
+ * published, because publication lag drifts 0–11 minutes — now happens on the
+ * server. It has to: the client cannot probe filenames it is no longer allowed
+ * to name, and the server was already doing the same walk for its frame warmer.
+ * One implementation, one answer, and one fewer copy of MET's naming scheme.
  */
 export async function latestAnalysis(signal?: AbortSignal): Promise<Analysis> {
-  for (const stamp of candidateStamps()) {
-    const a = analysisFor(stamp);
-    try {
-      await get(`${a.base}.dds`, signal);
-      return a;
-    } catch (e) {
-      if (e instanceof OpenDapError && e.status === 404) continue;
-      throw e;
-    }
-  }
-  throw new OpenDapError("no published analysis in the last 40 minutes");
+  const res = await fetch(apiUrl("/analysis", {}), { signal, headers: apiHeaders() });
+  if (!res.ok) throw new OpenDapError(`analysis ${res.status}`, res.status);
+  const body = (await res.json()) as { stamp?: string };
+  if (!body.stamp) throw new OpenDapError("no published analysis");
+  return analysisFor(body.stamp);
 }
 
+/** A window of grid cells, in the shape the API takes. */
+export type SlabWindow = { row0: number; col0: number; rows: number; cols: number };
+
 /**
- * Is there a newer analysis than the one we hold?
+ * Read a window of raw values for one analysis.
  *
- * Cheap enough to answer *before* fetching any data (~25 ms), which is what
- * lets a manual refresh report "already the latest" instantly instead of
- * spinning through a full subset fetch to discover nothing changed.
+ * The caller says WHICH CELLS, never which file and never which subset
+ * expression. The server builds the hyperslab, which is why the frame span is
+ * not a parameter: a verdict always wants the whole run, and letting a caller
+ * choose only adds a way to get it wrong.
  */
-export async function hasNewerThan(
+export async function fetchSlab(
   stamp: string,
+  win: SlabWindow,
   signal?: AbortSignal,
-): Promise<Analysis | null> {
-  const latest = await latestAnalysis(signal);
-  return latest.stamp > stamp ? latest : null;
+): Promise<Map<string, Variable>> {
+  const res = await fetch(apiUrl("/slab", { stamp, ...win }), {
+    signal,
+    headers: apiHeaders(),
+  });
+  if (!res.ok) throw new OpenDapError(`slab ${res.status}`, res.status);
+  return parseAscii(await res.text());
 }
 
 /** Frame valid times, derived from the stamp — no request needed. */

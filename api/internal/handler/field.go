@@ -27,11 +27,11 @@ const frameFanout = 5
 
 // field serves a window of the radar grid as one byte per cell.
 //
-// WHY THIS EXISTS ALONGSIDE /fetch. `/fetch` is a transparent proxy: it hands
-// back exactly what MET sent, which is float32, which for one national frame is
-// 14 MB uncompressed — MET serves no gzip, verified. That is right for the
-// verdict, which reads a 51×51 window and needs the real numbers. It is
-// hopeless for a map you pan across a country.
+// WHY THIS EXISTS ALONGSIDE /slab. `/slab` relays exactly what MET sent, which
+// is float32, which for one national frame is 14 MB uncompressed — MET serves
+// no gzip, verified. That is right for the verdict, which reads a 51×51 window
+// and needs the real numbers to build a sentence out of. It is hopeless for a
+// map you pan across a country.
 //
 // This endpoint is the opposite trade, and it is the only place in the service
 // that INTERPRETS the data rather than forwarding it. It quantises each cell to
@@ -55,11 +55,12 @@ func (h *Handler) field(w http.ResponseWriter, r *http.Request) {
 	}
 
 	q := r.URL.Query()
-	base := q.Get("base")
-	if base == "" {
-		http.Error(w, "missing base parameter", http.StatusBadRequest)
+	stamp := q.Get("stamp")
+	if !stampRe.MatchString(stamp) {
+		http.Error(w, "malformed stamp", http.StatusBadRequest)
 		return
 	}
+	base := DatasetBase(stamp)
 
 	row0, err1 := intParam(q.Get("row0"))
 	col0, err2 := intParam(q.Get("col0"))

@@ -25,7 +25,6 @@ services:
       CLIENT_KEY: ${CLIENT_KEY:-}
       RATE_PER_MINUTE: ${RATE_PER_MINUTE:-60}
       RATE_BURST: ${RATE_BURST:-120}
-      MAX_VALUES: ${MAX_VALUES:-}
       MAX_INFLIGHT: ${MAX_INFLIGHT:-8}
       # Always behind nginx here, so the forwarded address is the real client
       # and the socket address is always nginx.
