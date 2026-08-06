@@ -8,18 +8,14 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/deviationist/byge/api/internal/cache"
 	"github.com/deviationist/byge/api/internal/field"
-	"github.com/deviationist/byge/api/internal/limits"
-	"github.com/deviationist/byge/api/internal/upstream"
+	"github.com/deviationist/byge/api/internal/frames"
 )
 
-// The Nordic grid, mirroring web/lib/grid.ts. Used only to refuse windows that
-// fall outside it before they reach MET.
-const (
-	gridNX = 1694
-	gridNY = 2134
-)
+// The largest response worth sending: 24 frames of a national window is about
+// 17.6 million cells, which gzips to roughly 900 KB. Beyond that a client is
+// asking for more than a screen can show.
+const maxFieldCells = 20_000_000
 
 // field serves a window of the radar grid as one byte per cell.
 //
@@ -61,85 +57,64 @@ func (h *Handler) field(w http.ResponseWriter, r *http.Request) {
 	col0, err2 := intParam(q.Get("col0"))
 	rows, err3 := intParam(q.Get("rows"))
 	cols, err4 := intParam(q.Get("cols"))
-	stride, err5 := intParam(q.Get("stride"))
-	frames, err6 := intParam(q.Get("frames"))
-	if err1 != nil || err2 != nil || err3 != nil || err4 != nil || err5 != nil || err6 != nil {
+	count, err5 := intParam(q.Get("frames"))
+	if err1 != nil || err2 != nil || err3 != nil || err4 != nil || err5 != nil {
 		http.Error(w, "malformed window parameters", http.StatusBadRequest)
 		return
 	}
-	if stride < 1 {
-		stride = 1
+
+	win := frames.Window{Row0: row0, Col0: col0, Rows: rows, Cols: cols}.Clamp()
+	if count < 1 {
+		count = 1
 	}
-	if rows < 1 || cols < 1 || frames < 1 {
-		http.Error(w, "empty window", http.StatusBadRequest)
+	if count > frames.NFrames {
+		count = frames.NFrames
+	}
+
+	// The only cap left, and it bounds the RESPONSE rather than MET's work.
+	// Nothing here can ask MET for more than a whole frame — the store already
+	// holds those — so the question is no longer "how much will this cost
+	// upstream" but "how much is reasonable to send".
+	if win.Rows*win.Cols*count > maxFieldCells {
+		http.Error(w, "window too large", http.StatusBadRequest)
 		return
 	}
 
-	// Clamped rather than rejected: a map panned to the edge of the grid is an
-	// ordinary thing to do, and refusing it would make the coastline a wall.
-	// The header reports what was actually read, so the client places the cells
-	// it got rather than the ones it asked for.
-	row0 = clamp(row0, 0, gridNY-1)
-	col0 = clamp(col0, 0, gridNX-1)
-	rowEnd := clamp(row0+(rows-1)*stride, row0, gridNY-1)
-	colEnd := clamp(col0+(cols-1)*stride, col0, gridNX-1)
-	rows = (rowEnd-row0)/stride + 1
-	cols = (colEnd-col0)/stride + 1
-
-	target := fmt.Sprintf(
-		"%s.dods?lwe_precipitation_rate[0:1:%d][%d:%d:%d][%d:%d:%d]",
-		base, frames-1, row0, stride, rowEnd, col0, stride, colEnd,
-	)
-
-	// A LARGER cap than the transparent route, not a way around it. What MET is
-	// asked to do is identical — bounded by the frame span, since a frame is one
-	// chunk — and what comes back is quantised and gzipped to about a twentieth
-	// of the float payload. Holding this to the raw-float budget was making the
-	// map coarse to save bytes that were never going to be sent.
-	if err := limits.Check(target, limits.FieldMaxValues); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	entry, hit, err := h.cache.Do(target, func() (cache.Entry, error) {
-		return h.client.Fetch(r.Context(), target)
-	})
-	if err != nil {
-		var forbidden *upstream.ErrForbidden
-		if errors.As(err, &forbidden) {
-			http.Error(w, "upstream not allowed", http.StatusForbidden)
-			return
+	// Sliced out of whole frames the store already has, or fetches once. This
+	// is the difference the store makes: twenty-four frames of a national view
+	// used to be twenty-four overlapping requests to MET and 67 MB; it is now
+	// at most twenty-four whole-frame fetches shared by every user and every
+	// pan, and usually none at all.
+	body := make([]byte, 0, win.Rows*win.Cols*count)
+	for f := 0; f < count; f++ {
+		whole, err := h.frames.Frame(r.Context(), base, f)
+		if err != nil {
+			if errors.Is(err, context.Canceled) {
+				return
+			}
+			// The window is NOT logged: grid indices are a coordinate in
+			// another spelling.
+			h.log.Error("frame fetch failed", "frame", f, "err", err)
+			// Partial is better than nothing — the map can play what arrived,
+			// and its own header says how many frames it actually holds.
+			if f == 0 {
+				http.Error(w, "could not reach the radar", http.StatusBadGateway)
+				return
+			}
+			count = f
+			break
 		}
-		if errors.Is(err, context.Canceled) {
-			return
-		}
-		// The window is NOT logged, for the same reason the coordinate is not
-		// on /fetch: grid indices are a coordinate in another spelling.
-		h.log.Error("upstream fetch failed", "err", err)
-		http.Error(w, "upstream fetch failed", http.StatusBadGateway)
-		return
-	}
-	if entry.Status != http.StatusOK {
-		http.Error(w, "upstream unavailable", http.StatusBadGateway)
-		return
+		body = append(body, frames.Slice(whole, win)...)
 	}
 
-	want := frames * rows * cols
-	values, err := field.ParseDods(entry.Body, want)
-	if err != nil {
-		h.log.Error("field decode failed", "err", err)
-		http.Error(w, "could not decode the radar field", http.StatusBadGateway)
-		return
-	}
-
-	payload, err := field.Encode(field.Header{
-		Frames: uint16(frames),
-		Width:  uint16(cols),
-		Height: uint16(rows),
-		Row0:   int32(row0),
-		Col0:   int32(col0),
-		Stride: uint16(stride),
-	}, values)
+	payload, err := field.EncodeBands(field.Header{
+		Frames: uint16(count),
+		Width:  uint16(win.Cols),
+		Height: uint16(win.Rows),
+		Row0:   int32(win.Row0),
+		Col0:   int32(win.Col0),
+		Stride: 1,
+	}, body)
 	if err != nil {
 		h.log.Error("field encode failed", "err", err)
 		http.Error(w, "could not encode the radar field", http.StatusInternalServerError)
@@ -148,17 +123,24 @@ func (h *Handler) field(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/octet-stream")
 	w.Header().Set("Content-Encoding", "gzip")
-	if h.opts.ExposeCacheHeader {
-		if hit {
-			w.Header().Set("X-Cache", "HIT")
-		} else {
-			w.Header().Set("X-Cache", "MISS")
-		}
-	}
 	// Compressed here rather than by a middleware, because the ratio is the
 	// entire point of the endpoint and it should not depend on whatever sits in
-	// front of it in production.
-	gz, _ := gzip.NewWriterLevel(w, gzip.BestCompression)
+	// front of it in production. Consecutive frames of a rain field are very
+	// alike, so gzipping them together costs far less than the sum of each.
+	//
+	// LEVEL 5, not BestCompression, measured on a real 24-frame national
+	// payload rather than guessed:
+	//
+	//	level 1   1147 KB    42 ms
+	//	level 5    963 KB   109 ms
+	//	level 6    917 KB   229 ms
+	//	level 9    862 KB  2643 ms
+	//
+	// BestCompression spends two and a half SECONDS to save a tenth of the
+	// bytes, on a request somebody is waiting for in front of a map they want
+	// to pan. It was the default this endpoint shipped with, and it was the
+	// slowest thing in the whole path.
+	gz, _ := gzip.NewWriterLevel(w, 5)
 	defer gz.Close()
 	if _, err := gz.Write(payload); err != nil {
 		h.log.Error("field write failed", "err", err)

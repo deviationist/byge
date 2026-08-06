@@ -101,6 +101,22 @@ const (
 	HeaderSize = len(magic) + 2 + 2 + 2 + 4 + 4 + 2
 )
 
+// EncodeBands writes the header in front of cells that are ALREADY quantised.
+//
+// The counterpart to Encode, for the path where the frame store did the
+// quantising on the way in — it holds bands, not floats, so re-deriving them
+// here would mean widening 3.6 MB back to 14 MB to narrow it again.
+func EncodeBands(h Header, bands []byte) ([]byte, error) {
+	want := int(h.Frames) * int(h.Width) * int(h.Height)
+	if len(bands) != want {
+		return nil, fmt.Errorf("field: got %d cells, header describes %d", len(bands), want)
+	}
+	out := make([]byte, HeaderSize+want)
+	writeHeader(out, h)
+	copy(out[HeaderSize:], bands)
+	return out, nil
+}
+
 // Encode writes the header and one byte per cell.
 //
 // `values` is frame-major, then row, then column — the order MET sends and the
@@ -114,6 +130,16 @@ func Encode(h Header, values []float32) ([]byte, error) {
 	}
 
 	out := make([]byte, HeaderSize+want)
+	writeHeader(out, h)
+
+	body := out[HeaderSize:]
+	for i, v := range values {
+		body[i] = BandOf(float64(v))
+	}
+	return out, nil
+}
+
+func writeHeader(out []byte, h Header) {
 	copy(out, magic)
 	p := len(magic)
 	binary.BigEndian.PutUint16(out[p:], h.Frames)
@@ -122,12 +148,6 @@ func Encode(h Header, values []float32) ([]byte, error) {
 	binary.BigEndian.PutUint32(out[p+6:], uint32(h.Row0))
 	binary.BigEndian.PutUint32(out[p+10:], uint32(h.Col0))
 	binary.BigEndian.PutUint16(out[p+14:], h.Stride)
-
-	body := out[HeaderSize:]
-	for i, v := range values {
-		body[i] = BandOf(float64(v))
-	}
-	return out, nil
 }
 
 // DecodeHeader reads back what Encode wrote. Exported for the tests and for any

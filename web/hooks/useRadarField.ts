@@ -21,13 +21,6 @@ import { API_BASE, CLIENT_KEY, latestAnalysis } from "../lib/opendap";
  * national scale you want to see the weather move, and at street scale you want
  * the detail.
  */
-// Just under the proxy's FieldMaxValues, leaving room to round.
-//
-// Far larger than the raw-float budget because this endpoint sends one gzipped
-// byte per cell rather than a float32 — measured at about a twentieth of the
-// size. Three million values is ~150 KB on the wire, and it is what lets a
-// national view sample at 2 km instead of 5.
-const MAX_VALUES = 4_000_000;
 
 export type FieldRequest = {
   /** Viewport centre. */
@@ -78,8 +71,6 @@ export function useRadarField(req: FieldRequest | null) {
  * squashed into a corner.
  */
 export function planWindow(req: FieldRequest) {
-  // How many 1 km cells the viewport covers, plus a margin so a small pan does
-  // not immediately expose an edge.
   const mpp = (156543.03392 * Math.cos((req.lat * Math.PI) / 180)) / 2 ** req.zoom;
   const spanCols = Math.ceil((req.width * mpp * 1.5) / 1000);
   const spanRows = Math.ceil((req.height * mpp * 1.5) / 1000);
@@ -88,27 +79,22 @@ export function planWindow(req: FieldRequest) {
   const row0 = clamp(row - Math.floor(spanRows / 2), 0, NY - 1);
   const col0 = clamp(col - Math.floor(spanCols / 2), 0, NX - 1);
 
-  // FULL RESOLUTION, ALWAYS. Every cell, at every zoom — a 1 km sample is what
-  // the radar measures, and a map that quietly coarsens as you zoom out is
-  // showing you a different instrument than the one it names.
+  // Full resolution and the full horizon, both, at every zoom.
   //
-  // Sampling used to follow the zoom, which made a national view 5 km blocks.
-  // That was solving the wrong problem: MET decompresses a whole frame however
-  // few cells you ask for, so a coarse stride never saved the SERVER anything —
-  // it only sent fewer bytes, and bytes are the cheap part after quantising.
-  //
-  // The window still bounds itself, because it cannot exceed the grid.
-  const stride = 1;
-  const rows = Math.max(1, Math.min(spanRows, NY - row0));
-  const cols = Math.max(1, Math.min(spanCols, NX - col0));
-
-  // So FRAMES pay for the area instead of detail paying for it. A close view
-  // gets all 24; a national one gets a handful, because a national frame is
-  // three quarters of a million cells and each one is a float MET has to send
-  // us. Motion is the thing worth trading here — the picture stays true.
-  const frames = clamp(Math.floor(MAX_VALUES / Math.max(1, rows * cols)), 1, 24);
-
-  return { row0, col0, rows, cols, stride, frames };
+  // Frames used to be rationed against area, which is why a national view
+  // stopped at +20 min: each frame was a separate slice fetched from MET, so
+  // twenty-four of them was 67 MB for one person looking at one rectangle. The
+  // proxy now holds whole frames and slices them from memory, so asking for all
+  // 24 costs it nothing beyond the bytes — and the bytes are small, because
+  // consecutive frames of a rain field are very alike and gzip together well.
+  return {
+    row0,
+    col0,
+    rows: Math.max(1, spanRows),
+    cols: Math.max(1, spanCols),
+    stride: 1,
+    frames: 24,
+  };
 }
 
 /**
