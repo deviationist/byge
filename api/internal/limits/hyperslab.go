@@ -1,0 +1,149 @@
+// Package limits bounds how much data a single request may ask MET for.
+//
+// The allowlist in `upstream` decides WHERE we will fetch; this decides HOW
+// MUCH. Without it, an allowlisted URL can still ask for the entire grid —
+// `lwe_precipitation_rate[0:1:23][0:1:2133][0:1:1693]` is 86.8 million values,
+// ~347 MB, and it is a perfectly legal OPeNDAP request. Worse, the file is
+// chunked one full time-slice per chunk, so a request like that makes MET
+// decompress the whole variable. One of those does more damage to our standing
+// with MET than a thousand people politely reading 7×7 windows, and no
+// generous rate limit would catch it because it is a single request.
+package limits
+
+import (
+	"fmt"
+	"strconv"
+	"strings"
+)
+
+// The ceiling is the widest thing the APP can legitimately ask for, not a round
+// number. MAX_RADIUS_KM is 25 in web/lib/storage.ts, the grid is 1 km, so the
+// largest honest window is 2×25+1 = 51 cells a side across all 24 frames.
+//
+// COUPLING: raise MAX_RADIUS_KM in the client and this must follow, or wide
+// radii start failing with a 400. That is deliberate — a cap derived from the
+// UI's own limit is one somebody can reason about, where a round number invites
+// quiet inflation.
+const (
+	MaxRadiusKm = 25
+	MaxFrames   = 24 // NFRAMES in web/lib/grid.ts
+	// Per-dimension, so a request cannot be narrow in two axes and swallow the
+	// whole grid in the third. A total-value budget alone misses that: a
+	// full-height column is only 51k values but still reads every row.
+	MaxDim = 2*MaxRadiusKm + 1
+
+	DefaultMaxValues = MaxFrames * MaxDim * MaxDim
+)
+
+type Error struct {
+	Reason string
+}
+
+func (e *Error) Error() string { return e.Reason }
+
+// Check parses the OPeNDAP constraint expression from a URL and rejects
+// requests that are unbounded or too large.
+//
+// Metadata requests (.dds, .das, .html) carry no constraint and are always
+// allowed — they are a few KB and describe the file rather than reading it.
+func Check(rawURL string, maxValues int) error {
+	q := strings.IndexByte(rawURL, '?')
+	if q < 0 {
+		return nil // metadata: no constraint expression
+	}
+	expr := rawURL[q+1:]
+	if strings.TrimSpace(expr) == "" {
+		return nil
+	}
+
+	total := 0
+	// Multiple variables are comma-separated at the top level. Index ranges use
+	// colons, never commas, so a plain split is safe here.
+	for _, part := range strings.Split(expr, ",") {
+		n, err := countOne(part)
+		if err != nil {
+			return err
+		}
+		total += n
+		if total > maxValues {
+			return &Error{Reason: fmt.Sprintf("request asks for %d+ values, limit is %d", total, maxValues)}
+		}
+	}
+	return nil
+}
+
+// countOne returns how many values one variable projection asks for.
+func countOne(part string) (int, error) {
+	part = strings.TrimSpace(part)
+	open := strings.IndexByte(part, '[')
+	if open < 0 {
+		// A bare variable name means "the whole thing" — which for
+		// lwe_precipitation_rate is the entire 86.8-million-value cube. This is
+		// the exact shape the cap exists to refuse, so it is never allowed even
+		// though it is syntactically valid OPeNDAP.
+		return 0, &Error{Reason: "unbounded request: every variable must be indexed"}
+	}
+
+	count := 1
+	rest := part[open:]
+	for len(rest) > 0 {
+		if rest[0] != '[' {
+			return 0, &Error{Reason: "malformed constraint expression"}
+		}
+		close := strings.IndexByte(rest, ']')
+		if close < 0 {
+			return 0, &Error{Reason: "malformed constraint expression"}
+		}
+		n, span, err := countDim(rest[1:close])
+		if err != nil {
+			return 0, err
+		}
+		// SPAN, not count. A coarse stride reads fewer values but MET still
+		// decompresses every chunk the range touches — the file is chunked one
+		// full time-slice at a time — so `[0:100:2100]` costs it exactly what
+		// `[0:1:2100]` costs. Bounding the count would let a sampler walk the
+		// whole grid for free.
+		if span > MaxDim {
+			return 0, &Error{Reason: fmt.Sprintf("dimension spans %d cells, limit is %d (the widest radius the app offers)", span, MaxDim)}
+		}
+		count *= n
+		rest = rest[close+1:]
+	}
+	return count, nil
+}
+
+// countDim sizes one `[start:stride:end]`, `[start:end]` or `[index]` range,
+// returning how many values it yields and how many cells it spans.
+func countDim(s string) (count, span int, err error) {
+	fields := strings.Split(s, ":")
+	nums := make([]int, 0, 3)
+	for _, f := range fields {
+		v, err := strconv.Atoi(strings.TrimSpace(f))
+		if err != nil {
+			return 0, 0, &Error{Reason: "non-numeric index in constraint expression"}
+		}
+		if v < 0 {
+			return 0, 0, &Error{Reason: "negative index in constraint expression"}
+		}
+		nums = append(nums, v)
+	}
+
+	var start, stride, end int
+	switch len(nums) {
+	case 1:
+		return 1, 1, nil // a single index
+	case 2:
+		start, stride, end = nums[0], 1, nums[1]
+	case 3:
+		start, stride, end = nums[0], nums[1], nums[2]
+	default:
+		return 0, 0, &Error{Reason: "malformed index range"}
+	}
+	if stride < 1 {
+		return 0, 0, &Error{Reason: "stride must be at least 1"}
+	}
+	if end < start {
+		return 0, 0, &Error{Reason: "index range ends before it starts"}
+	}
+	return (end-start)/stride + 1, end - start + 1, nil
+}

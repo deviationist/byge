@@ -31,6 +31,7 @@ import (
 	"github.com/deviationist/byge/api/internal/cache"
 	"github.com/deviationist/byge/api/internal/config"
 	"github.com/deviationist/byge/api/internal/handler"
+	"github.com/deviationist/byge/api/internal/ratelimit"
 	"github.com/deviationist/byge/api/internal/upstream"
 )
 
@@ -66,8 +67,25 @@ func main() {
 	}
 
 	c := cache.New(cfg.CacheTTLOK, cfg.CacheTTLMiss, cfg.CacheMaxBytes)
-	up := upstream.New(&http.Client{Timeout: cfg.UpstreamTimeout}, cfg.UserAgent)
-	h := handler.New(c, up, cfg.AllowedOrigins, log)
+	up := upstream.New(&http.Client{Timeout: cfg.UpstreamTimeout}, cfg.UserAgent, cfg.MaxInflight)
+	rl := ratelimit.New(cfg.RatePerMinute, cfg.RateBurst)
+	h := handler.New(c, up, rl, handler.Options{
+		AllowedOrigins:    cfg.AllowedOrigins,
+		ClientKey:         cfg.ClientKey,
+		MaxValues:         cfg.MaxValues,
+		TrustProxyHeaders: cfg.TrustProxyHeaders,
+		ExposeCacheHeader: cfg.Env == "development",
+	}, log)
+
+	// Idle rate-limit buckets carry no state worth keeping; sweeping them is
+	// what stops the map growing for every IP that ever visited.
+	go func() {
+		t := time.NewTicker(10 * time.Minute)
+		defer t.Stop()
+		for range t.C {
+			rl.Sweep(30 * time.Minute)
+		}
+	}()
 
 	srv := &http.Server{
 		Addr:              cfg.Addr,

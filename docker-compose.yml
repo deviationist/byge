@@ -22,6 +22,15 @@ services:
       CACHE_TTL_MISS: ${CACHE_TTL_MISS:-30s}
       CACHE_MAX_BYTES: ${CACHE_MAX_BYTES:-67108864}
       UPSTREAM_TIMEOUT: ${UPSTREAM_TIMEOUT:-20s}
+      CLIENT_KEY: ${CLIENT_KEY:-}
+      RATE_PER_MINUTE: ${RATE_PER_MINUTE:-60}
+      RATE_BURST: ${RATE_BURST:-120}
+      MAX_VALUES: ${MAX_VALUES:-}
+      MAX_INFLIGHT: ${MAX_INFLIGHT:-8}
+      # Always behind nginx here, so the forwarded address is the real client
+      # and the socket address is always nginx.
+      TRUST_PROXY_HEADERS: ${TRUST_PROXY_HEADERS:-true}
+      APP_ENV: ${APP_ENV:-production}
     healthcheck:
       # The binary is distroless with no shell and no curl, so the check runs
       # the app itself in a probe mode rather than shelling out.
