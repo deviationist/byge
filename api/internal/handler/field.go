@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"sync"
 
 	"github.com/deviationist/byge/api/internal/field"
 	"github.com/deviationist/byge/api/internal/frames"
@@ -16,6 +17,13 @@ import (
 // 17.6 million cells, which gzips to roughly 900 KB. Beyond that a client is
 // asking for more than a screen can show.
 const maxFieldCells = 20_000_000
+
+// How many whole frames to pull from MET at once for a single request.
+//
+// Below the upstream client's own limit on purpose. That one exists to protect
+// MET from the service; this one exists to stop ONE map request consuming the
+// whole allowance and leaving every verdict on the site queued behind it.
+const frameFanout = 5
 
 // field serves a window of the radar grid as one byte per cell.
 //
@@ -80,23 +88,52 @@ func (h *Handler) field(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Sliced out of whole frames the store already has, or fetches once. This
-	// is the difference the store makes: twenty-four frames of a national view
-	// used to be twenty-four overlapping requests to MET and 67 MB; it is now
-	// at most twenty-four whole-frame fetches shared by every user and every
-	// pan, and usually none at all.
+	// Sliced out of whole frames the store already has, or fetches once.
+	//
+	// FETCHED IN PARALLEL, because they are independent and the sequential
+	// version was the single slowest thing in the app: 24 cold frames at about
+	// 400 ms each is 9.4 seconds of staring at an empty map. Concurrency is
+	// bounded here as well as in the upstream client — that semaphore protects
+	// MET from us, this one stops one map request monopolising it and starving
+	// every verdict on the site.
+	//
+	// The store coalesces, so overlapping requests for the same frame still
+	// make one upstream call however many goroutines ask.
+	type result struct {
+		cells []byte
+		err   error
+	}
+	results := make([]result, count)
+	sem := make(chan struct{}, frameFanout)
+	var wg sync.WaitGroup
+	for f := 0; f < count; f++ {
+		wg.Add(1)
+		go func(f int) {
+			defer wg.Done()
+			sem <- struct{}{}
+			defer func() { <-sem }()
+			whole, err := h.frames.Frame(r.Context(), base, f)
+			if err != nil {
+				results[f].err = err
+				return
+			}
+			results[f].cells = frames.Slice(whole, win)
+		}(f)
+	}
+	wg.Wait()
+
+	// Truncated at the first failure rather than skipped over: frame 7 missing
+	// from a run of 24 would leave the client animating a gap it cannot see,
+	// where a short run is simply a shorter animation and the header says so.
 	body := make([]byte, 0, win.Rows*win.Cols*count)
 	for f := 0; f < count; f++ {
-		whole, err := h.frames.Frame(r.Context(), base, f)
-		if err != nil {
-			if errors.Is(err, context.Canceled) {
+		if results[f].err != nil {
+			if errors.Is(results[f].err, context.Canceled) {
 				return
 			}
 			// The window is NOT logged: grid indices are a coordinate in
 			// another spelling.
-			h.log.Error("frame fetch failed", "frame", f, "err", err)
-			// Partial is better than nothing — the map can play what arrived,
-			// and its own header says how many frames it actually holds.
+			h.log.Error("frame fetch failed", "frame", f, "err", results[f].err)
 			if f == 0 {
 				http.Error(w, "could not reach the radar", http.StatusBadGateway)
 				return
@@ -104,7 +141,7 @@ func (h *Handler) field(w http.ResponseWriter, r *http.Request) {
 			count = f
 			break
 		}
-		body = append(body, frames.Slice(whole, win)...)
+		body = append(body, results[f].cells...)
 	}
 
 	payload, err := field.EncodeBands(field.Header{
