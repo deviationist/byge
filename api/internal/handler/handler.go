@@ -17,6 +17,7 @@ import (
 	"strconv"
 
 	"github.com/deviationist/byge/api/internal/cache"
+	"github.com/deviationist/byge/api/internal/frames"
 	"github.com/deviationist/byge/api/internal/limits"
 	"github.com/deviationist/byge/api/internal/ratelimit"
 	"github.com/deviationist/byge/api/internal/upstream"
@@ -39,6 +40,7 @@ type Options struct {
 }
 
 type Handler struct {
+	frames  *frames.Store
 	cache   *cache.Cache
 	client  *upstream.Client
 	limiter *ratelimit.Limiter
@@ -47,7 +49,11 @@ type Handler struct {
 }
 
 func New(c *cache.Cache, u *upstream.Client, l *ratelimit.Limiter, opts Options, log *slog.Logger) *Handler {
-	return &Handler{cache: c, client: u, limiter: l, opts: opts, log: log}
+	h := &Handler{cache: c, client: u, limiter: l, opts: opts, log: log}
+	// Whole frames, fetched through the same allowlisted client and the same
+	// coalescing cache as everything else.
+	h.frames = frames.New(h.fetchWholeFrame)
+	return h
 }
 
 func (h *Handler) Routes() http.Handler {
@@ -206,3 +212,8 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(entry.Status)
 	_, _ = w.Write(entry.Body)
 }
+
+// Frames exposes the store so the warmer can fill it. The handler owns it
+// because it owns the fetch path — the allowlisted client, the coalescing
+// cache — and a second way in would be a second set of rules.
+func (h *Handler) Frames() *frames.Store { return h.frames }

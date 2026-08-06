@@ -33,6 +33,7 @@ import (
 	"github.com/deviationist/byge/api/internal/handler"
 	"github.com/deviationist/byge/api/internal/ratelimit"
 	"github.com/deviationist/byge/api/internal/upstream"
+	"github.com/deviationist/byge/api/internal/warm"
 )
 
 // healthcheck probes a running instance and exits non-zero if it is unwell.
@@ -76,6 +77,14 @@ func main() {
 		TrustProxyHeaders: cfg.TrustProxyHeaders,
 		ExposeCacheHeader: cfg.Env == "development",
 	}, log)
+
+	// Keeps the frame store ahead of whoever is using the map, and stays quiet
+	// when nobody is — see internal/warm for why that condition is not
+	// optional. Cancelled with the server, so a shutdown does not leave a
+	// goroutine pulling 14 MB frames into a store nothing will read.
+	warmCtx, stopWarm := context.WithCancel(context.Background())
+	defer stopWarm()
+	go warm.New(h.Frames(), h.LatestAnalysis, warm.Defaults(), log).Run(warmCtx)
 
 	// Idle rate-limit buckets carry no state worth keeping; sweeping them is
 	// what stops the map growing for every IP that ever visited.
