@@ -1,5 +1,6 @@
 import i18next from "i18next";
 import { Text, type TextStyle, View } from "react-native";
+import { durationLong, durationShort } from "../i18n/duration";
 import { durationMin, isBlindVerdict, isOpenEnded, type Verdict } from "../lib/forecast";
 import type { Theme } from "../theme/useTheme";
 
@@ -91,7 +92,9 @@ function horizonPhrase(min: number): string {
   // express at all.
   if (h >= 1 && Math.abs(min - h * 60) <= 10)
     return i18next.t("status.horizonHours", { count: h });
-  return i18next.t("status.horizonMin", { count: min });
+  // Not near a whole hour, so say it exactly — but still as hours and minutes
+  // ("1 hour and 35 min"), not as a raw minute count.
+  return durationLong(min);
 }
 
 /**
@@ -158,9 +161,9 @@ function secondaryOf(v: Verdict): { text: string; clock: string | null } | null 
   // only place in the app where a time was absolute — the clock now sits
   // beneath, in the same treatment the primary uses.
   const text = i18next.t(key, {
-    start: n.startMin,
-    gap,
-    dur: durationMin(n, v.horizonMin),
+    start: durationLong(n.startMin),
+    gap: gap === null ? null : durationLong(gap),
+    dur: durationLong(durationMin(n, v.horizonMin)),
   });
   const end = n.endMin;
   const clock =
@@ -205,7 +208,9 @@ export function headlineOf(v: Verdict): Headline {
     const edgeNote = edge ? i18next.t("status.edgeNote", { km, radius: v.radiusKm }) : null;
 
     if (isOpenEnded(s)) {
-      const openNote = i18next.t("status.rainingOpenNote", { horizon: v.horizonMin });
+      const openNote = i18next.t("status.rainingOpenNote", {
+        horizon: durationLong(v.horizonMin),
+      });
       return {
         state: edge ? "edge-only" : "raining-open",
         lead,
@@ -222,16 +227,14 @@ export function headlineOf(v: Verdict): Headline {
       };
     }
 
+    const end = s.endMin;
     return {
       state: edge ? "edge-only" : "raining",
       lead,
-      body: i18next.t("status.stops", { min: s.endMin }),
+      body: end === null ? "" : i18next.t("status.stops", { duration: durationLong(end) }),
       bound: null,
       tail: "",
-      clock:
-        s.endMin === null
-          ? null
-          : i18next.t("status.clockAround", { time: clockAt(v, s.endMin) }),
+      clock: end === null ? null : i18next.t("status.clockAround", { time: clockAt(v, end) }),
       secondary,
       secondClock,
       note: edgeNote,
@@ -246,17 +249,17 @@ export function headlineOf(v: Verdict): Headline {
       return {
         state: "incoming-open",
         lead: i18next.t("status.dryLead"),
-        body: i18next.t("status.incomingOpenBody", { start: s.startMin }),
+        body: i18next.t("status.incomingOpenBody", { start: durationLong(s.startMin) }),
         // "at least N min" — the ONLY form this may take. Rendering the same
         // number bare would turn a floor into a forecast.
-        bound: i18next.t("status.incomingOpenBound", { dur }),
+        bound: i18next.t("status.incomingOpenBound", { dur: durationLong(dur) }),
         tail: i18next.t("status.incomingOpenTail"),
         clock: null,
         secondary: null,
         secondClock: null,
         note: i18next.t("status.incomingOpenNote", {
-          dur,
-          horizon: horizonPhrase(v.horizonMin),
+          dur: durationLong(dur),
+          horizon: durationLong(v.horizonMin),
         }),
       };
     }
@@ -264,7 +267,10 @@ export function headlineOf(v: Verdict): Headline {
     return {
       state: "incoming",
       lead: i18next.t("status.dryLead"),
-      body: i18next.t("status.incomingBody", { start: s.startMin, dur }),
+      body: i18next.t("status.incomingBody", {
+        start: durationLong(s.startMin),
+        dur: durationLong(dur),
+      }),
       bound: null,
       tail: "",
       clock: s.endMin === null ? null : `${clockAt(v, s.startMin)}-${clockAt(v, s.endMin)}`,
@@ -288,7 +294,7 @@ export function headlineOf(v: Verdict): Headline {
     // one flat assertion; the near term is solid, the tail is indicative. The
     // confidence badge stays high because the OBSERVATION is certain — so the
     // decay has to be carried here, in the prose, or it is carried nowhere.
-    note: i18next.t("status.clearNote", { horizon: v.horizonMin }),
+    note: i18next.t("status.clearNote", { horizon: durationLong(v.horizonMin) }),
   };
 }
 
@@ -315,9 +321,10 @@ export function statusLine(v: Verdict): string {
     parts.push(
       isOpenEnded(s)
         ? i18next.t("compact.noEnd")
-        : i18next.t("compact.stops", { min: s.endMin }),
+        : i18next.t("compact.stops", { min: durationShort(s.endMin ?? 0) }),
     );
-    if (v.next) parts.push(i18next.t("compact.thenMore", { start: v.next.startMin }));
+    if (v.next)
+      parts.push(i18next.t("compact.thenMore", { start: durationShort(v.next.startMin) }));
     return parts.join(i18next.t("compact.separator"));
   }
 
@@ -327,8 +334,14 @@ export function statusLine(v: Verdict): string {
     parts.push(i18next.t("compact.dry"));
     parts.push(
       isOpenEnded(s)
-        ? i18next.t("compact.incomingOpen", { start: s.startMin, dur })
-        : i18next.t("compact.incoming", { start: s.startMin, dur }),
+        ? i18next.t("compact.incomingOpen", {
+            start: durationShort(s.startMin),
+            dur: durationShort(dur),
+          })
+        : i18next.t("compact.incoming", {
+            start: durationShort(s.startMin),
+            dur: durationShort(dur),
+          }),
     );
     return parts.join(i18next.t("compact.separator"));
   }

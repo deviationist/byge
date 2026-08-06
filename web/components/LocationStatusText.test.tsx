@@ -141,7 +141,7 @@ describe("state 2 — raining, end unknown", () => {
 
   it("footnotes why the end is invisible, with the real horizon", () => {
     const note = text(view(rainingOpen).getByTestId("status-note"));
-    expect(note).toContain("115-minute horizon");
+    expect(note).toContain("1 hour and 55 min");
     expect(note).toMatch(/cannot tell you when it stops/i);
   });
 });
@@ -186,18 +186,18 @@ describe("state 3 — dry, rain arriving, end visible", () => {
 });
 
 describe("state 4 — dry, rain arriving, end unknown", () => {
-  it('renders "at least 75 min" and never a bare "75 min"', () => {
+  it('renders "at least 1 hour and 15 min" and never a bare form of it', () => {
     expect(headlineOf(incomingOpen).state).toBe("incoming-open");
     const h = headline(incomingOpen);
-    expect(h).toContain("at least 75 min");
+    expect(h).toContain("at least 1 hour and 15 min");
     // The floor must never be readable as a forecast. Anything matching
-    // "lasting 75 min" or "about 75 min" would do exactly that.
-    expect(h).not.toMatch(/(?:lasting|about|for)\s+75 min/);
+    // "lasting 1 hour and 15 min" or "about 1 hour and 15 min" would do exactly that.
+    expect(h).not.toMatch(/(?:lasting|about|for)\s+1 hour and 15 min/);
   });
 
   it("puts the floor inside the underlined bound, not loose in the sentence", () => {
     const v = view(incomingOpen);
-    expect(text(v.getByTestId("status-bound"))).toBe("at least 75 min");
+    expect(text(v.getByTestId("status-bound"))).toBe("at least 1 hour and 15 min");
     expect(v.getByTestId("status-bound").style.borderBottomStyle).toBe("dotted");
   });
 
@@ -209,7 +209,7 @@ describe("state 4 — dry, rain arriving, end unknown", () => {
 
   it("footnotes that the floor is a floor", () => {
     const note = text(view(incomingOpen).getByTestId("status-note"));
-    expect(note).toContain("75 min is a floor, not a forecast");
+    expect(note).toContain("1 hour and 15 min is a floor, not a forecast");
     expect(note).toContain("It could be twice that.");
   });
 });
@@ -229,7 +229,7 @@ describe("state 5 — dry, nothing approaching", () => {
     const note = text(view(clear).getByTestId("status-note"));
     expect(note).toMatch(/next ~30 min are a confident call/i);
     expect(note).toMatch(/indicative only/i);
-    expect(note).toContain("+115 min");
+    expect(note).toContain("1 hour and 55 min");
     // Two sentences, not one collapsed assertion.
     expect(note.split(". ").length).toBeGreaterThanOrEqual(2);
   });
@@ -341,14 +341,14 @@ describe("state 8 — a second spell", () => {
 describe("compact variant", () => {
   it("is word-labelled for every state", () => {
     const cases: [Verdict, RegExp][] = [
-      [raining, /Raining · stops in about 25 min/],
+      [raining, /Raining · stops in about 25m/],
       [rainingOpen, /Raining · no end in sight/],
-      [incoming, /Dry · rain in about 40 min, about 25 min/],
-      [incomingOpen, /Dry · rain in about 40 min, at least 75 min/],
+      [incoming, /Dry · rain in about 40m, about 25m/],
+      [incomingOpen, /Dry · rain in about 40m, at least 1h15m/],
       [clear, /Dry · nothing approaching/],
       [blind, /No radar coverage — we cannot see here/],
       [edgeOnly, /Rain within 8 km · not on you yet/],
-      [twoSpells, /then more from about 40 min/],
+      [twoSpells, /then more from about 40m/],
     ];
     for (const [v, re] of cases) {
       expect(statusLine(v)).toMatch(re);
@@ -357,8 +357,8 @@ describe("compact variant", () => {
 
   it("does not collapse an unknown end into a number, even when short", () => {
     expect(statusLine(rainingOpen)).not.toMatch(/\d+ min/);
-    expect(statusLine(incomingOpen)).toContain("at least 75 min");
-    expect(statusLine(incomingOpen)).not.toMatch(/about 75 min/);
+    expect(statusLine(incomingOpen)).toContain("at least 1h15m");
+    expect(statusLine(incomingOpen)).not.toMatch(/about 1h15m/);
   });
 
   it("renders as a single line of text", () => {
