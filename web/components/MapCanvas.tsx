@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect, useRef } from "react";
 import { Text, View } from "react-native";
+import { MONO } from "../theme/tokens";
 import type { Theme } from "../theme/useTheme";
 
 /**
@@ -336,10 +337,7 @@ export function MapCanvas({
             paddingHorizontal: 6,
           }}
         >
-          <Text
-            className="text-ink3"
-            style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9 }}
-          >
+          <Text className="text-ink3" style={{ fontFamily: MONO, fontSize: 9 }}>
             {attribution}
           </Text>
         </View>

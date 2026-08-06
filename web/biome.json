@@ -1,13 +1,7 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.5.7/schema.json",
   "files": {
-    "includes": [
-      "**",
-      "!node_modules/**",
-      "!dist/**",
-      "!.expo/**",
-      "!public/icons/**"
-    ]
+    "includes": ["**", "!node_modules/**", "!dist/**", "!.expo/**", "!public/icons/**"]
   },
   "formatter": { "indentStyle": "space", "indentWidth": 2, "lineWidth": 96 },
   "linter": { "enabled": true, "rules": { "preset": "recommended" } },

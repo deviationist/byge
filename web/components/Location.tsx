@@ -91,7 +91,7 @@ export function Location({
       {withCoords ? (
         <Text
           testID="location-coords"
-          className="text-ink3"
+          className="text-ink3 font-mono"
           style={{ fontSize: 9.5, lineHeight: 14, letterSpacing: 0.4 }}
         >
           {formatCoords(lat as number, lon as number)}

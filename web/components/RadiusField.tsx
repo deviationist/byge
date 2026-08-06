@@ -1,5 +1,6 @@
 import { useId, useState } from "react";
 import type { LayoutChangeEvent, TextStyle } from "react-native";
+import { MONO } from "../theme/tokens";
 import { Pressable, Text, View } from "react-native";
 
 /**
@@ -114,14 +115,14 @@ export type RadiusFieldProps = {
 };
 
 const LABEL: TextStyle = {
-  fontFamily: "'IBM Plex Mono', monospace",
+  fontFamily: MONO,
   fontSize: 9.5,
   letterSpacing: 0.5,
   textTransform: "uppercase",
 };
 
 const NOTE: TextStyle = {
-  fontFamily: "'IBM Plex Mono', monospace",
+  fontFamily: MONO,
   fontSize: 10,
   lineHeight: 16,
 };
@@ -206,10 +207,7 @@ export function RadiusField({
         <Text nativeID={labelId} className="text-ink3" style={LABEL}>
           {label}
         </Text>
-        <Text
-          className="text-ink"
-          style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 14 }}
-        >
+        <Text className="text-ink" style={{ fontFamily: MONO, fontSize: 14 }}>
           {km} km
         </Text>
       </View>

@@ -45,8 +45,7 @@ export const STEM =
  * caches. It stores nothing, so byge's "everything stays on this device" is
  * still true.
  */
-export const API_BASE =
-  process.env.EXPO_PUBLIC_API_BASE ?? "https://byge-api.ichiva.no";
+export const API_BASE = process.env.EXPO_PUBLIC_API_BASE ?? "https://byge-api.ichiva.no";
 
 /**
  * Shared key for the proxy. Deterrence, not authentication — anyone reading

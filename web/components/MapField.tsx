@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Text, View } from "react-native";
+import { MONO } from "../theme/tokens";
 import { cellOf, clampCoord, OutsideGridError } from "../lib/grid";
 import type { Theme } from "../theme/useTheme";
 import { Button } from "./Button";
@@ -62,8 +63,6 @@ type LocateStatus = "idle" | "locating" | "denied" | "unavailable" | "failed";
 
 /** PERMISSION_DENIED. Read off the constant when present — the enum is on the error. */
 const PERMISSION_DENIED = 1;
-
-const MONO = "'IBM Plex Mono', monospace";
 
 export function MapField({
   value,

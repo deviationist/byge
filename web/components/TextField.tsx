@@ -1,5 +1,6 @@
 import { useId } from "react";
 import type { KeyboardTypeOptions, TextStyle } from "react-native";
+import { MONO } from "../theme/tokens";
 import { Text, TextInput, View } from "react-native";
 import { clampCoord } from "../lib/grid";
 
@@ -59,14 +60,14 @@ export const COORD_HINT =
   "Four decimals max — MET rejects anything finer. That is about 11 m, far inside a single 1 km radar cell, so nothing is lost.";
 
 const LABEL: TextStyle = {
-  fontFamily: "'IBM Plex Mono', monospace",
+  fontFamily: MONO,
   fontSize: 9.5,
   letterSpacing: 0.5,
   textTransform: "uppercase",
 };
 
 const NOTE: TextStyle = {
-  fontFamily: "'IBM Plex Mono', monospace",
+  fontFamily: MONO,
   fontSize: 10,
   lineHeight: 16,
 };
@@ -147,9 +148,7 @@ export function TextField({
           paddingVertical: 13,
           borderWidth: 1,
           borderRadius: 10,
-          ...(coordinate
-            ? { fontFamily: "'IBM Plex Mono', monospace", fontSize: 14 }
-            : { fontSize: 15 }),
+          ...(coordinate ? { fontFamily: MONO, fontSize: 14 } : { fontSize: 15 }),
         }}
       />
 

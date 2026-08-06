@@ -32,7 +32,7 @@ const { angleDeg, lineWidth, period, color } = HATCH_PATTERN;
 
 export const HATCH = `repeating-linear-gradient(${angleDeg}deg,${color} 0 ${lineWidth}px,transparent ${lineWidth}px ${period}px)`;
 
-export const MONO = "ui-monospace, SFMono-Regular, Menlo, monospace";
+export const MONO = '"IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace';
 
 /**
  * Type faces.
