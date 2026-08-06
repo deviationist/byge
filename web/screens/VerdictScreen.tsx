@@ -201,7 +201,13 @@ export function VerdictScreen({ id: idProp, showBack = true }: VerdictScreenProp
           radarAgeMin={verdict ? Math.round(verdict.analysisAgeMin) : undefined}
           onRefresh={() => void refresh()}
         />
-        <Attribution />
+        {/*
+          Only when this screen IS the screen. In two-pane the list pane already
+          carries it, and MET's attribution appearing twice on one screen reads
+          as a layout mistake rather than as diligence. `showBack` distinguishes
+          the two cases: it is false exactly when this is a pane.
+        */}
+        {showBack ? <Attribution /> : null}
       </View>
 
       <ConfirmSheet
