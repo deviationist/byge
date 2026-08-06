@@ -385,6 +385,8 @@
     "clock": "{{when}}  ·  {{time}}",
     "frame": "BILDE {{i}} AV {{n}}",
     "playing": "SPILLER · BILDE {{i}} AV {{n}}",
+    "waiting": "HENTER SERIEN…",
+    "buffering": "BILDE {{i}} · {{total}} PÅ VEI",
     "ended": "SLUTT PÅ SERIEN · SPILL PÅ NYTT",
     "horizon": "Så langt rekker radarserien. Det som fortsatt faller her, har ingen kjent slutt."
   }

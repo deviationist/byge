@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"sync"
 
 	"github.com/deviationist/byge/api/internal/field"
 	"github.com/deviationist/byge/api/internal/frames"
@@ -91,28 +90,63 @@ func (h *Handler) field(w http.ResponseWriter, r *http.Request) {
 
 	// Sliced out of whole frames the store already has, or fetches once.
 	//
-	// FETCHED IN PARALLEL, because they are independent and the sequential
-	// version was the single slowest thing in the app: 24 cold frames at about
-	// 400 ms each is 9.4 seconds of staring at an empty map. Concurrency is
-	// bounded here as well as in the upstream client — that semaphore protects
-	// MET from us, this one stops one map request monopolising it and starving
-	// every verdict on the site.
+	// FRAME 0 GOES FIRST, ALONE, and that ordering is the whole reason streaming
+	// is worth anything. A whole national frame is 14 MB from MET, and the link
+	// — not MET — is the bottleneck: five of them in parallel each take five
+	// times as long. When the response could not begin until it was finished
+	// that cost nothing, because all 24 had to land anyway. Streaming changes
+	// what the reader waits for to the FIRST frame, so sharing the pipe with 23
+	// frames nobody is looking at yet makes the only number that matters five
+	// times worse. Measured cold, frame 0 arrived at 8.3 s under the old fan-out
+	// and at about 1.7 s on its own.
+	whole0, err := h.frames.Frame(r.Context(), base, 0)
+	if err != nil {
+		// Nothing has been written, so a status code is still ours to choose —
+		// which is the other reason frame 0 is handled apart. Once a byte of body
+		// has gone out the status is committed and a later failure can only stop
+		// the stream short; it cannot become a 502.
+		if errors.Is(err, context.Canceled) {
+			return
+		}
+		// The window is NOT logged: grid indices are a coordinate in another
+		// spelling.
+		h.log.Error("frame fetch failed", "frame", 0, "err", err)
+		http.Error(w, "could not reach the radar", http.StatusBadGateway)
+		return
+	}
+
+	// THE REST FAN OUT, because now they are behind something already on screen
+	// and throughput matters more than any one of their latencies. Concurrency
+	// is bounded here as well as in the upstream client — that semaphore
+	// protects MET from us, this one stops one map request monopolising it and
+	// starving every verdict on the site.
 	//
-	// The store coalesces, so overlapping requests for the same frame still
-	// make one upstream call however many goroutines ask.
+	// The store coalesces, so overlapping requests for the same frame still make
+	// one upstream call however many goroutines ask.
+	//
+	// Each goroutine closes its own `done` channel, so the writer below can send
+	// frames IN ORDER as they finish without waiting for the slowest.
 	type result struct {
 		cells []byte
 		err   error
+		done  chan struct{}
 	}
 	results := make([]result, count)
+	results[0] = result{cells: frames.Slice(whole0, win), done: closed()}
+	for f := 1; f < count; f++ {
+		results[f].done = make(chan struct{})
+	}
 	sem := make(chan struct{}, frameFanout)
-	var wg sync.WaitGroup
-	for f := 0; f < count; f++ {
-		wg.Add(1)
+	for f := 1; f < count; f++ {
 		go func(f int) {
-			defer wg.Done()
-			sem <- struct{}{}
-			defer func() { <-sem }()
+			defer close(results[f].done)
+			select {
+			case sem <- struct{}{}:
+				defer func() { <-sem }()
+			case <-r.Context().Done():
+				results[f].err = r.Context().Err()
+				return
+			}
 			whole, err := h.frames.Frame(r.Context(), base, f)
 			if err != nil {
 				results[f].err = err
@@ -120,43 +154,6 @@ func (h *Handler) field(w http.ResponseWriter, r *http.Request) {
 			}
 			results[f].cells = frames.Slice(whole, win)
 		}(f)
-	}
-	wg.Wait()
-
-	// Truncated at the first failure rather than skipped over: frame 7 missing
-	// from a run of 24 would leave the client animating a gap it cannot see,
-	// where a short run is simply a shorter animation and the header says so.
-	body := make([]byte, 0, win.Rows*win.Cols*count)
-	for f := 0; f < count; f++ {
-		if results[f].err != nil {
-			if errors.Is(results[f].err, context.Canceled) {
-				return
-			}
-			// The window is NOT logged: grid indices are a coordinate in
-			// another spelling.
-			h.log.Error("frame fetch failed", "frame", f, "err", results[f].err)
-			if f == 0 {
-				http.Error(w, "could not reach the radar", http.StatusBadGateway)
-				return
-			}
-			count = f
-			break
-		}
-		body = append(body, results[f].cells...)
-	}
-
-	payload, err := field.EncodeBands(field.Header{
-		Frames: uint16(count),
-		Width:  uint16(win.Cols),
-		Height: uint16(win.Rows),
-		Row0:   int32(win.Row0),
-		Col0:   int32(win.Col0),
-		Stride: 1,
-	}, body)
-	if err != nil {
-		h.log.Error("field encode failed", "err", err)
-		http.Error(w, "could not encode the radar field", http.StatusInternalServerError)
-		return
 	}
 
 	w.Header().Set("Content-Type", "application/octet-stream")
@@ -180,9 +177,81 @@ func (h *Handler) field(w http.ResponseWriter, r *http.Request) {
 	// slowest thing in the whole path.
 	gz, _ := gzip.NewWriterLevel(w, 5)
 	defer gz.Close()
-	if _, err := gz.Write(payload); err != nil {
-		h.log.Error("field write failed", "err", err)
+
+	// STREAMED, ONE FRAME AT A TIME.
+	//
+	// The whole run used to be assembled, encoded and gzipped before a single
+	// byte left — so the reader waited on the SLOWEST frame to see the first
+	// one, and on a cold store that was seconds of an empty map with a playback
+	// control that had nothing to play. Frames are independent and arrive out of
+	// order; there is no reason the reader should wait for frame 23 to look at
+	// frame 0.
+	//
+	// The header states the intended count and goes out immediately, so the
+	// client knows the window's shape and how much is coming. It then paints
+	// each frame as it lands and can start playing long before the run is in.
+	//
+	// `gz.Flush` is a sync flush, NOT a reset: the deflate history carries
+	// across frames, so consecutive frames of a rain field still compress
+	// against each other and the ratio the endpoint exists for is intact. What
+	// it costs is a few bytes of block boundary per frame.
+	flusher, _ := w.(http.Flusher)
+	push := func(b []byte) bool {
+		if _, err := gz.Write(b); err != nil {
+			return false
+		}
+		if err := gz.Flush(); err != nil {
+			return false
+		}
+		if flusher != nil {
+			flusher.Flush()
+		}
+		return true
 	}
+
+	if !push(field.HeaderBytes(field.Header{
+		Frames: uint16(count),
+		Width:  uint16(win.Cols),
+		Height: uint16(win.Rows),
+		Row0:   int32(win.Row0),
+		Col0:   int32(win.Col0),
+		Stride: 1,
+	})) {
+		return
+	}
+
+	for f := 0; f < count; f++ {
+		select {
+		case <-results[f].done:
+		case <-r.Context().Done():
+			return
+		}
+		// TRUNCATED AT THE FIRST FAILURE rather than skipped over. Frame 7
+		// missing from a run of 24 would leave the client animating a gap it
+		// cannot see; a short run is simply a shorter animation.
+		//
+		// The header cannot be corrected — it left before this was knowable —
+		// so the client counts the frames it actually received rather than
+		// trusting the count. That is the same arithmetic it does while the
+		// stream is still open, so a truncated run and an in-progress one are
+		// the same case and neither needs special handling.
+		if results[f].err != nil {
+			if !errors.Is(results[f].err, context.Canceled) {
+				h.log.Error("frame fetch failed", "frame", f, "err", results[f].err)
+			}
+			return
+		}
+		if !push(results[f].cells) {
+			return
+		}
+	}
+}
+
+/** An already-closed channel, so frame 0 slots into the same wait as the rest. */
+func closed() chan struct{} {
+	c := make(chan struct{})
+	close(c)
+	return c
 }
 
 func intParam(s string) (int, error) {

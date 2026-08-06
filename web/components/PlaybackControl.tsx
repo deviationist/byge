@@ -19,6 +19,12 @@ import { MONO } from "../theme/tokens";
  * the OS asks for less. Stepping through frames is how this screen is read, so
  * removing the control would take away the point instead of the motion.
  *
+ * IT DISTINGUISHES "ENDED" FROM "STILL ARRIVING", which sounds like a detail and
+ * was a lie on screen. The field streams a frame at a time, so a fresh map has
+ * one frame and a playhead already at the end of it — the control read that as
+ * the end of the run and offered REPLAY, on a run that had not started. Nothing
+ * in a frame count can tell those apart; only the loader knows, so it says.
+ *
  * The clock is RELATIVE first and wall time second, which is the convention the
  * verdict sentence already uses. One app, one way of saying when.
  */
@@ -28,6 +34,13 @@ export type PlaybackControlProps = {
   /** Zero-based frame on screen, and how many there are. */
   index: number;
   count: number;
+  /**
+   * How many frames the run will have once it is all in.
+   *
+   * Only differs from `count` while streaming. Absent means "the same", which
+   * is the right default for a caller that has no stream to report on.
+   */
+  expected?: number;
   /** Minutes from the analysis for that frame. */
   minutes: number;
   /**
@@ -38,6 +51,14 @@ export type PlaybackControlProps = {
    * nobody claimed.
    */
   openEnded?: boolean;
+  /**
+   * More frames are still on the wire.
+   *
+   * The reason REPLAY cannot be inferred from `index >= count - 1` alone: while
+   * a run is streaming, the last frame we have is not the last frame there is,
+   * and the playhead sitting on it means "caught up", not "finished".
+   */
+  buffering?: boolean;
 };
 
 export function PlaybackControl({
@@ -45,11 +66,15 @@ export function PlaybackControl({
   onToggle,
   index,
   count,
+  expected,
   minutes,
   openEnded = false,
+  buffering = false,
 }: PlaybackControlProps) {
   const { t } = useTranslation();
-  const ended = !playing && count > 0 && index >= count - 1;
+  // Nothing to play yet — not paused, not ended, just not here.
+  const empty = count === 0;
+  const ended = !playing && !buffering && count > 0 && index >= count - 1;
 
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 13 }}>
@@ -57,8 +82,18 @@ export function PlaybackControl({
         testID="playback"
         accessibilityRole="button"
         accessibilityLabel={
-          playing ? t("radarMap.pause") : ended ? t("radarMap.replay") : t("radarMap.play")
+          empty
+            ? t("playback.waiting")
+            : playing
+              ? t("radarMap.pause")
+              : ended
+                ? t("radarMap.replay")
+                : t("radarMap.play")
         }
+        // Disabled rather than hidden: the control keeps its place in the
+        // layout, so the foot of the map does not reflow the moment data lands.
+        disabled={empty}
+        aria-disabled={empty}
         onPress={onToggle}
         className="bg-surface border-line2"
         style={({ pressed }) => ({
@@ -68,7 +103,7 @@ export function PlaybackControl({
           borderWidth: 1,
           alignItems: "center",
           justifyContent: "center",
-          opacity: pressed ? 0.7 : 1,
+          opacity: empty ? 0.45 : pressed ? 0.7 : 1,
         })}
       >
         {/* Drawn from views rather than glyphs: a font's ▶ sits off-centre in a
@@ -97,11 +132,18 @@ export function PlaybackControl({
           className="text-ink3"
           style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: 0.4 }}
         >
-          {ended
-            ? t("playback.ended")
-            : playing
-              ? t("playback.playing", { i: index + 1, n: count })
-              : t("playback.frame", { i: index + 1, n: count })}
+          {empty
+            ? t("playback.waiting")
+            : ended
+              ? t("playback.ended")
+              : // While streaming, `count` is what we HAVE and `expected` is
+                // what is coming. Showing "frame 3 of 3" on a 24-frame run
+                // would be true and misleading in the same breath.
+                buffering
+                ? t("playback.buffering", { i: index + 1, total: expected ?? count })
+                : playing
+                  ? t("playback.playing", { i: index + 1, n: count })
+                  : t("playback.frame", { i: index + 1, n: count })}
         </Text>
       </View>
 
