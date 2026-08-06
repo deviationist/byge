@@ -1,15 +1,21 @@
 import { useEffect, useState } from "react";
 import { Appearance, Platform } from "react-native";
+import { getItem, removeItem, setItem } from "../lib/kv";
 
 export type ThemeChoice = "light" | "dark" | "system";
 export type Theme = "light" | "dark";
 
 const KEY = "byge:theme";
 
-/** Read the stored preference synchronously so the first paint is correct. */
+/**
+ * Read the stored preference synchronously so the first paint is correct.
+ *
+ * Went through lib/kv so this now persists on native too. It previously
+ * early-returned "system" off web, which meant an explicit choice silently
+ * failed to survive a restart on iOS and Android.
+ */
 function storedChoice(): ThemeChoice {
-  if (Platform.OS !== "web" || typeof localStorage === "undefined") return "system";
-  const v = localStorage.getItem(KEY);
+  const v = getItem(KEY);
   return v === "light" || v === "dark" ? v : "system";
 }
 
@@ -51,10 +57,8 @@ export function useTheme() {
 
   function choose(next: ThemeChoice) {
     setChoice(next);
-    if (Platform.OS === "web" && typeof localStorage !== "undefined") {
-      if (next === "system") localStorage.removeItem(KEY);
-      else localStorage.setItem(KEY, next);
-    }
+    if (next === "system") removeItem(KEY);
+    else setItem(KEY, next);
   }
 
   return { theme, choice, choose };

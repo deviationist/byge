@@ -7,6 +7,7 @@
  */
 
 import { clampCoord } from "./grid";
+import { getItem, setItem } from "./kv";
 
 export type SavedLocation = {
   id: string;
@@ -41,14 +42,9 @@ export function normalise(loc: SavedLocation): SavedLocation {
   };
 }
 
-function hasStorage(): boolean {
-  return typeof localStorage !== "undefined";
-}
-
 export function loadLocations(): SavedLocation[] {
-  if (!hasStorage()) return [];
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = getItem(KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
@@ -70,8 +66,7 @@ export function loadLocations(): SavedLocation[] {
 }
 
 export function saveLocations(list: SavedLocation[]): void {
-  if (!hasStorage()) return;
-  localStorage.setItem(KEY, JSON.stringify(list));
+  setItem(KEY, JSON.stringify(list));
 }
 
 export function newId(): string {
