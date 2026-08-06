@@ -23,12 +23,26 @@ export type ZoomControlProps = {
 
 const SIZE = 34;
 
+/**
+ * `dataSet` is a react-native-web affordance — it becomes `data-map-control` in
+ * the DOM — and React Native's own types do not know it, so it needs the same
+ * cast the other web-only props in this codebase use. Inert on native, which is
+ * correct: the pan gesture it guards is web-only too, built on PointerEvent.
+ */
+const MAP_CONTROL = { dataSet: { mapControl: "true" } } as object;
+
 export function ZoomControl({ zoom, min, max, onChange }: ZoomControlProps) {
   const { t } = useTranslation();
 
   return (
     <View
       testID="zoom-control"
+      // Marks this subtree as a control rather than map surface. MapCanvas's
+      // pan listener sits on the surface and sees every pointerdown inside it
+      // through bubbling; without this it starts a drag and captures the
+      // pointer, which steals the pointerup and stops the button ever firing a
+      // click. See the guard in MapCanvas.
+      {...MAP_CONTROL}
       // The container must not swallow drags meant for the map underneath —
       // only the two buttons are interactive.
       pointerEvents="box-none"
