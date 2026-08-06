@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { useEffect, useState } from "react";
 import { RefreshControl as ScrollRefreshControl, Text, View } from "react-native";
 import { Button } from "./Button";
@@ -64,15 +65,17 @@ export function refreshMessage(status: RefreshStatus, radarAgeMin?: number): str
   const age = radarAgeMin === undefined ? null : Math.max(0, Math.round(radarAgeMin));
   switch (status) {
     case "refreshing":
-      return "Checking for a newer analysis…";
+      return i18next.t("refresh.checking");
     case "updated":
-      return age === null ? "Updated." : `Updated — radar ${age} min old.`;
+      return age === null
+        ? i18next.t("refresh.updated")
+        : i18next.t("refresh.updatedAge", { age });
     case "already-latest":
       // Never "up to date" or a bare checkmark. The reader is owed the age, so
       // "nothing changed" is verifiable rather than something to take on faith.
       return age === null
-        ? "Already the latest."
-        : `Already the latest — radar ${age} min old.`;
+        ? i18next.t("refresh.latest")
+        : i18next.t("refresh.latestAge", { age });
     default:
       return null;
   }

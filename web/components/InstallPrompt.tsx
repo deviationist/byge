@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 import type { Theme } from "../theme/useTheme";
 import { BrandMark } from "./BrandMark";
@@ -26,6 +27,7 @@ export type InstallPromptProps = {
 };
 
 export function InstallPrompt({ onInstall, onDismiss, theme }: InstallPromptProps) {
+  const { t } = useTranslation();
   return (
     <View
       className="bg-surface border-line"
@@ -48,14 +50,13 @@ export function InstallPrompt({ onInstall, onDismiss, theme }: InstallPromptProp
         className="text-ink2"
         style={{ flex: 1, minWidth: 180, fontSize: 12.5, lineHeight: 19 }}
       >
-        Keep byge one tap away — add it to your home screen. Works offline with the last
-        verdict.
+        {t("install.body")}
       </Text>
       <View style={{ flexDirection: "row", gap: 8 }}>
         {/* Both buttons inherit Button's 44px minimum. The comp drew 6px-padded
             30px chips; a dismiss you keep missing is worse than no dismiss. */}
-        <Button label="Not now" variant="secondary" onPress={onDismiss} />
-        <Button label="Add" onPress={onInstall} />
+        <Button label={t("install.notNow")} variant="secondary" onPress={onDismiss} />
+        <Button label={t("install.add")} onPress={onInstall} />
       </View>
     </View>
   );

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 import { Button } from "./Button";
 
@@ -26,13 +27,12 @@ export type ErrorStateProps = {
   detail?: string;
 };
 
-const FULL_TITLE = "Could not reach the radar";
-const FULL_BODY =
-  "You are online — the request to MET Norway failed. There is no saved answer for this place " +
-  "yet, so byge has nothing to show. It will not guess.";
-const INLINE_BODY = "Refresh failed — this is still the answer from before.";
+// Read at RENDER, not at module scope. A `const` here would call t() the moment
+// the module is imported, which can precede i18n init and would freeze the
+// English string into a variable the language switch could never reach.
 
 export function ErrorState({ variant = "full", onRetry, detail }: ErrorStateProps) {
+  const { t } = useTranslation();
   if (variant === "inline") {
     return (
       <View
@@ -53,9 +53,11 @@ export function ErrorState({ variant = "full", onRetry, detail }: ErrorStateProp
           className="text-ink2"
           style={{ flex: 1, minWidth: 180, fontSize: 12.5, lineHeight: 20 }}
         >
-          {INLINE_BODY}
+          {t("error.inline")}
         </Text>
-        {onRetry ? <Button label="Try again" variant="secondary" onPress={onRetry} /> : null}
+        {onRetry ? (
+          <Button label={t("error.retry")} variant="secondary" onPress={onRetry} />
+        ) : null}
       </View>
     );
   }
@@ -76,10 +78,10 @@ export function ErrorState({ variant = "full", onRetry, detail }: ErrorStateProp
         className="text-ink"
         style={{ fontSize: 22, lineHeight: 28, letterSpacing: -0.3 }}
       >
-        {FULL_TITLE}
+        {t("error.title")}
       </Text>
       <Text className="text-ink2" style={{ fontSize: 13.5, lineHeight: 22 }}>
-        {FULL_BODY}
+        {t("error.body")}
       </Text>
       {detail ? (
         <Text
@@ -95,7 +97,7 @@ export function ErrorState({ variant = "full", onRetry, detail }: ErrorStateProp
           {detail}
         </Text>
       ) : null}
-      {onRetry ? <Button label="Try again" onPress={onRetry} /> : null}
+      {onRetry ? <Button label={t("error.retry")} onPress={onRetry} /> : null}
     </View>
   );
 }
