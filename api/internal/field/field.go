@@ -101,6 +101,20 @@ const (
 	HeaderSize = len(magic) + 2 + 2 + 2 + 4 + 4 + 2
 )
 
+// HeaderBytes is the header on its own, for the streaming path.
+//
+// A streamed response cannot build the payload first — the whole point is that
+// the header goes out before frame 0 has been fetched, so the client knows the
+// window's shape (and how many frames are coming) while it waits. Frames::
+// therefore states the INTENDED count, and a reader must take the number it
+// actually has from the bytes that arrive, not from this field. See the note on
+// truncation in handler/field.go.
+func HeaderBytes(h Header) []byte {
+	out := make([]byte, HeaderSize)
+	writeHeader(out, h)
+	return out
+}
+
 // EncodeBands writes the header in front of cells that are ALREADY quantised.
 //
 // The counterpart to Encode, for the path where the frame store did the

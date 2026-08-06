@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -51,7 +52,7 @@ func call(t *testing.T, h *Handler, path, origin string) *httptest.ResponseRecor
 var endpoints = []string{
 	"/analysis",
 	"/slab?stamp=20260806T120000Z&row0=1400&col0=500&rows=7&cols=7",
-	"/field?stamp=20260806T120000Z&row0=1400&col0=500&rows=7&cols=7&frames=1",
+	"/tiles?stamp=20260806T120000Z&frames=1&tiles=11.4",
 	"/geocode?lat=59.9273&lon=10.7607",
 }
 
@@ -80,7 +81,7 @@ func TestStampCannotRedirectTheUpstream(t *testing.T) {
 		"",
 	}
 	for _, s := range hostile {
-		for _, ep := range []string{"/slab?stamp=", "/field?stamp="} {
+		for _, ep := range []string{"/slab?stamp=", "/tiles?tiles=11.4&stamp="} {
 			rec := call(t, newTestHandler(), ep+s+"&row0=0&col0=0&rows=2&cols=2&frames=1", "")
 			if rec.Code != http.StatusBadRequest {
 				t.Errorf("%s%q → %d, want 400", ep, s, rec.Code)
@@ -134,7 +135,7 @@ func TestEchoesOnlyAllowlistedOrigins(t *testing.T) {
 
 func TestPreflightIsAnswered(t *testing.T) {
 	h := newTestHandler()
-	for _, ep := range []string{"/analysis", "/slab", "/field", "/geocode"} {
+	for _, ep := range []string{"/analysis", "/slab", "/tiles", "/geocode"} {
 		req := httptest.NewRequest(http.MethodOptions, ep, nil)
 		req.Header.Set("Origin", "https://byge.ichiva.no")
 		rec := httptest.NewRecorder()
@@ -219,6 +220,59 @@ func TestGeocodeZoomIsPinnedServerSide(t *testing.T) {
 	}
 	if !strings.Contains(got, "lat=59.9273") || strings.Contains(got, "59.92734") {
 		t.Errorf("coordinate not rounded to four decimals: %s", got)
+	}
+}
+
+func TestTileListIsParsedAndBounded(t *testing.T) {
+	ok, err := parseTiles("0.0,11.4,16.13")
+	if err != nil {
+		t.Fatalf("a valid list was refused: %v", err)
+	}
+	if len(ok) != 3 {
+		t.Errorf("got %d tiles, want 3", len(ok))
+	}
+
+	// A tile repeated would otherwise multiply the response without the caller
+	// asking for anything more.
+	if dup, _ := parseTiles("5.5,5.5,5.5"); len(dup) != 1 {
+		t.Errorf("duplicates were not collapsed: %d tiles", len(dup))
+	}
+
+	// A map panned into the Atlantic legitimately names tiles off the lattice.
+	// Those are dropped, not refused — the domain boundary must not be a wall.
+	mixed, err := parseTiles("0.0,9999.9999")
+	if err != nil || len(mixed) != 1 {
+		t.Errorf("off-lattice tile was not dropped cleanly: %v, %d tiles", err, len(mixed))
+	}
+	if _, err := parseTiles("9999.9999"); err == nil {
+		t.Error("a request entirely outside the grid should be a 400")
+	}
+
+	for _, bad := range []string{"", "abc", "1.", "1.2.3", "-1.x"} {
+		if _, err := parseTiles(bad); err == nil {
+			t.Errorf("parseTiles(%q) was accepted", bad)
+		}
+	}
+}
+
+func TestTilesEndpointRefusesAnUnboundedList(t *testing.T) {
+	// The list is the one parameter here that can grow without limit, in the URL
+	// and in the response. A caller must not be able to enumerate the whole
+	// lattice across every frame in one request.
+	var b strings.Builder
+	for i := 0; i < maxTilesPerRequest+1; i++ {
+		if i > 0 {
+			b.WriteByte(',')
+		}
+		fmt.Fprintf(&b, "%d.%d", i%16, i%13)
+	}
+	if _, err := parseTiles(b.String()); err == nil {
+		t.Error("an oversized tile list was accepted")
+	}
+
+	rec := call(t, newTestHandler(), "/tiles?stamp=20260806T120000Z&frames=1&tiles="+b.String(), "")
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("oversized /tiles → %d, want 400", rec.Code)
 	}
 }
 

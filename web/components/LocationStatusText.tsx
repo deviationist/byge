@@ -80,6 +80,30 @@ export type Headline = {
 };
 
 /**
+ * Where the data stops, said out loud.
+ *
+ * THE ONE THING BYGE CANNOT SEE. MET's nowcast runs 115 minutes and is
+ * advection-only: the measured field slid along measured motion, with cells
+ * that neither grow nor die. Extending it would not be a bigger computation, it
+ * would be a different and worse product — inventing weather past the end of
+ * somebody else's measurement, which is the move this app exists to refuse.
+ *
+ * So a band four hours out is not a "no" we got wrong. It is a question we were
+ * never in a position to answer, and somebody who scrolls the radar map can see
+ * that band with their own eyes. Every sentence whose plain reading extends past
+ * the horizon now names the horizon.
+ */
+function windowNote(v: Verdict): string {
+  return i18next.t("status.windowNote", { horizon: horizonPhrase(v.horizonMin) });
+}
+
+/** Two notes, or whichever exists. Both are sentences, so a space is enough. */
+function joinNotes(a: string | null, b: string | null): string | null {
+  if (a && b) return `${a} ${b}`;
+  return a ?? b;
+}
+
+/**
  * "2 hours" reads better than "115 min" in a headline, and the exact horizon is
  * always restated in the footnote — so the prose can round without the claim
  * getting looser than the data. Only rounds when it is within 10 min of a whole
@@ -237,7 +261,11 @@ export function headlineOf(v: Verdict): Headline {
       clock: end === null ? null : i18next.t("status.clockAround", { time: clockAt(v, end) }),
       secondary,
       secondClock,
-      note: edgeNote,
+      // "Stops in about 25 min" is true, and on its own it reads as "and then
+      // that is that". The claim is sound; the IMPLICATURE runs past the end of
+      // the data. When nothing follows inside the window, say where the window
+      // ends rather than letting silence stand in for "clear after".
+      note: joinNotes(edgeNote, secondary ? null : windowNote(v)),
     };
   }
 
@@ -297,14 +325,22 @@ export function headlineOf(v: Verdict): Headline {
       clock: s.endMin === null ? null : `${clockAt(v, s.startMin)}-${clockAt(v, s.endMin)}`,
       secondary: null,
       secondClock: null,
-      note: null,
+      // Same implicature as a closing spell above: "rain at 4, gone by 5" reads
+      // as an account of the rest of the day. It is an account of 115 minutes.
+      note: windowNote(v),
     };
   }
 
   return {
     state: "clear",
     lead: i18next.t("status.dryLead"),
-    body: i18next.t("status.clearBody"),
+    // NAMES THE WINDOW, because "Nothing approaching." was a claim about the
+    // future and we only have 115 minutes of it. Someone looking at the map can
+    // see a band that will plainly arrive in three hours; the sentence has to be
+    // false for them, or bounded. Bounded is the only honest option, since
+    // extending the forecast would mean inventing weather past the end of MET's
+    // own product — see the note below on why that is not a compute problem.
+    body: i18next.t("status.clearBody", { horizon: horizonPhrase(v.horizonMin) }),
     bound: null,
     tail: "",
     clock: null,
@@ -328,6 +364,7 @@ export function headlineOf(v: Verdict): Headline {
  */
 export function statusLine(v: Verdict): string {
   if (isBlindVerdict(v)) return i18next.t("compact.blind");
+  const horizon = horizonPhrase(v.horizonMin);
 
   const parts: string[] = [];
 
@@ -370,7 +407,10 @@ export function statusLine(v: Verdict): string {
     return parts.join(i18next.t("compact.separator"));
   }
 
-  return i18next.t("compact.clear");
+  // Bounded, in the compact register too. The list is where somebody decides
+  // whether a place needs a look at all, so it is the last place a sentence
+  // should quietly claim the rest of the day.
+  return i18next.t("compact.clear", { horizon });
 }
 
 export type LocationStatusTextProps = {
