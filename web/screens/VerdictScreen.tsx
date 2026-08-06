@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pressable, Text, useWindowDimensions, View } from "react-native";
+import { Text, useWindowDimensions, View } from "react-native";
 import { Attribution } from "../components/Attribution";
 import { ConfirmSheet, removeLocationCopy } from "../components/ConfirmSheet";
 import { CoverageNotice } from "../components/CoverageNotice";
@@ -13,6 +13,7 @@ import { OverflowMenu } from "../components/OverflowMenu";
 import { PrecipitationConfidence } from "../components/PrecipitationConfidence";
 import { PrecipitationGraph } from "../components/PrecipitationGraph";
 import { PrecipitationLevelCard } from "../components/PrecipitationLevelCard";
+import { RadarPreview } from "../components/RadarPreview";
 import { RefreshControl } from "../components/RefreshControl";
 import { StaleBanner } from "../components/StaleBanner";
 import { useLocations } from "../hooks/useLocations";
@@ -21,18 +22,18 @@ import { pagePadFor, Screen } from "../layouts/Screen";
 import { isBlindVerdict } from "../lib/forecast";
 import { toast } from "../lib/toast";
 import { useResolvedTheme } from "../theme/ThemeProvider";
-import { MONO } from "../theme/tokens";
 
 /**
  * The answer.
  *
  * The order IS the argument: answer -> what it feels like -> how sure we are ->
- * the shape of the next two hours -> and only then a small link to the map.
+ * the shape of the next two hours -> and only then, at the foot, the radar.
  * The headline stays typographically dominant at every size; extra desktop
  * width goes to whitespace, not to promoting the timeline.
  *
- * Renders complete with no map present. The map link is a line of text, not a
- * hole where a map should be.
+ * Renders complete with no radar present. The preview at the bottom loads on
+ * its own schedule and is absent until it does — it is never a hole where a map
+ * should be, and the answer above never waits on it.
  */
 export type VerdictScreenProps = {
   /**
@@ -233,33 +234,31 @@ export function VerdictScreen({ id: idProp, showBack = true }: VerdictScreenProp
 
       <View style={{ marginTop: "auto", paddingTop: 28, gap: 16 }}>
         {/*
-          A line of text, not a button and not a thumbnail. The design is
-          explicit that the map is a confirmation layer you go looking for — it
-          is never the landing view and never the biggest thing here, because
-          the answer is the sentence above. Sizing this like an action would
-          make the screen look as though it were leading somewhere.
+          The map, still subordinate and still at the foot.
+
+          It was a bare line of text, on the design's reasoning that the map is a
+          confirmation layer you go looking for — never the landing view, never
+          the biggest thing here, because the answer is the sentence above. That
+          ruling holds and this obeys it: it sits below the graph, after
+          everything that answers the question, and a strip this size cannot
+          compete with a 54-point headline. What it changes is that the old link
+          asked you to take the trip on faith. Somebody deciding whether to check
+          the evidence should be able to see whether there IS any weather nearby
+          first.
 
           Hidden for a blind verdict: there is no field to show, and offering to
           explain a non-answer is worse than not offering.
         */}
         {hasReading ? (
-          <Pressable
-            testID="see-why"
-            accessibilityRole="link"
-            accessibilityLabel={t("radarMap.seeWhy")}
-            onPress={() => router.push(`/location/${location.id}/map`)}
-            className="border-b-line2"
-            style={({ pressed }) => ({
-              alignSelf: "flex-start",
-              borderBottomWidth: 1,
-              paddingBottom: 2,
-              opacity: pressed ? 0.6 : 1,
-            })}
-          >
-            <Text className="text-ink2" style={{ fontSize: 12.5 }}>
-              {t("radarMap.seeWhy")} <Text style={{ fontFamily: MONO }}>→</Text>
-            </Text>
-          </Pressable>
+          <RadarPreview
+            lat={location.lat}
+            lon={location.lon}
+            name={location.name}
+            radiusKm={location.radiusKm}
+            theme={theme}
+            height={phone ? 140 : 180}
+            onPress={() => router.push(`/map/${location.id}`)}
+          />
         ) : null}
 
         <RefreshControl

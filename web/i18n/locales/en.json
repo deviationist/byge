@@ -213,8 +213,9 @@
     "incomingOpenTail": ".",
     "incomingOpenNote": "{{dur}} is a floor, not a forecast: the band is still overhead at the end of the {{horizon}} we can see. It could be twice that.",
     "dryLead": "Dry.",
-    "clearBody": "Nothing approaching.",
+    "clearBody": "Nothing approaching within {{horizon}}.",
     "clearNote": "The next ~30 min are a confident call. Radar sees no rain for the next {{horizon}}, but that far out is indicative only.",
+    "windowNote": "That is the whole of what we can see: the radar run stops {{horizon}} from now. A band further out than that is not in this forecast — not as a yes, and not as a no.",
     "secondClosedGap": "Then more in about {{start}} — about {{gap}} of dry in between, lasting about {{dur}}.",
     "secondClosedNoGap": "Then more in about {{start}}, lasting about {{dur}}.",
     "secondOpenGap": "Then more in about {{start}} — about {{gap}} of dry in between, and no end in sight after that.",
@@ -233,7 +234,7 @@
     "dry": "Dry",
     "incoming": "rain in about {{start}}, about {{dur}}",
     "incomingOpen": "rain in about {{start}}, at least {{dur}} →",
-    "clear": "Dry · nothing approaching",
+    "clear": "Dry · nothing within {{horizon}}",
     "separator": " · ",
     "incomingEdge": "rain in about {{start}}, at the edge →"
   },
@@ -350,6 +351,7 @@
     "darkNote": "Dark mode: MET renders these tiles light and has no dark equivalent, so the map stays a lit window inside dark chrome rather than a tinted version of someone else's data.",
     "unavailable": "Could not load the radar field. The verdict above is unaffected — it was already fetched.",
     "seeWhy": "See why — radar map",
+    "seeWhyFor": "See why — radar map for {{name}}",
     "window": "The dashed rectangle is how much radar we asked for around this place. Beyond it we have not looked — which is not the same as clear.",
     "play": "Play the next two hours",
     "pause": "Pause",
@@ -384,6 +386,8 @@
     "clock": "{{when}}  ·  {{time}}",
     "frame": "FRAME {{i}} OF {{n}}",
     "playing": "PLAYING · FRAME {{i}} OF {{n}}",
+    "waiting": "LOADING THE RUN…",
+    "buffering": "FRAME {{i}} · {{total}} ON THE WAY",
     "ended": "END OF RUN · REPLAY",
     "horizon": "This is as far as the radar run goes. Anything still falling here has no known end."
   }

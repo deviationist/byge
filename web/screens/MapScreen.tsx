@@ -7,15 +7,25 @@ import { type LatLon, MAX_ZOOM, MapCanvas, MIN_ZOOM } from "../components/MapCan
 import { MapLegend } from "../components/MapLegend";
 import { NavBar } from "../components/NavBar";
 import { PlaybackControl } from "../components/PlaybackControl";
-import { RadarGL } from "../components/RadarGL";
+import { RadarTilesGL } from "../components/RadarTilesGL";
 import { BASEMAP_OPTIONS, SegmentedControl } from "../components/SegmentedControl";
 import type { KartverketLayer } from "../components/TileLayer";
 import { ZoomControl } from "../components/ZoomControl";
 import { useBack } from "../hooks/useBack";
-import { useProgressiveField } from "../hooks/useRadarField";
+import { useReducedMotion } from "../hooks/useReducedMotion";
+import { useRadarTiles } from "../hooks/useRadarTiles";
 import { Screen } from "../layouts/Screen";
 import { useResolvedTheme } from "../theme/ThemeProvider";
 import { MONO } from "../theme/tokens";
+
+/**
+ * How long one radar frame is on screen while playing, ms.
+ *
+ * 220 was the step interval before the playhead went continuous, and it is kept
+ * so the run still takes about five seconds end to end — the change is that the
+ * five seconds are now spent moving rather than in twenty-four jumps.
+ */
+const MS_PER_FRAME = 220;
 
 /** Oslo, as a starting view. Nothing is saved here, so something has to be first. */
 const START: LatLon = { lat: 60.5, lon: 9.0 };
@@ -24,7 +34,7 @@ const START_ZOOM = 7;
 /**
  * The radar, with no place in mind.
  *
- * A DIFFERENT SCREEN FROM `/location/<id>/map`, not a generalisation of it, and
+ * A DIFFERENT SCREEN FROM `/map/<id>`, not a generalisation of it, and
  * the difference is what you arrive with. That one answers "why does my place
  * say what it says" — it is anchored, it is reached from a sentence, and the
  * sentence is still the answer. This one answers "what is the weather doing",
@@ -63,47 +73,86 @@ export function MapScreen() {
   const [zoom, setZoom] = useState(START_ZOOM);
   const [basemap, setBasemap] = useState<KartverketLayer>("grey");
   const [size, setSize] = useState({ width: 0, height: 0 });
-  const [frame, setFrame] = useState(0);
+  // THE PLAYHEAD IS FRACTIONAL — 3.4 is 40 % of the way from frame 3 to 4, and
+  // RadarGL cross-fades there. Everything that reports a frame to a human reads
+  // the floored value below instead; nobody wants "frame 3.4 of 24".
+  const [playhead, setPlayhead] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [picked, setPicked] = useState<LatLon | null>(null);
 
-  // Two requests, not one: the still paints in about half a second and the
-  // full run replaces it. See useProgressiveField for the measurement.
-  const { field, partial, loading } = useProgressiveField(
+  // Only the tiles this tab does not already hold. Frame 0 paints as soon as it
+  // lands and the rest arrive behind it; a pan or a zoom fetches the difference
+  // rather than the whole viewport. See useRadarTiles.
+  const {
+    tiles,
+    depth,
+    expected,
+    partial,
+    loading,
+    version,
+  } = useRadarTiles(
     size.width > 0
       ? { lat: view.lat, lon: view.lon, zoom, width: size.width, height: size.height }
       : null,
   );
 
-  const frameCount = field?.frames ?? 0;
+  // ONLY AS FAR AS EVERY VISIBLE TILE CAN GO. A ragged cache — 24 frames of the
+  // square you zoomed into, fewer of its new neighbours — must not animate into
+  // a hole, because a hole is indistinguishable from observed-dry.
+  const frameCount = depth;
+  const reduced = useReducedMotion();
+  /** The whole-frame index, for anything that shows a number or reads a cell. */
+  const frame = Math.min(Math.floor(playhead), Math.max(0, frameCount - 1));
 
   // Clamp when a new window arrives with fewer frames than the last — a wide
   // view buys area with frames, so zooming out can leave the playhead past the
   // end, which would paint nothing at all.
   useEffect(() => {
-    if (frameCount > 0 && frame >= frameCount) setFrame(frameCount - 1);
-  }, [frameCount, frame]);
+    if (frameCount > 0 && playhead > frameCount - 1) setPlayhead(frameCount - 1);
+  }, [frameCount, playhead]);
 
+  // A CONTINUOUS PLAYHEAD, not a frame counter on a timer.
+  //
+  // `frame` is fractional and `RadarGL` cross-fades between the two frames it
+  // sits between, so this advances it by elapsed time on every animation frame
+  // rather than jumping it by one every 220 ms. Radar frames are five minutes
+  // apart: stepped, the eye reads a band as teleporting; faded, it reads as
+  // weather moving, which is the thing the animation is for.
+  //
+  // Under prefers-reduced-motion it goes back to being a slideshow — a
+  // cross-fade IS motion, and someone who asked for less of it should not be
+  // given a smoother version. See the render, which floors the playhead there.
   useEffect(() => {
     if (!playing || frameCount <= 1) return;
-    const reduced =
-      typeof matchMedia === "function" &&
-      matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const id = setInterval(
-      () =>
-        setFrame((f) => {
-          // Stops at the horizon rather than looping — see RadarMapScreen for
-          // why the end of the data is a place worth leaving the reader.
-          if (f >= frameCount - 1) {
-            setPlaying(false);
-            return f;
-          }
-          return f + 1;
-        }),
-      reduced ? 900 : 220,
-    );
-    return () => clearInterval(id);
-  }, [playing, frameCount]);
+    if (reduced) {
+      const id = setInterval(() => setPlayhead((f) => Math.min(f + 1, frameCount - 1)), 900);
+      return () => clearInterval(id);
+    }
+    let raf = 0;
+    let last = performance.now();
+    const tick = (now: number) => {
+      // Clamped: a backgrounded tab resumes with a huge delta, and without this
+      // the run would jump most of the way to the horizon on return.
+      const dt = Math.min(now - last, 250);
+      last = now;
+      setPlayhead((f) => Math.min(f + dt / MS_PER_FRAME, frameCount - 1));
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [playing, frameCount, reduced]);
+
+  // Stops at the horizon rather than looping — see RadarMapScreen for why the
+  // end of the data is a place worth leaving the reader.
+  //
+  // BUT NOT WHILE THE RUN IS STILL ARRIVING. Frames stream in, so the last one
+  // we hold is usually not the last one there is; stopping there would end the
+  // animation two seconds after it started and call a half-loaded run finished.
+  // Sitting on the newest frame means "caught up", and playback resumes by
+  // itself the moment another lands.
+  useEffect(() => {
+    if (playing && !partial && frameCount > 0 && playhead >= frameCount - 1) setPlaying(false);
+  }, [playing, partial, playhead, frameCount]);
 
   // Settles a beat after the gesture stops, so a flick-and-flick-again asks
   // once rather than twice.
@@ -163,10 +212,13 @@ export function MapScreen() {
           label={t("map.canvasLabel")}
           attribution={t("radarMap.attribution")}
           overlay={(v) =>
-            field ? (
-              <RadarGL
-                field={field}
-                frame={Math.min(frame, Math.max(0, field.frames - 1))}
+            frameCount > 0 ? (
+              <RadarTilesGL
+                tiles={tiles}
+                version={version}
+                // Fractional while playing; floored under reduced motion so the
+                // slideshow stays a slideshow. The renderer handles both.
+                frame={reduced ? frame : Math.min(playhead, Math.max(0, frameCount - 1))}
                 originX={v.originX}
                 originY={v.originY}
                 zoom={v.z}
@@ -242,22 +294,24 @@ export function MapScreen() {
             playing={playing}
             index={frame}
             count={frameCount}
+            expected={expected}
+            buffering={partial}
             minutes={frame * 5}
             onToggle={() => {
-              if (!playing && frame >= frameCount - 1) setFrame(0);
+              // Replaying from a finished run rewinds; resuming a caught-up
+              // stream does not — there is nothing behind the reader to see.
+              if (!playing && !partial && playhead >= frameCount - 1) setPlayhead(0);
               setPlaying((p) => !p);
             }}
           />
           <Text className="text-ink3" style={{ fontFamily: MONO, fontSize: 10 }}>
             {loading
               ? t("map.loadingField")
-              : field
+              : partial
                 ? // Says the animation is still arriving rather than showing a
                   // frame count that is about to change under the reader.
-                  partial
-                  ? t("map.loadingFrames")
-                  : t("map.sampling", { km: field.stride, frames: field.frames })
-                : ""}
+                  t("map.loadingFrames")
+                : t("map.sampling", { km: 1, frames: frameCount })}
           </Text>
         </View>
 

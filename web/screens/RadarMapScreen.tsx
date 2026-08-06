@@ -65,7 +65,7 @@ export function RadarMapScreen() {
 
   const location = byId(id);
   const { data: verdict } = useVerdict(location);
-  const { data: probe, isError } = useRadarGrid(location);
+  const { data: probe, isError, isPending } = useRadarGrid(location);
 
   const [basemap, setBasemap] = useState<KartverketLayer>("grey");
   // Frame index, not minutes. The graph speaks in indices and so does the
@@ -115,7 +115,7 @@ export function RadarMapScreen() {
     return (
       <ErrorScreen
         kind="deleted"
-        path={id ? `/location/${id}/map` : undefined}
+        path={id ? `/map/${id}` : undefined}
         onPrimary={() => router.replace("/")}
         onSecondary={() => router.replace("/add")}
       />
@@ -258,6 +258,10 @@ export function RadarMapScreen() {
               playing={playing}
               index={frame}
               count={frameCount}
+              // This screen's field arrives in one piece — `/slab` is a single
+              // small window, not a stream — so the only waiting state it has is
+              // "not here yet", and the frame list is empty until it is.
+              buffering={isPending}
               minutes={frames[frame]?.minutes ?? 0}
               // Only when the spell under the reader is still running at the
               // last frame. Saying it over a clear field would invent an open

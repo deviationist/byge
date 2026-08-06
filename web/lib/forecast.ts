@@ -278,6 +278,9 @@ export function describe(v: Verdict): string {
       lines.push(`Still raining ${v.horizonMin} min from now — no end within the forecast.`);
     } else {
       lines.push(`Stops in about ${s.endMin} min.`);
+      // Bounded, because "stops in 25 min" with nothing after it reads as an
+      // account of the rest of the day and is an account of 115 minutes.
+      if (!v.next) lines.push(`Nothing further within ${v.horizonMin} min — that is as far as we see.`);
       if (v.next) {
         // Dropping the second spell turns "clears at 6, more at 6:30" into
         // "clears at 6" — true, and the wrong thing to plan around.
@@ -291,7 +294,7 @@ export function describe(v: Verdict): string {
   } else if (!v.next) {
     // "Dry for the next 115 min" is really two claims of very different
     // strength. The near term is observed; the tail is extrapolation.
-    lines.push("No — dry now, and nothing approaching.");
+    lines.push(`No — dry now, and nothing approaching within ${v.horizonMin} min.`);
     lines.push(
       `The next ~30 min are a confident call; radar sees no rain through ${v.horizonMin} min, but that far out is indicative only.`,
     );
@@ -308,6 +311,7 @@ export function describe(v: Verdict): string {
       lines.push(
         `It should last about ${durationMin(s, v.horizonMin)} min, clearing around ${s.endMin} min from now.`,
       );
+      lines.push(`Nothing further within ${v.horizonMin} min — that is as far as we see.`);
     }
   }
 

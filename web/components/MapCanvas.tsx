@@ -77,6 +77,19 @@ export type MapCanvasProps = {
   theme: Theme;
   /** RadarMap in a non-interactive placement (e.g. a thumbnail) turns this off. */
   interactive?: boolean;
+  /**
+   * Floor on the surface's height. 240 is right for a map you look AT; a
+   * thumbnail has to lower it.
+   *
+   * It is a prop rather than a constant because the floor is not cosmetic. The
+   * surface is `flex: 1`, so a shorter container does not shrink it — it
+   * overflows, and everything positioned against the surface goes with it: the
+   * centred marker lands below the visual middle, and the attribution badge
+   * (bottom: 8 of the REAL height) falls outside the clip entirely. A basemap
+   * credit that is present in the DOM and invisible on screen satisfies nobody's
+   * licence.
+   */
+  minHeight?: number;
   /** Accessible name — a bare map surface is meaningless without one. */
   label?: string;
   /**
@@ -196,6 +209,7 @@ export function MapCanvas({
   basemap = "grey",
   theme,
   interactive = true,
+  minHeight = 240,
   label = "Map",
   attribution,
   children,
@@ -379,7 +393,7 @@ export function MapCanvas({
       style={[
         {
           flex: 1,
-          minHeight: 240,
+          minHeight,
           overflow: "hidden",
           backgroundColor: BASEMAP[basemap],
           borderRadius: 12,
