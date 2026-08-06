@@ -1,5 +1,6 @@
 import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Text, useWindowDimensions, View } from "react-native";
 import { useLocations } from "../hooks/useLocations";
 import { TWO_PANE_BREAKPOINT, TwoPane } from "../layouts/TwoPane";
@@ -69,6 +70,7 @@ export function HomeScreen() {
  * emptied and says why rather than left blank.
  */
 function EmptyPane() {
+  const { t } = useTranslation();
   return (
     <View
       testID="pane-empty"
@@ -76,10 +78,10 @@ function EmptyPane() {
     >
       <View style={{ maxWidth: 340, gap: 12 }}>
         <Text className="text-ink3 font-display" style={{ fontSize: 26, lineHeight: 31 }}>
-          Nothing to show.
+          {t("pane.emptyTitle")}
         </Text>
         <Text className="text-ink3 font-mono" style={{ fontSize: 10.5, lineHeight: 18 }}>
-          The place that was here is gone. Add one and its answer appears in this pane.
+          {t("pane.emptyBody")}
         </Text>
       </View>
     </View>

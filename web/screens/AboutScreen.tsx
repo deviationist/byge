@@ -1,4 +1,5 @@
 import { useRouter } from "expo-router";
+import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 import { Attribution } from "../components/Attribution";
@@ -8,15 +9,26 @@ import { SegmentedControl } from "../components/SegmentedControl";
 import { useBack } from "../hooks/useBack";
 import { Screen } from "../layouts/Screen";
 import { Section } from "../layouts/Section";
+import { APP_VERSION } from "../lib/version";
 import { useThemeContext } from "../theme/ThemeProvider";
 import { MONO } from "../theme/tokens";
 import type { ThemeChoice } from "../theme/useTheme";
 
-const THEME_OPTIONS = [
-  { value: "light" as const, label: "Light" },
-  { value: "dark" as const, label: "Dark" },
-  { value: "system" as const, label: "System" },
-] satisfies readonly { value: ThemeChoice; label: string }[];
+// Built at render, not as a module constant: a constant calls t() at import
+// time, which can precede i18n init and pins English into a value no language
+// switch can reach. Three labels that existed as `appearance.*` keys were
+// hardcoded here regardless — the string table had them, this screen ignored it.
+function themeOptions(t: TFunction) {
+  return [
+    { value: "light" as const, label: t("appearance.light") },
+    { value: "dark" as const, label: t("appearance.dark") },
+    {
+      value: "system" as const,
+      label: t("appearance.system"),
+      hint: t("appearance.systemHint"),
+    },
+  ] satisfies readonly { value: ThemeChoice; label: string; hint?: string }[];
+}
 
 /**
  * What byge is, how to change its appearance, and the attribution in full.
@@ -41,26 +53,45 @@ export function AboutScreen() {
   return (
     <Screen>
       <NavBar onBack={goBack} backLabel={t("nav.backToPlaces")}>
-        <View />
+        <Text
+          accessibilityRole="header"
+          className="text-ink font-display"
+          style={{ fontSize: 24 }}
+        >
+          {t("nav.aboutByge")}
+        </Text>
       </NavBar>
 
       <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
         <BrandMark size={52} />
+        {/*
+          These two were hardcoded English while `about.pronunciation` and
+          `about.what` sat unused in the string table — the extraction created
+          the keys and never came back for the screen.
+        */}
         <Text className="text-ink3" style={note}>
-          byge /ˈbyːɡə/{"\n"}Norwegian: a passing shower.
+          {t("about.pronunciation")}
         </Text>
       </View>
 
-      <Text className="text-ink" style={{ fontSize: 19, lineHeight: 29 }}>
-        byge reads MET Norway’s radar nowcast for your exact coordinate and tells you whether it
-        is raining, and for how long. Nothing else.
+      {/*
+        The display face at 300, matching the headline register: this sentence
+        is the app describing what it is, which is the same kind of statement as
+        a verdict, not a caption about one. 40ch because it is a paragraph to
+        read rather than a column to scan.
+      */}
+      <Text
+        className="text-ink font-display"
+        style={{ fontSize: 19, lineHeight: 29, fontWeight: "300", maxWidth: "40ch" as never }}
+      >
+        {t("about.what")}
       </Text>
 
       <Section title={t("about.appearanceSection")}>
         <SegmentedControl
           label={t("about.appearance")}
           labelHidden
-          options={THEME_OPTIONS}
+          options={themeOptions(t)}
           value={choice}
           onChange={choose}
         />
@@ -84,6 +115,21 @@ export function AboutScreen() {
           {t("about.notAffiliated")}
         </Text>
       </Section>
+
+      {/*
+        "offline-capable" is a claim, so it is only made because the service
+        worker makes it true — the last verdict is readable with no network.
+        The design's line ends in a link to Settings; there is no Settings
+        screen, so it ends here instead of pointing at nothing.
+      */}
+      <View
+        className="border-t-line"
+        style={{ marginTop: "auto", borderTopWidth: 1, paddingTop: 14 }}
+      >
+        <Text className="text-ink3" style={note}>
+          {t("about.version", { version: APP_VERSION })}
+        </Text>
+      </View>
     </Screen>
   );
 }
