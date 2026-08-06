@@ -5,7 +5,7 @@ import { Pressable, Text, View } from "react-native";
 import { bandOf, colorOf, legend } from "../lib/scale";
 import { MONO } from "../theme/tokens";
 import type { Theme } from "../theme/useTheme";
-import { Swatch, type SwatchMode } from "./Swatch";
+import { SWATCH, Swatch, type SwatchMode } from "./Swatch";
 
 /**
  * "Reading the list" — a collapsed disclosure beneath the locations list.
@@ -111,7 +111,13 @@ export function PrecipitationLegend({
           */}
           <View aria-hidden style={{ flexDirection: "row", gap: 5 }}>
             {states.map((s) => (
-              <Swatch key={s.mode} mode={s.mode} rate={s.rate} size={11} theme={theme} />
+              <Swatch
+                key={s.mode}
+                mode={s.mode}
+                rate={s.rate}
+                size={SWATCH.legendInline}
+                theme={theme}
+              />
             ))}
           </View>
           <Text className="text-ink3" style={[micro, { fontSize: 13 }]}>
@@ -125,7 +131,7 @@ export function PrecipitationLegend({
           <View style={{ gap: 12 }}>
             {states.map((s) => (
               <Row key={s.mode}>
-                <Swatch mode={s.mode} rate={s.rate} size={16} theme={theme} />
+                <Swatch mode={s.mode} rate={s.rate} size={SWATCH.legend} theme={theme} />
                 <View style={{ flex: 1, gap: 1 }}>
                   <Text className="text-ink" style={{ fontSize: 12.5 }}>
                     {s.label}
@@ -147,9 +153,9 @@ export function PrecipitationLegend({
                 <View
                   className="border-line2"
                   style={{
-                    width: 14,
-                    height: 14,
-                    borderRadius: 3,
+                    width: 20,
+                    height: 20,
+                    borderRadius: 4,
                     borderWidth: 1,
                     // Through the same lookup the strip and the map use, so the
                     // ramp cannot drift out of step with what it explains.
@@ -170,7 +176,7 @@ export function PrecipitationLegend({
             <Row>
               <View
                 className="border-line2 bg-dry"
-                style={{ width: 14, height: 14, borderRadius: 3, borderWidth: 1 }}
+                style={{ width: 20, height: 20, borderRadius: 4, borderWidth: 1 }}
               />
               <Text className="text-ink" style={{ fontSize: 12, minWidth: 92 }}>
                 {t("legend.dry")}

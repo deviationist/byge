@@ -4,7 +4,7 @@ import { isBlindVerdict } from "../lib/forecast";
 import { bandOf, NOTICEABLE } from "../lib/scale";
 import { MONO } from "../theme/tokens";
 import type { Theme } from "../theme/useTheme";
-import { Swatch, swatchModeOf, swatchRateOf } from "./Swatch";
+import { SWATCH, Swatch, swatchModeOf, swatchRateOf } from "./Swatch";
 
 /**
  * The intensity badge: swatch + label + what it feels like + the number.
@@ -92,7 +92,7 @@ export function PrecipitationLevelCard({ verdict, theme }: PrecipitationLevelCar
       <Swatch
         mode={swatchModeOf(verdict)}
         rate={swatchRateOf(verdict)}
-        size={22}
+        size={SWATCH.badge}
         theme={theme}
       />
 

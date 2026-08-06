@@ -73,18 +73,18 @@
   },
   "legend": {
     "title": "Reading the list",
-    "filled": "Filled",
-    "filledBody": "Raining there right now. The colour is how hard.",
-    "outline": "Outline",
-    "outlineBody": "Dry now, but a spell is on the way within the next two hours.",
-    "hatched": "Hatched",
-    "hatchedBody": "Outside radar coverage — we have no observation at all.",
+    "filled": "Raining now",
+    "filledBody": "The colour is how hard.",
+    "outline": "Rain on the way",
+    "outlineBody": "Dry now, but a spell arrives within the next two hours.",
+    "hatched": "No radar coverage",
+    "hatchedBody": "We have no observation at all — which is not the same as dry.",
     "ramp": "HOW HARD · MM/H",
     "dry": "dry",
     "dryFeels": "we looked, nothing is falling",
     "dryRange": "observed",
     "notObserved": "NOT OBSERVED",
-    "notObservedBody": "Hatching is not a level of rain and it is not dry. It means the radar mosaic cannot see that place at all, so byge makes no claim either way. Dry means we looked and saw nothing falling; hatched means we could not look."
+    "notObservedBody": "This is not a level of rain and it is not dry. It means the radar mosaic cannot see that place at all, so byge makes no claim either way. Dry means we looked and saw nothing falling; no coverage means we could not look."
   },
   "field": {
     "coordHint": "Four decimals max — MET rejects anything finer. That is about 11 m, far inside a single 1 km radar cell, so nothing is lost."

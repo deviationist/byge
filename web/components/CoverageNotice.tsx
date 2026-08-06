@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 import type { Theme } from "../theme/useTheme";
-import { Swatch } from "./Swatch";
+import { SWATCH, Swatch } from "./Swatch";
 
 /**
  * What the radar could and could not see.
@@ -79,7 +79,7 @@ export function CoverageNotice({ observed, theme }: CoverageNoticeProps) {
           "not observed", so the notice and the row agree at a glance. Shape,
           not colour, is what carries it. */}
       <View style={{ paddingTop: 2 }}>
-        <Swatch mode="blind" size={14} theme={theme} />
+        <Swatch mode="blind" size={SWATCH.notice} theme={theme} />
       </View>
 
       <View style={{ flex: 1, gap: 6 }}>

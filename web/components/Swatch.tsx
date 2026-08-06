@@ -30,6 +30,38 @@ export type SwatchProps = {
   theme: Theme;
 };
 
+/**
+ * Every size a swatch is drawn at, in one place.
+ *
+ * They used to be magic numbers at five call sites, which meant "make the
+ * indicators bigger" was a hunt rather than an edit — and meant two of them had
+ * already drifted a pixel apart for no reason anybody recorded.
+ *
+ * They sit on a 4 px grid off a base of 16, and they are roughly half again
+ * their original values. At the old sizes the three shapes were the smallest
+ * thing on screen while being the only carrier of the raining / on-the-way /
+ * no-coverage distinction; a hatch pattern in an 11 px box is a texture you
+ * cannot resolve, so the one signal that must not be missed was the hardest to
+ * see. Doubling overshot — the swatch started competing with the place name it
+ * annotates — so these are the settled values.
+ */
+export const SWATCH = {
+  /** List row, full-width layout. */
+  row: 20,
+  /** List row in the 300 px two-pane column. */
+  rowCompact: 16,
+  /** Map marker popup. */
+  popup: 16,
+  /** The three explanatory rows inside the legend. */
+  legend: 20,
+  /** The three shown inline in the legend's collapsed header. */
+  legendInline: 16,
+  /** The verdict screen's level badge. */
+  badge: 20,
+  /** The coverage notice. */
+  notice: 20,
+} as const;
+
 const TITLES: Record<SwatchMode, string> = {
   now: "raining now",
   later: "rain on the way",
@@ -65,7 +97,7 @@ export function Swatch({ mode, rate = 0, size = 13, theme }: SwatchProps) {
     now: { className: "border-line2", style: { backgroundColor: color, borderWidth: 1 } },
     later: {
       className: "bg-transparent",
-      // Scales with size so the ring stays legible at 11px and at 24px.
+      // Scales with size so the ring stays legible across the whole SWATCH scale.
       style: { borderWidth: Math.max(2, Math.round(size * 0.2)), borderColor: color },
     },
     dry: { className: "bg-dry border-line2", style: { borderWidth: 1 } },
