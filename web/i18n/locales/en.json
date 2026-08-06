@@ -173,7 +173,7 @@
     "canvasLabel": "Radar map — drag to pan, tap a square to read it",
     "loadingField": "loading the field…",
     "sampling": "sampled every {{km}} km · {{frames}} frames",
-    "footnote": "Sampling follows the zoom, so a wide view is coarser — MET decompresses a whole frame either way, so only the detail changes, never the cost. Hatched ground is outside radar coverage: not dry, unobserved."
+    "footnote": "Every square is one kilometre, at every zoom — the resolution the radar actually measures. A wide view trades FRAMES for that, not detail, so it animates over fewer steps. Hatched ground is outside radar coverage: not dry, unobserved."
   },
   "status": {
     "horizonHours_one": "{{count}} hour",
@@ -334,7 +334,8 @@
     "seeWhy": "See why — radar map",
     "window": "The dashed rectangle is how much radar we asked for around this place. Beyond it we have not looked — which is not the same as clear.",
     "play": "Play the next two hours",
-    "pause": "Pause"
+    "pause": "Pause",
+    "replay": "Play again from now"
   },
   "cell": {
     "reading": "Reading…",

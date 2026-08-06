@@ -68,20 +68,3 @@ export function decodeField(buffer: ArrayBuffer): BandField {
 export function bandAt(f: BandField, frame: number, i: number, j: number): number {
   return f.bands[frame * f.width * f.height + i * f.width + j];
 }
-
-/**
- * Grid sampling for a zoom level.
- *
- * A cell is 1 km. There is no point sending four cells for one screen pixel, so
- * the stride follows the scale — and it is free to do so, because MET decompresses
- * a whole frame either way (see the timings in api/internal/field). Coarser than
- * a pixel would be visible as blockiness; finer is bytes nobody can see.
- */
-export function strideForZoom(zoom: number, lat: number): number {
-  // Metres per pixel at this zoom and latitude, in Web Mercator.
-  const mpp = (156543.03392 * Math.cos((lat * Math.PI) / 180)) / 2 ** zoom;
-  const kmPerPixel = mpp / 1000;
-  // Aim for roughly one sample per 2 px: fine enough that the field reads as
-  // continuous, coarse enough that a national view is kilobytes.
-  return Math.max(1, Math.min(32, Math.round(kmPerPixel * 2)));
-}

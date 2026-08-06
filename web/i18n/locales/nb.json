@@ -172,8 +172,8 @@
     "subtitle": "SELVE FELTET · INGEN STED, INGEN DOM",
     "canvasLabel": "Radarkart — dra for å flytte, trykk på en rute for å lese den",
     "loadingField": "laster feltet …",
-    "sampling": "målt hver {{km}}. km · {{frames}} bilder",
-    "footnote": "Oppløsningen følger zoomen, så et vidt utsnitt er grovere — MET pakker ut et helt bilde uansett, så det er bare detaljene som endrer seg, aldri kostnaden. Skravert bakke er utenfor radardekning: ikke opphold, men uobservert."
+    "sampling": "hver {{km}}. km · {{frames}} bilder",
+    "footnote": "Hver rute er én kilometer, uansett zoom — oppløsningen radaren faktisk måler. Et vidt utsnitt betaler med BILDER i stedet for detaljer, så det animerer over færre steg. Skravert bakke er utenfor radardekning: ikke opphold, men uobservert."
   },
   "status": {
     "horizonHours_one": "{{count}} time",
@@ -334,7 +334,8 @@
     "seeWhy": "Se hvorfor — radarkart",
     "window": "Den stiplede firkanten viser hvor mye radar vi ba om rundt dette stedet. Utenfor har vi ikke sett etter — som ikke er det samme som klart.",
     "play": "Spill av de neste to timene",
-    "pause": "Sett på pause"
+    "pause": "Sett på pause",
+    "replay": "Spill av på nytt fra nå"
   },
   "cell": {
     "reading": "Leser …",

@@ -72,6 +72,18 @@ const (
 	// It bounds transfer, not server work: 400k float32 is about 1.5 MB, which
 	// is the most this app has any business pulling in one request.
 	DefaultMaxValues = 400_000
+
+	// FieldMaxValues is the budget for /field, and it is far larger for one
+	// reason: that endpoint does not send floats. It quantises to one byte per
+	// cell and gzips, measured at 226 440 bytes down to 11 484 — a ratio of
+	// about 20×. So a value costs roughly a twentieth of what the same value
+	// costs on /fetch, and holding both to one number made the map needlessly
+	// coarse: a national view was sampling at 5 km when 2 km fits comfortably.
+	//
+	// Four million values is ~200 KB on the wire. MET's own work is unchanged
+	// either way — it is bounded by MaxFrames, because a frame is one chunk and
+	// area is nearly free.
+	FieldMaxValues = 4_200_000
 )
 
 type Error struct {
