@@ -128,7 +128,12 @@
     "saveChanges": "Save changes",
     "remove": "Remove place",
     "removeHint": "Cannot be undone",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "search": "SEARCH",
+    "orCoordinates": "OR COORDINATES",
+    "lat": "Latitude",
+    "lon": "Longitude",
+    "coordHint": "Four decimals max — MET rejects anything finer. That is about 11 m, far inside a single 1 km radar cell, so nothing is lost."
   },
   "verdict": {
     "notSaved": "This place is not saved on this device.",
@@ -239,5 +244,10 @@
     "detailedHint": "Contours and relief",
     "nautical": "Nautical",
     "nauticalHint": "Sea charts and depths"
+  },
+  "search": {
+    "label": "Search for a place",
+    "placeholder": "e.g. Bergen",
+    "none": "No match. You can pan the map or type the coordinates instead."
   }
 }

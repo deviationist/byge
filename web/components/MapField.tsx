@@ -208,22 +208,14 @@ export function MapField({
       <View
         style={{ flexDirection: "row", gap: 10, alignItems: "flex-start", flexWrap: "wrap" }}
       >
-        <View style={{ flex: 1, minWidth: 180, gap: 4 }}>
-          <Text
-            accessibilityLabel={`Selected coordinate ${value.lat.toFixed(4)}, ${value.lon.toFixed(4)}`}
-            className="text-ink"
-            style={{ fontFamily: MONO, fontSize: 14 }}
-          >
-            {value.lat.toFixed(4)}, {value.lon.toFixed(4)}
-          </Text>
-          <Text
-            className="text-ink3"
-            style={{ fontFamily: MONO, fontSize: 10, lineHeight: 16 }}
-          >
-            Four decimals max — MET rejects finer than that. ≈11 m, closer than the radar can
-            see anyway.
-          </Text>
-        </View>
+        {/*
+          No coordinate readout here any more. It used to be the only place the
+          numbers appeared, so it carried them AND the four-decimal note — but
+          the screen now has two labelled, editable coordinate boxes, and
+          repeating the same pair of numbers above them with the same hint
+          underneath said one thing three times. The boxes are the readout.
+        */}
+        <View style={{ flex: 1, minWidth: 180 }} />
 
         <Button
           label={status === "locating" ? t("map.locating") : t("map.locate")}

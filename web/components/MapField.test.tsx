@@ -67,9 +67,14 @@ describe("MapField is centre-pinned", () => {
     fireEvent.pointerUp(document, { pointerId: 1 });
   });
 
-  it("shows the coordinate under the crosshair", () => {
+  it("does not restate the coordinate it reports", () => {
+    // It used to print the pair under the map, back when that was the only
+    // place the numbers appeared. The screen now has two labelled, editable
+    // coordinate boxes, and a read-only copy above them said the same thing
+    // twice — with the same four-decimal note under each. The boxes are the
+    // readout; this reports the value and draws the map.
     setup();
-    expect(screen.getByText(/59\.9273, 10\.7607/)).toBeTruthy();
+    expect(screen.queryByText(/59\.9273, 10\.7607/)).toBeNull();
   });
 });
 
@@ -94,10 +99,11 @@ describe("MapField coordinate clamping", () => {
     expect(onChange).toHaveBeenCalledWith({ lat: 59.9127, lon: 10.7607 });
   });
 
-  it("explains the 4-decimal limit rather than silently truncating", () => {
+  it("leaves the 4-decimal explanation to the screen that owns the boxes", () => {
+    // The clamp still happens here — see the test above — but the note about it
+    // belongs beside the fields a person types into, and exactly once.
     setup();
-    expect(screen.getByText(/Four decimals max/)).toBeTruthy();
-    expect(screen.getByText(/11 m/)).toBeTruthy();
+    expect(screen.queryByText(/Four decimals max/)).toBeNull();
   });
 });
 
