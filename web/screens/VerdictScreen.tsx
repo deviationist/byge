@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useWindowDimensions, View } from "react-native";
+import { Text, useWindowDimensions, View } from "react-native";
 import { Attribution } from "../components/Attribution";
 import { ConfirmSheet, removeLocationCopy } from "../components/ConfirmSheet";
 import { CoverageNotice } from "../components/CoverageNotice";
@@ -120,24 +120,45 @@ export function VerdictScreen({ id: idProp, showBack = true }: VerdictScreenProp
         onBack={showBack ? () => router.push("/") : undefined}
         backLabel={showBack ? t("nav.backToPlaces") : undefined}
         trailing={
-          <OverflowMenu
-            theme={theme}
-            label={t("verdict.moreFor", { name: location.name })}
-            items={[
-              {
-                label: t("verdict.edit"),
-                key: "edit",
-                hint: t("verdict.editHint"),
-                onSelect: () => router.push(`/edit/${location.id}`),
-              },
-              {
-                label: t("verdict.remove"),
-                key: "remove",
-                hint: t("verdict.removeHint"),
-                onSelect: () => setConfirming(true),
-              },
-            ]}
-          />
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            {/*
+              The age of the analysis, where the specimen puts it. It also lives
+              in the refresh control at the foot, and that is not duplication:
+              down there it is the OUTCOME of pressing refresh, up here it dates
+              the answer you are reading before you decide whether to trust it.
+              "no radar signal" rather than an age when there is no coverage —
+              a blind verdict has no analysis to be old.
+            */}
+            <Text
+              testID="verdict-age"
+              className="text-ink3 font-mono"
+              style={{ fontSize: 9.5, letterSpacing: 0.3, textAlign: "right" }}
+            >
+              {verdict
+                ? blind
+                  ? t("verdict.noRadar")
+                  : t("verdict.radarAge", { age: Math.round(verdict.analysisAgeMin) })
+                : ""}
+            </Text>
+            <OverflowMenu
+              theme={theme}
+              label={t("verdict.moreFor", { name: location.name })}
+              items={[
+                {
+                  label: t("verdict.edit"),
+                  key: "edit",
+                  hint: t("verdict.editHint"),
+                  onSelect: () => router.push(`/edit/${location.id}`),
+                },
+                {
+                  label: t("verdict.remove"),
+                  key: "remove",
+                  hint: t("verdict.removeHint"),
+                  onSelect: () => setConfirming(true),
+                },
+              ]}
+            />
+          </View>
         }
       >
         <Location
