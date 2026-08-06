@@ -117,7 +117,10 @@ export function axisTicks(frames: Frame[]): string[] {
 
 type Bar = {
   pct: number;
-  backgroundColor: string;
+  /** Token classes, for the fills that are semantic rather than a band. */
+  className?: string;
+  /** Band colour, computed per rate — stays a value, never a class. */
+  backgroundColor?: string;
   backgroundImage?: string;
   opacity: number;
   label: string;
@@ -130,7 +133,7 @@ function barOf(f: Frame, theme: Theme): Bar {
   if (isBlind(f)) {
     return {
       pct: 100,
-      backgroundColor: "var(--color-nodata)",
+      className: "bg-nodata",
       backgroundImage: HATCH,
       opacity: 1,
       label: `${atLabel(f.minutes)} — not observed`,
@@ -142,7 +145,7 @@ function barOf(f: Frame, theme: Theme): Bar {
   const label = `${atLabel(f.minutes)} — ${describeRate(f.maxRate)}`;
 
   if (band.index === 0) {
-    return { pct: DRY_PCT, backgroundColor: "var(--color-dry)", opacity: past, label };
+    return { pct: DRY_PCT, className: "bg-dry", opacity: past, label };
   }
   return {
     pct: barHeight(f.maxRate),
@@ -182,7 +185,7 @@ export function PrecipitationGraph({
       ? `${atLabel(selected.minutes)} · ${selected.minutes < 0 ? "observed" : "forecast"}`
       : shapeCaptionOf(frames));
 
-  const micro = { fontFamily: MONO, fontSize: 9.5, color: "var(--color-ink3)" } as const;
+  const micro = { fontFamily: MONO, fontSize: 9.5 } as const;
 
   return (
     <View>
@@ -194,8 +197,12 @@ export function PrecipitationGraph({
           marginBottom: 9,
         }}
       >
-        <Text style={[micro, { letterSpacing: 0.5 }]}>{header}</Text>
-        <Text style={[micro, { letterSpacing: 0.3 }]}>{right}</Text>
+        <Text className="text-ink3" style={[micro, { letterSpacing: 0.5 }]}>
+          {header}
+        </Text>
+        <Text className="text-ink3" style={[micro, { letterSpacing: 0.3 }]}>
+          {right}
+        </Text>
       </View>
 
       <View
@@ -220,13 +227,18 @@ export function PrecipitationGraph({
             minHeight: d.minBar,
             borderTopLeftRadius: 2,
             borderTopRightRadius: 2,
-            backgroundColor: bar.backgroundColor,
+            ...(bar.backgroundColor ? { backgroundColor: bar.backgroundColor } : null),
             opacity: bar.opacity,
             ...(bar.backgroundImage ? { backgroundImage: bar.backgroundImage } : null),
-            ...(i === selectedIndex
-              ? { outlineWidth: 2, outlineColor: "var(--color-ink)", outlineOffset: 1 }
-              : null),
+            ...(i === selectedIndex ? { outlineWidth: 2, outlineOffset: 1 } : null),
           } as object;
+
+          // The selected bar's outline is ink; the semantic fills (not
+          // observed, dry) are tokens. The band fills are values and stay in
+          // `style` above.
+          const barClass = [bar.className, i === selectedIndex ? "outline-ink" : null]
+            .filter(Boolean)
+            .join(" ");
 
           const key = `${f.minutes}`;
           // Non-interactive stays a View, not a disabled Pressable: the compact
@@ -239,10 +251,17 @@ export function PrecipitationGraph({
               accessibilityLabel={bar.label}
               aria-selected={i === selectedIndex}
               onPress={() => onScrub(i)}
+              className={barClass}
               style={style}
             />
           ) : (
-            <View key={key} testID="precip-bar" accessibilityLabel={bar.label} style={style} />
+            <View
+              key={key}
+              testID="precip-bar"
+              accessibilityLabel={bar.label}
+              className={barClass}
+              style={style}
+            />
           );
         })}
 
@@ -268,11 +287,11 @@ export function PrecipitationGraph({
         ) : null}
       </View>
 
-      <View style={{ height: 1, backgroundColor: "var(--color-line2)", marginTop: 2 }} />
+      <View className="bg-line2" style={{ height: 1, marginTop: 2 }} />
 
       <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 7 }}>
         {ticks.map((t) => (
-          <Text key={t} style={[micro, { letterSpacing: 0.3 }]}>
+          <Text key={t} className="text-ink3" style={[micro, { letterSpacing: 0.3 }]}>
             {t}
           </Text>
         ))}
