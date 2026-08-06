@@ -55,6 +55,14 @@ export function useVerdicts(locations: SavedLocation[]) {
     },
     staleTime: FIVE_MIN,
     refetchInterval: FIVE_MIN,
+    // Same as the single verdict, and it has to be: in two-pane both are on
+    // screen at once, so without this the list rows could sit an hour stale
+    // beside a detail pane that refreshed the moment you came back to the tab —
+    // two different answers about the same place, side by side.
+    //
+    // Neither refetches while the tab is hidden (`refetchIntervalInBackground`
+    // defaults to false), so a backgrounded app costs MET nothing.
+    refetchOnWindowFocus: true,
     placeholderData: (prev) => prev,
     retry: 1,
   });
