@@ -305,7 +305,9 @@ describe("state 8 — a second spell", () => {
     expect(head).toContain("Raining.");
     expect(head).toContain("Stops in about 25 min.");
     expect(head).not.toContain("Then more");
-    expect(second).toContain("Then more from about 40 min");
+    // Leads with the RELATIVE time, matching the primary spell. It used to lead
+    // with the clock; the clock now sits beneath in its own line.
+    expect(second).toContain("Then more in about 40 min");
   });
 
   it("makes the gap visible — that is what people plan around", () => {
@@ -408,5 +410,60 @@ describe("presentation", () => {
         expect(() => render(<LocationStatusText verdict={v} theme={theme} />)).not.toThrow();
       }
     }
+  });
+});
+
+describe("the clock line", () => {
+  const clockOf = (v: Verdict) =>
+    view(v).container.querySelector('[data-testid="status-clock"]');
+
+  it("names the time a visible end lands on", () => {
+    // "Stops in about 25 min" is what you read; "around 18:15" is what you plan
+    // around. Both, because they answer different questions.
+    const el = clockOf(raining);
+    expect(el).not.toBeNull();
+    expect(el?.textContent).toMatch(/^around \d{2}:\d{2}$/);
+  });
+
+  it("gives incoming rain a range, not a single time", () => {
+    const el = clockOf(incoming);
+    expect(el?.textContent).toMatch(/^\d{2}:\d{2}-\d{2}:\d{2}$/);
+  });
+
+  it("renders NO clock for an open-ended spell", () => {
+    // The load-bearing case. Absence is the fifth redundant signal that we
+    // cannot name an end, alongside the grammar swap, the dotted bound, the
+    // arrow and the footnote. A synthesised time here would contradict the
+    // sentence directly above it.
+    expect(clockOf(rainingOpen)).toBeNull();
+    expect(clockOf(incomingOpen)).toBeNull();
+  });
+
+  it("renders no clock when there is nothing to time", () => {
+    expect(clockOf(clear)).toBeNull();
+    expect(clockOf(blind)).toBeNull();
+  });
+
+  it("sits on its own line, never inside the body sentence", () => {
+    // Inline would put it in the same line as the open-ended bound, which is
+    // where the open-ended signal starts to blur — and it would wrap first in
+    // Norwegian, whose relative phrases run longer.
+    const { container } = view(raining);
+    const body = container.querySelector('[data-testid="status-body"]');
+    expect(body?.textContent ?? "").not.toMatch(/\d{2}:\d{2}/);
+  });
+
+  it("uses tabular figures so a changing digit does not shift the line", () => {
+    const el = clockOf(raining) as HTMLElement;
+    expect(el.style.fontVariant || el.style.fontVariantNumeric).toContain("tabular-nums");
+  });
+
+  it("stays legible rather than shrinking with the headline", () => {
+    // 0.28x floored at 11 px. The old 0.22x/9.5 px was caption-sized for
+    // something people act on.
+    const small = view(raining, { size: 20 }).container.querySelector(
+      '[data-testid="status-clock"]',
+    ) as HTMLElement;
+    expect(Number.parseFloat(small.style.fontSize)).toBeGreaterThanOrEqual(11);
   });
 });
