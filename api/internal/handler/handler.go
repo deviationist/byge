@@ -151,12 +151,23 @@ func (h *Handler) fetch(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "malformed url parameter", http.StatusBadRequest)
 		return
 	}
-	// Magnitude before allowlist would leak which hosts we accept; allowlist
-	// before magnitude means a rejected host never reaches the parser. Either
-	// order is safe, but both must run before anything is forwarded.
-	if err := limits.Check(target, h.opts.MaxValues); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	// Allowlist first, so a rejected host never reaches the parser. The
+	// alternative order answers an off-allowlist URL with a complaint about its
+	// query string — the wrong reason, and a hint about what we parse. Both run
+	// before anything is forwarded.
+	if !upstream.Permitted(target) {
+		http.Error(w, "upstream not allowed", http.StatusForbidden)
 		return
+	}
+	// The magnitude cap is OPeNDAP-specific: it refuses a constraint expression
+	// with no index brackets, because against thredds that means the whole grid.
+	// Against the geocoder `?lat=&lon=` has no brackets and is simply a request,
+	// so an uncapped source has to be exempt or it could never be called.
+	if upstream.Capped(target) {
+		if err := limits.Check(target, h.opts.MaxValues); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 	}
 
 	entry, hit, err := h.cache.Do(target, func() (cache.Entry, error) {

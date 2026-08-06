@@ -48,6 +48,11 @@ func TestRejectsUrlsOutsideTheAllowlist(t *testing.T) {
 		"http://169.254.169.254/latest/meta-data/",
 		"https://thredds.met.no.evil.example/thredds/dodsC/radarnowcasting/x",
 		"https://api.met.no/weatherapi/locationforecast/2.0/compact",
+		// Nominatim is allowlisted only at /reverse. Its search and lookup
+		// endpoints are the ones their policy singles out as expensive, and we
+		// have no use for either — so the prefix stops at the one we need.
+		"https://nominatim.openstreetmap.org/search?q=oslo",
+		"https://nominatim.openstreetmap.org/",
 	} {
 		rec := get(t, newTestHandler(), target, "")
 		if rec.Code != http.StatusForbidden {
@@ -242,5 +247,15 @@ func TestPreflightAllowsTheKeyHeader(t *testing.T) {
 	newTestHandler().Routes().ServeHTTP(rec, req)
 	if got := rec.Header().Get("Access-Control-Allow-Headers"); got != KeyHeader {
 		t.Fatalf("Allow-Headers = %q, want %q", got, KeyHeader)
+	}
+}
+
+func TestOpendapIsStillCapped(t *testing.T) {
+	// The other half: exempting one upstream must not exempt the one the cap
+	// exists for. A bracket-less thredds query is a whole-grid read.
+	rec := get(t, newTestHandler(),
+		"https://thredds.met.no/thredds/dodsC/radarnowcasting/x.nc.ascii?lwe_precipitation_rate", "")
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("unbounded thredds read → %d, want 400", rec.Code)
 	}
 }

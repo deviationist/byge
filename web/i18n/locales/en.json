@@ -49,7 +49,10 @@
     "dataFrom": "Data from",
     "met": "MET Norway",
     "nlod": "NLOD 2.0",
-    "ccBy": "CC BY 4.0"
+    "ccBy": "CC BY 4.0",
+    "places": "Place names",
+    "osm": "OpenStreetMap",
+    "odbl": "ODbL 1.0"
   },
   "refresh": {
     "action": "Refresh",
@@ -119,12 +122,13 @@
     "howFar": "How far to watch",
     "nameIt": "Name it",
     "nameLabel": "Name",
-    "namePlaceholder": "Home",
+    "namePlaceholder": "e.g. Home",
     "nameHint": "Shown in your list of places.",
     "save": "Save place",
     "saveChanges": "Save changes",
     "remove": "Remove place",
-    "removeHint": "Cannot be undone"
+    "removeHint": "Cannot be undone",
+    "cancel": "Cancel"
   },
   "verdict": {
     "notSaved": "This place is not saved on this device.",

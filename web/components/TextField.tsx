@@ -3,7 +3,8 @@ import { useId } from "react";
 import type { KeyboardTypeOptions, TextStyle } from "react-native";
 import { Text, TextInput, View } from "react-native";
 import { clampCoord } from "../lib/grid";
-import { MONO } from "../theme/tokens";
+import { MONO, PLACEHOLDER } from "../theme/tokens";
+import type { Theme } from "../theme/useTheme";
 
 /**
  * Label, value, hint, error.
@@ -29,6 +30,14 @@ export type TextFieldProps = {
   /** Present means invalid. Announced, not just coloured. */
   error?: string;
   placeholder?: string;
+  /**
+   * Passed rather than read from context, matching Swatch and LocationCard.
+   * `placeholderTextColor` is a prop and cannot take a Uniwind class, and a
+   * `var()` string would be meaningless on native — so this needs a real value.
+   * A leaf input should not start throwing because it is rendered without a
+   * provider.
+   */
+  theme?: Theme;
   keyboardType?: KeyboardTypeOptions;
   /** `coordinate` clamps to 4 decimals on blur and defaults to the MET hint. */
   variant?: TextFieldVariant;
@@ -87,6 +96,7 @@ export function TextField({
   autoCapitalize,
   onBlur,
   editable = true,
+  theme = "light",
   testID,
 }: TextFieldProps) {
   const id = useId();
@@ -137,6 +147,7 @@ export function TextField({
         onBlur={handleBlur}
         editable={editable}
         placeholder={placeholder}
+        placeholderTextColor={PLACEHOLDER[theme]}
         // Nordic coordinates are all positive, and `decimal-pad` is the only
         // inputmode that reliably offers a decimal separator on a phone.
         keyboardType={keyboardType ?? (coordinate ? "decimal-pad" : "default")}
