@@ -71,12 +71,16 @@ export function LocationCard({
 
       {isRow ? (
         // Affordance only. The row already announces itself as a button.
-        <Text aria-hidden style={{ fontSize: 15, color: "var(--color-ink3)" }}>
+        <Text aria-hidden className="text-ink3" style={{ fontSize: 15 }}>
           ›
         </Text>
       ) : null}
     </>
   );
+
+  // Selection is a surface change, not an accent: the selected row sinks to
+  // bg-sunk with a firmer hairline rather than taking a colour of its own.
+  const frameClass = selected ? "bg-sunk border-line2" : "bg-surface border-line";
 
   const frame = {
     flexDirection: "row" as const,
@@ -87,17 +91,19 @@ export function LocationCard({
     paddingVertical: isRow ? 14 : 11,
     paddingHorizontal: isRow ? 17 : 13,
     minHeight: MIN_TARGET,
-    backgroundColor: selected ? "var(--color-sunk)" : "var(--color-surface)",
-    borderColor: selected ? "var(--color-line2)" : "var(--color-line)",
   };
 
   const popup = isRow
     ? null
     : {
         minWidth: 190,
-        borderColor: "var(--color-line2)",
         // Tokenised rather than a raw rgba so the lift stays right on dark,
         // where a black shadow is invisible and a light one is wrong.
+        //
+        // The one place a var() legitimately stays inline: `boxShadow` does not
+        // exist in React Native at all — it uses shadowColor/elevation — so this
+        // declaration is web-only by nature and there is no native reader to
+        // hand an unresolvable string to.
         boxShadow: "0 8px 22px -8px var(--color-scrim)",
       };
 
@@ -107,7 +113,12 @@ export function LocationCard({
 
   if (!onPress) {
     return (
-      <View testID="location-card" accessibilityLabel={label} style={[frame, popup]}>
+      <View
+        testID="location-card"
+        accessibilityLabel={label}
+        className={frameClass}
+        style={[frame, popup]}
+      >
         {body}
       </View>
     );
@@ -124,6 +135,7 @@ export function LocationCard({
       // is not in React Native's typed aria surface.)
       aria-selected={selected}
       onPress={onPress}
+      className={frameClass}
       style={({ pressed }) => [frame, popup, pressed ? { opacity: 0.7 } : null]}
     >
       {body}

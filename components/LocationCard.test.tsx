@@ -167,15 +167,22 @@ describe("tapping", () => {
   it("marks the current selection for assistive tech, not only visually", () => {
     const el = card({ onPress: () => {}, selected: true }).getByTestId("location-card");
     expect(el.getAttribute("aria-selected")).toBe("true");
-    expect(el.style.backgroundColor).toBe("var(--color-sunk)");
+    // Selection sinks the surface rather than accenting it, now via the token
+    // class. The unselected case below proves the two states differ.
+    expect(el.className).toContain("bg-sunk");
   });
 });
 
 describe("presentation", () => {
   it("uses only theme tokens for its own surfaces", () => {
     const el = card().getByTestId("location-card");
-    expect(el.style.backgroundColor).toContain("var(--color-");
-    expect(el.style.borderTopColor).toContain("var(--color-");
+    // Same invariant, in the vocabulary the styles now use: a token class for
+    // both surface and hairline, and NO inline colour — which also catches a
+    // literal creeping back in beside the class.
+    expect(el.className).toMatch(/\bbg-(surface|sunk)\b/);
+    expect(el.className).toMatch(/\bborder-line2?\b/);
+    expect(el.style.backgroundColor).toBe("");
+    expect(el.style.borderTopColor).toBe("");
   });
 
   it("renders every state in both themes and both variants without throwing", () => {

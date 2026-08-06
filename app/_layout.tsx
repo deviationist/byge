@@ -3,7 +3,24 @@ import { Stack } from "expo-router";
 import { useState } from "react";
 import "../global.css";
 import { useServiceWorker } from "../hooks/useServiceWorker";
-import { ThemeProvider } from "../theme/ThemeProvider";
+import { ThemeProvider, useResolvedTheme } from "../theme/ThemeProvider";
+import { BG } from "../theme/tokens";
+
+/**
+ * Inside the provider so it can read the resolved theme.
+ *
+ * `contentStyle` paints behind a screen during a transition. It is a navigator
+ * style object rather than a component, so it takes neither a Uniwind class nor
+ * a `var()` — it needs a real value, which is why BG exists.
+ */
+function Navigator() {
+  const theme = useResolvedTheme();
+  return (
+    <Stack
+      screenOptions={{ headerShown: false, contentStyle: { backgroundColor: BG[theme] } }}
+    />
+  );
+}
 
 export default function RootLayout() {
   useServiceWorker();
@@ -28,12 +45,7 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={client}>
       <ThemeProvider>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: "var(--color-bg)" },
-          }}
-        />
+        <Navigator />
       </ThemeProvider>
     </QueryClientProvider>
   );
