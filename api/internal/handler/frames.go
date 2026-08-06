@@ -16,9 +16,9 @@ import (
 // million cells is only five times a national map window, and holding one lets
 // every window at every zoom be a slice of memory instead of a request.
 //
-// It goes through the same cache as `/fetch`, so a frame already pulled for one
-// reason is not pulled again for another, and two simultaneous first-time map
-// loads collapse into one upstream call.
+// It goes through the same coalescing cache as every other endpoint, so a frame
+// already pulled for one reason is not pulled again for another, and two
+// simultaneous first-time map loads collapse into one upstream call.
 func (h *Handler) fetchWholeFrame(ctx context.Context, base string, frame int) ([]float32, error) {
 	target := fmt.Sprintf(
 		"%s.dods?lwe_precipitation_rate[%d:1:%d][0:1:%d][0:1:%d]",

@@ -14,6 +14,22 @@
 // users or with panning and becomes a property of the analysis: fetched once,
 // shared by everyone, for the five minutes until the next one.
 //
+// WHY A WHOLE FRAME IS BARELY DEARER THAN A SMALL ONE, timed against the live
+// service rather than assumed:
+//
+//	 1 frame,  51×51        11 KB     81 ms
+//	 1 frame, 201×201      160 KB     87 ms
+//	 1 frame, 501×501      985 KB    144 ms
+//	 1 frame, ENTIRE grid   14 MB    542 ms
+//	24 frames, 51×51       245 KB    947 ms
+//
+// The file is chunked ONE FULL TIME-SLICE PER CHUNK, so reading any part of a
+// frame decompresses all of it. Area is therefore nearly free and FRAMES are
+// the whole cost — a single frame of the entire Nordic mosaic is faster than a
+// postage stamp across all 24. Asking for less than a frame saves MET nothing,
+// which is what makes caching whole ones the right shape rather than a
+// generous one.
+//
 // This is yr's insight arrived at from the other side. They pre-render raster
 // tiles per frame; we pre-quantise frames. Same move — do the expensive work
 // once, per frame, server-side — but ours keeps "unobserved" as a symbol rather

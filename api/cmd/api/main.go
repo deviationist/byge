@@ -73,7 +73,6 @@ func main() {
 	h := handler.New(c, up, rl, handler.Options{
 		AllowedOrigins:    cfg.AllowedOrigins,
 		ClientKey:         cfg.ClientKey,
-		MaxValues:         cfg.MaxValues,
 		TrustProxyHeaders: cfg.TrustProxyHeaders,
 		ExposeCacheHeader: cfg.Env == "development",
 	}, log)

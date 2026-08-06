@@ -1,4 +1,3 @@
-import { useRouter } from "expo-router";
 import type { TFunction } from "i18next";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -40,7 +39,6 @@ function themeOptions(t: TFunction) {
  * not earn a screen of its own.
  */
 export function AboutScreen() {
-  const router = useRouter();
   const goBack = useBack("/");
   const { t } = useTranslation();
   const { choice, choose } = useThemeContext();

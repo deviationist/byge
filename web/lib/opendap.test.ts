@@ -1,13 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { NFRAMES, NX, NY } from "./grid";
-import {
-  analysisFor,
-  candidateStamps,
-  clampWindow,
-  frameTimes,
-  OpenDapError,
-  parseAscii,
-} from "./opendap";
+import { analysisFor, apiUrl, clampWindow, frameTimes, OpenDapError, parseAscii } from "./opendap";
 
 /** A verbatim capture of a real thredds.met.no `.ascii` response. */
 const REAL = `Dataset {
@@ -93,41 +86,39 @@ describe("parseAscii", () => {
 });
 
 describe("analysis stamps", () => {
-  it("builds a URL and time from a stamp", () => {
+  it("reads a time out of a stamp and carries nothing else", () => {
     const a = analysisFor("20260801T194000Z");
-    expect(a.base).toContain("20260801T194000Z.nc");
     expect(a.time.toISOString()).toBe("2026-08-01T19:40:00.000Z");
-  });
-
-  it("walks back in 5-minute steps from the nearest mark", () => {
-    const from = new Date("2026-08-01T19:43:21Z");
-    const s = candidateStamps(from, 3);
-    expect(s).toEqual(["20260801T194000Z", "20260801T193500Z", "20260801T193000Z"]);
-  });
-
-  it("floors onto a 5-minute mark even when already on one", () => {
-    expect(candidateStamps(new Date("2026-08-01T19:40:00Z"), 1)).toEqual(["20260801T194000Z"]);
-  });
-
-  it("crosses an hour boundary correctly", () => {
-    expect(candidateStamps(new Date("2026-08-01T20:02:00Z"), 2)).toEqual([
-      "20260801T200000Z",
-      "20260801T195500Z",
-    ]);
-  });
-
-  it("crosses midnight correctly", () => {
-    expect(candidateStamps(new Date("2026-08-02T00:01:00Z"), 2)).toEqual([
-      "20260802T000000Z",
-      "20260801T235500Z",
-    ]);
+    // The stamp IS the whole handle. If a URL ever reappears on this object,
+    // something has started building destinations in the browser again.
+    expect(Object.keys(a).sort()).toEqual(["stamp", "time"]);
   });
 
   it("stamps sort lexicographically in time order", () => {
-    // hasNewerThan() compares stamps as strings; that only works if the format
-    // is zero-padded and fixed-width.
-    const s = candidateStamps(new Date("2026-08-02T00:01:00Z"), 6);
-    expect([...s].sort()).toEqual([...s].reverse());
+    // Freshness is compared as strings, which only works because the format is
+    // zero-padded and fixed-width — the same property the server's regex relies
+    // on to decide a stamp is safe to concatenate.
+    const s = ["20260801T235500Z", "20260802T000000Z", "20260802T000500Z"];
+    expect([...s].sort()).toEqual(s);
+  });
+});
+
+describe("apiUrl", () => {
+  // Every request in the app is built here, so this is the one place a URL
+  // could smuggle its way back into a parameter.
+  it("escapes values rather than pasting them in", () => {
+    const u = apiUrl("/slab", { stamp: "../../evil?x=1" });
+    expect(u).toContain("stamp=..%2F..%2Fevil%3Fx%3D1");
+    expect(u.endsWith("/slab?stamp=..%2F..%2Fevil%3Fx%3D1")).toBe(true);
+  });
+
+  it("takes numbers without stringifying at the call site", () => {
+    expect(apiUrl("/field", { row0: 1400, cols: 7 })).toContain("row0=1400&cols=7");
+  });
+
+  it("leaves no trailing ? on a bare path", () => {
+    // `/analysis` and `/analysis?` are one request and two cache keys.
+    expect(apiUrl("/analysis", {}).endsWith("/analysis")).toBe(true);
   });
 });
 
