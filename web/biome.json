@@ -4,10 +4,8 @@
     "includes": [
       "**",
       "!node_modules/**",
-      "!spike/**",
       "!dist/**",
       "!.expo/**",
-      "!design/**",
       "!public/icons/**"
     ]
   },

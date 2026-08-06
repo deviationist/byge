@@ -26,3 +26,9 @@ bun.lock
 
 expo-env.d.ts
 # @end expo-cli
+# go
+bin/
+
+# local env (see .env.example)
+.env
+.env.prod
