@@ -1,5 +1,6 @@
 import { useId, useState } from "react";
 import type { LayoutChangeEvent, TextStyle } from "react-native";
+import i18next from "i18next";
 import { MONO } from "../theme/tokens";
 import { Pressable, Text, View } from "react-native";
 
@@ -49,9 +50,7 @@ export const clampRadius = (km: number, min = RADIUS_MIN, max = RADIUS_MAX) =>
  * radius and watches the verdict flip to "raining" will assume the widening
  * *caused* rain rather than widening what counts.
  */
-export const RADIUS_HINT =
-  "Any rain touching the circle counts as rain here, so widening only ever adds — " +
-  "it can never turn a wet answer dry. The grid is 1 km, so below 2 km there is nothing finer to see.";
+export const radiusHint = () => i18next.t("radius.hint");
 
 /**
  * The quiet word at the wide end. Not a blocker: 25 km is a legitimate "watch
@@ -59,12 +58,9 @@ export const RADIUS_HINT =
  */
 export function radiusNote(km: number): string | null {
   if (km < RADIUS_SATURATES) return null;
-  const wide =
-    `A wide watch area. Some rain somewhere within ${km} km over the next two hours is very ` +
-    "nearly always true in Norway, so the answer stops discriminating. That is what the 3 km " +
-    "default protects.";
+  const wide = i18next.t("radius.wide", { km });
   if (km < RADIUS_COSTLY) return wide;
-  return `${wide} It is also about 350 KB of radar per check at 25 km, against 8 KB at 3 km — a cost, not a limit.`;
+  return `${wide} ${i18next.t("radius.costly")}`;
 }
 
 /**
@@ -72,10 +68,10 @@ export function radiusNote(km: number): string | null {
  * floor both mean something, and a number alone does not carry either.
  */
 export function radiusValueText(km: number): string {
-  if (km === RADIUS_DEFAULT) return `${km} km — the default`;
-  if (km <= RADIUS_MIN) return `${km} km — as narrow as the 1 km grid supports`;
-  if (km >= RADIUS_SATURATES) return `${km} km — a wide watch area`;
-  return `${km} km`;
+  if (km === RADIUS_DEFAULT) return i18next.t("radius.valueDefault", { km });
+  if (km <= RADIUS_MIN) return i18next.t("radius.valueMin", { km });
+  if (km >= RADIUS_SATURATES) return i18next.t("radius.valueWide", { km });
+  return i18next.t("radius.value", { km });
 }
 
 /** Where a key press should land, or `null` for keys that are not ours. */
@@ -214,7 +210,7 @@ export function RadiusField({
 
       <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
         <Step
-          label="Narrower"
+          label={i18next.t("radius.narrower")}
           glyph="−"
           disabled={km <= min}
           onPress={() => set(clampRadius(km - STEP, min, max))}
@@ -284,7 +280,7 @@ export function RadiusField({
         </Pressable>
 
         <Step
-          label="Wider"
+          label={i18next.t("radius.wider")}
           glyph="+"
           disabled={km >= max}
           onPress={() => set(clampRadius(km + STEP, min, max))}
@@ -292,7 +288,7 @@ export function RadiusField({
       </View>
 
       <Text className="text-ink3" style={NOTE}>
-        {RADIUS_HINT}
+        {radiusHint()}
       </Text>
 
       {/* Polite, not assertive: the note appears while someone is dragging, and

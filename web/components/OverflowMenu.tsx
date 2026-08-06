@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import type { Theme } from "../theme/useTheme";
@@ -60,7 +61,7 @@ const el = (r: unknown) => r as unknown as HTMLElement | null;
 export function OverflowMenu({
   items,
   theme,
-  label = "More actions",
+  label = i18next.t("menu.more"),
   menuLabel,
   triggerText,
   align = "end",
@@ -295,10 +296,15 @@ export function locationMenuItems(opts: {
   return [
     {
       key: "edit",
-      label: "Edit place",
-      hint: "Name, coordinates and radius",
+      label: i18next.t("menu.edit"),
+      hint: i18next.t("menu.editHint"),
       onSelect: opts.onEdit,
     },
-    { key: "remove", label: "Remove place", hint: "Cannot be undone", onSelect: opts.onRemove },
+    {
+      key: "remove",
+      label: i18next.t("menu.remove"),
+      hint: i18next.t("menu.removeHint"),
+      onSelect: opts.onRemove,
+    },
   ];
 }

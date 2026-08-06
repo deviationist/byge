@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { COORD_HINT, TextField } from "./TextField";
+import { coordHint, TextField } from "./TextField";
 
 const MIN_TARGET = 44;
 
@@ -152,7 +152,7 @@ describe("TextField coordinate variant", () => {
       <TextField label="Latitude" variant="coordinate" value="59.9" onChangeText={() => {}} />,
     );
     expect(screen.getByLabelText("Latitude")).toHaveAccessibleDescription(/four decimals max/i);
-    expect(COORD_HINT).toMatch(/11 m/);
+    expect(coordHint()).toMatch(/11 m/);
   });
 
   it("offers a decimal keypad on phones", () => {
