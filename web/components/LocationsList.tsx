@@ -26,6 +26,8 @@ export type LocationsListProps = {
   theme: Theme;
   selectedId?: string;
   onSelect?: (id: string) => void;
+  /** Steps the rows down for the two-pane column. See LocationCard. */
+  compact?: boolean;
   /** Shown instead of the list when nothing is saved. */
   empty?: ReactNode;
   /** FlatList-shaped alias for `empty`, for callers that already speak that. */
@@ -43,6 +45,7 @@ export function LocationsList({
   theme,
   selectedId,
   onSelect,
+  compact = false,
   empty,
   ListEmptyComponent,
   footer,
@@ -55,7 +58,7 @@ export function LocationsList({
     <View
       testID="locations-list"
       accessibilityRole="list"
-      style={{ flexDirection: "column", gap: 8 }}
+      style={{ flexDirection: "column", gap: compact ? 6 : 8 }}
     >
       {items.map((it) => (
         <LocationCard
@@ -67,6 +70,7 @@ export function LocationsList({
           verdict={it.verdict}
           theme={theme}
           variant="row"
+          compact={compact}
           selected={it.id === selectedId}
           // No handler means no Pressable, so a read-only list is not
           // announced as a row of buttons that do nothing.
