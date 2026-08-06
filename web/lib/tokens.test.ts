@@ -47,11 +47,11 @@ describe("theme tokens", () => {
     if (band.index === 0) continue;
     const key = `b${band.index}`;
 
-    it(`band ${band.index} (${band.label}) has a light token matching scale.ts`, () => {
+    it(`band ${band.index} (${band.key}) has a light token matching scale.ts`, () => {
       expect(theme.get(key)).toBe(band.light.toLowerCase());
     });
 
-    it(`band ${band.index} (${band.label}) has a dark token matching scale.ts`, () => {
+    it(`band ${band.index} (${band.key}) has a dark token matching scale.ts`, () => {
       expect(dark.get(key)).toBe(band.dark.toLowerCase());
     });
   }

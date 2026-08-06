@@ -1,0 +1,318 @@
+{
+  "empty": {
+    "firstRun": {
+      "title": "Ingen steder lagret ennå",
+      "body": "Legg til et sted — hjemme, hytta, en tursti — så sier byge om det regner der og hvor lenge, rett fra radaren til MET Norway. Alt blir liggende på denne enheten.",
+      "action": "Legg til et sted"
+    },
+    "removed": {
+      "title": "{{name}} er fjernet.",
+      "titleNameless": "Fjernet.",
+      "body": "Det var det siste stedet du hadde lagret, så det er ingenting igjen å sjekke. Det er borte fra denne enheten — det finnes ingen konto og ingen synk, så ingen andre sitter med en kopi."
+    }
+  },
+  "confirm": {
+    "removeTitle": "Fjerne {{name}}?",
+    "removeBody": "Dette sletter stedet og det lagrede svaret fra denne enheten. Det finnes ingen konto og ingen synk, så det kan ikke hentes tilbake.",
+    "removeConfirm": "Fjern {{name}}",
+    "keep": "Behold det",
+    "dismiss": "Lukk"
+  },
+  "nav": {
+    "about": "Om",
+    "back": "Tilbake",
+    "backToPlaces": "Tilbake til stedene",
+    "addPlace": "+ Legg til et sted",
+    "aboutByge": "Om byge"
+  },
+  "install": {
+    "body": "Ha byge ett trykk unna — legg den til på hjemskjermen. Virker uten nett med det siste svaret.",
+    "add": "Legg til",
+    "notNow": "Ikke nå"
+  },
+  "stale": {
+    "offline": "Viser svaret fra {{age}} min siden — du er uten nett. Det oppdateres straks du er tilbake."
+  },
+  "about": {
+    "pronunciation": "byge /ˈbyːɡə/\nNorsk: en kort regnskur.",
+    "what": "byge leser nedbørvarselet fra radaren til MET Norway for akkurat din koordinat og sier om det regner, og hvor lenge. Ikke noe annet.",
+    "appearance": "Utseende",
+    "data": "Data",
+    "notAffiliated": "Ikke tilknyttet eller godkjent av MET Norway eller NRK.",
+    "howItWorks": "Slik virker det",
+    "advection": "Varselbildene er ren adveksjon: det målte nedbørfeltet forskyves langs målt bevegelse. Celler vokser ikke og dør ikke, så bilder langt fram er svakere — og det er nettopp det sikkerhetsmerket forteller deg.",
+    "horizon": "Horisonten er 115 minutter. Når en byge fortsatt pågår ved horisonten, oppgir byge en nedre grense og sier fra om det. Den gjør aldri et ukjent tall om til et tall.",
+    "blind": "Der radaren ikke ser, sier byge det i stedet for å si «opphold». Det er to forskjellige påstander.",
+    "appearanceSection": "Utseende",
+    "version": "Versjon {{version}} · virker uten nett",
+    "language": "Språk",
+    "languageSection": "Språk"
+  },
+  "attribution": {
+    "dataFrom": "Data fra",
+    "met": "MET Norway",
+    "nlod": "NLOD 2.0",
+    "ccBy": "CC BY 4.0",
+    "places": "Stedsnavn fra",
+    "osm": "OpenStreetMap",
+    "odbl": "ODbL 1.0"
+  },
+  "refresh": {
+    "action": "Oppdater",
+    "checking": "Ser etter en nyere analyse …",
+    "updated": "Oppdatert.",
+    "updatedAge": "Oppdatert — radaren er {{age}} min gammel.",
+    "latest": "Allerede den nyeste.",
+    "latestAge": "Allerede den nyeste — radaren er {{age}} min gammel.",
+    "hint": "Sjekk MET Norway for en nyere radaranalyse"
+  },
+  "coverage": {
+    "blindTitle": "Ingen radardekning — vi kan ikke se dette stedet.",
+    "blindBody": "Det er ikke det samme som opphold: vi har ingen observasjon i det hele tatt, så byge påstår ingenting hverken den ene eller andre veien.",
+    "partial": "Radaren ser bare {{percent}} % av området ditt — resten er utenfor dekning og er ikke regnet med noen vei."
+  },
+  "error": {
+    "title": "Fikk ikke kontakt med radaren",
+    "body": "Du er på nett — forespørselen til MET Norway feilet. Det finnes ikke noe lagret svar for dette stedet ennå, så byge har ingenting å vise. Den gjetter ikke.",
+    "inline": "Oppdateringen feilet — dette er fortsatt svaret fra før.",
+    "retry": "Prøv igjen"
+  },
+  "legend": {
+    "title": "Slik leser du lista",
+    "filled": "Regner nå",
+    "filledBody": "Fargen viser hvor kraftig.",
+    "outline": "Regn på vei",
+    "outlineBody": "Opphold nå, men en byge kommer i løpet av de neste to timene.",
+    "hatched": "Ingen radardekning",
+    "hatchedBody": "Vi har ingen observasjon i det hele tatt — som ikke er det samme som opphold.",
+    "ramp": "HVOR KRAFTIG · MM/T",
+    "dry": "opphold",
+    "dryFeels": "vi så etter, ingenting faller",
+    "dryRange": "observert",
+    "notObserved": "IKKE OBSERVERT",
+    "notObservedBody": "Dette er ikke et nivå av regn, og det er ikke opphold. Det betyr at radarmosaikken ikke ser det stedet i det hele tatt, så byge påstår ingenting hverken den ene eller andre veien. Opphold betyr at vi så etter og ingenting falt; ingen dekning betyr at vi ikke fikk se."
+  },
+  "field": {
+    "coordHint": "Maks fire desimaler — MET avviser alt finere. Det er omtrent 11 m, godt innenfor én radarcelle på 1 km, så ingenting går tapt."
+  },
+  "radius": {
+    "hint": "Alt regn som berører sirkelen teller som regn her, så å utvide kan bare legge til — det kan aldri gjøre et vått svar tørt. Rutenettet er på 1 km, så under 2 km finnes det ikke noe finere å se.",
+    "narrower": "Smalere",
+    "wider": "Videre",
+    "wide": "Et vidt område. At det regner et eller annet sted innenfor {{km}} km i løpet av de neste to timene er nesten alltid sant i Norge, så svaret slutter å skille. Det er det standardvalget på 3 km beskytter mot.",
+    "costly": "Det er også rundt 350 KB radardata per sjekk ved 25 km, mot 8 KB ved 3 km — en kostnad, ikke en grense.",
+    "valueDefault": "{{km}} km — standard",
+    "valueMin": "{{km}} km — så smalt rutenettet på 1 km tillater",
+    "valueWide": "{{km}} km — et vidt område",
+    "value": "{{km}} km"
+  },
+  "appearance": {
+    "light": "Lyst",
+    "dark": "Mørkt",
+    "system": "System",
+    "systemHint": "Følger utseendeinnstillingen på enheten"
+  },
+  "menu": {
+    "more": "Flere handlinger",
+    "edit": "Rediger sted",
+    "editHint": "Navn, koordinater og radius",
+    "remove": "Fjern sted",
+    "removeHint": "Kan ikke angres"
+  },
+  "add": {
+    "titleAdd": "Legg til et sted",
+    "titleEdit": "Rediger sted",
+    "howFar": "Hvor langt vi ser",
+    "nameIt": "Gi det et navn",
+    "nameLabel": "Navn",
+    "namePlaceholder": "f.eks. Hjemme",
+    "nameHint": "Vises i lista di over steder.",
+    "save": "Lagre sted",
+    "saveChanges": "Lagre endringer",
+    "remove": "Fjern sted",
+    "removeHint": "Kan ikke angres",
+    "cancel": "Avbryt",
+    "search": "SØK",
+    "orCoordinates": "ELLER KOORDINATER",
+    "lat": "Breddegrad",
+    "lon": "Lengdegrad",
+    "coordHint": "Maks fire desimaler — MET avviser alt finere. Det er omtrent 11 m, godt innenfor én radarcelle på 1 km, så ingenting går tapt."
+  },
+  "verdict": {
+    "notSaved": "Dette stedet er ikke lagret på denne enheten.",
+    "unreachable": "MET Norway svarte ikke, og ingenting er mellomlagret for dette stedet ennå.",
+    "edit": "Rediger sted",
+    "editHint": "koordinat, radius og navn",
+    "remove": "Fjern sted",
+    "removeHint": "kan ikke angres",
+    "moreFor": "Mer for {{name}}",
+    "radarAge": "radaren er {{age}} min gammel",
+    "noRadar": "ingen radardekning"
+  },
+  "map": {
+    "pick": "Velg et sted — dra kartet for å flytte markøren",
+    "attribution": "© Kartverket",
+    "selectedPoint": "Valgt punkt",
+    "locate": "Bruk posisjonen min",
+    "locating": "Finner deg …",
+    "locateHint": "Sentrerer kartet på enheten din. Du bekrefter stedet selv.",
+    "blockedTitle": "Posisjon er blokkert for dette nettstedet",
+    "blockedBody": "Nettleseren spør ikke igjen herfra. På iOS: Innstillinger › Safari › Posisjon. På Android og datamaskin: hengelåsen i adressefeltet. I mellomtiden kan du dra kartet eller skrive inn koordinatene.",
+    "unsupportedTitle": "Denne enheten kan ikke oppgi posisjon",
+    "unsupportedBody": "Dra kartet eller skriv inn koordinatene i stedet.",
+    "failedTitle": "Fikk ikke posisjon",
+    "failedBody": "Enheten svarte ikke i tide. Prøv igjen, eller dra kartet i stedet.",
+    "outsideTitle": "Utenfor radarrutenettet",
+    "outsideBody": "Den nordiske radaren når ikke hit, så dette stedet ville ikke hatt noe svar å gi — ikke et tørt et, ingen. Dra markøren tilbake innenfor rutenettet.",
+    "zoomIn": "Zoom inn",
+    "zoomOut": "Zoom ut"
+  },
+  "status": {
+    "horizonHours_one": "{{count}} time",
+    "horizonHours_other": "{{count}} timer",
+    "blindLead": "Ingen radar her.",
+    "blindBody": "Vi kan ikke se dette stedet.",
+    "blindNote": "Dette er ikke «opphold». Vi har ingen observasjon i det hele tatt for denne koordinaten — så byge påstår ingenting. Opphold betyr at vi så etter og ingenting falt.",
+    "rainingLead": "Det regner.",
+    "edgeLead": "Regn innenfor {{km}} km — ikke på deg ennå.",
+    "edgeNote": "Ingenting faller på koordinaten din; nærmeste celle er {{km}} km unna. Det teller fordi alt regn som berører sirkelen på {{radius}} km du tegnet, teller.",
+    "stops": "Slutter om cirka {{duration}}.",
+    "clockAround": "rundt {{time}}",
+    "clockRange": "{{from}}-{{to}}",
+    "noEndBound": "Ingen slutt i sikte",
+    "noEndTail": " innenfor de neste {{horizon}}.",
+    "rainingOpenNote": "Det regner fortsatt i det siste bildet vi har. Bygen varer lenger enn de {{horizon}} vi kan se, så vi kan ikke si når den gir seg — bare at den ikke har gjort det innen da.",
+    "incomingBody": "Regn om cirka {{start}}, varer cirka {{dur}}.",
+    "incomingOpenBody": "Regn om cirka {{start}}, varer ",
+    "incomingOpenBound": "minst {{dur}}",
+    "incomingOpenTail": ".",
+    "incomingOpenNote": "{{dur}} er et gulv, ikke et varsel: feltet ligger fortsatt over stedet ved slutten av de {{horizon}} vi kan se. Det kan bli dobbelt så lenge.",
+    "dryLead": "Opphold.",
+    "clearBody": "Ingenting på vei.",
+    "clearNote": "De neste ~30 min er en trygg vurdering. Radaren ser ikke regn de neste {{horizon}}, men så langt fram er det bare veiledende.",
+    "secondClosedGap": "Så mer om cirka {{start}} — cirka {{gap}} opphold imellom, varer cirka {{dur}}.",
+    "secondClosedNoGap": "Så mer om cirka {{start}}, varer cirka {{dur}}.",
+    "secondOpenGap": "Så mer om cirka {{start}} — cirka {{gap}} opphold imellom, og ingen slutt i sikte etter det.",
+    "secondOpenNoGap": "Så mer om cirka {{start}}, og ingen slutt i sikte etter det.",
+    "incomingEdgeBound": "helt på kanten av det vi kan se",
+    "incomingEdgeTail": ".",
+    "incomingEdgeNote": "Bygen starter i det aller siste bildet radaren gir oss. Vi kan si at den kommer, og ingenting om hvor lenge den varer — ikke engang et gulv."
+  },
+  "compact": {
+    "blind": "Ingen radardekning — vi kan ikke se her",
+    "raining": "Regner",
+    "edge": "Regn innenfor {{km}} km · ikke på deg ennå",
+    "noEnd": "ingen slutt i sikte →",
+    "stops": "slutter om cirka {{min}}",
+    "thenMore": "så mer fra cirka {{start}}",
+    "dry": "Opphold",
+    "incoming": "regn om cirka {{start}}, cirka {{dur}}",
+    "incomingOpen": "regn om cirka {{start}}, minst {{dur}} →",
+    "clear": "Opphold · ingenting på vei",
+    "separator": " · ",
+    "incomingEdge": "regn om cirka {{start}}, på kanten →"
+  },
+  "duration": {
+    "hours_one": "{{count}} time",
+    "hours_other": "{{count}} timer",
+    "mins_one": "{{count}} min",
+    "mins_other": "{{count}} min",
+    "hoursMins": "{{hours}} og {{mins}}",
+    "shortHours": "{{count}}t",
+    "shortMins": "{{count}}m",
+    "shortHoursMins": "{{hours}}t{{mins}}m"
+  },
+  "toast": {
+    "saved": "Lagret {{name}}.",
+    "savedShowing": "Lagret {{name}}. Viser det nå.",
+    "removed": "Fjernet {{name}}.",
+    "removedShowing": "Fjernet {{name}}. Viser {{showing}}.",
+    "dismiss": "{{message}} Trykk for å lukke."
+  },
+  "list": {
+    "places_one": "{{count}} sted",
+    "places_other": "{{count}} steder",
+    "justNow": "oppdatert nå nettopp",
+    "updatedAge": "oppdatert for {{age}} min siden",
+    "offlineAge": "sist oppdatert for {{age}} min siden · uten nett",
+    "checking": "sjekker …",
+    "caption": "{{places}} · {{freshness}}"
+  },
+  "basemap": {
+    "label": "Kartstil",
+    "grey": "Dempet",
+    "greyHint": "Rolig, så sirkelen bærer",
+    "topo": "Terreng",
+    "detailed": "Detaljert",
+    "detailedHint": "Koter og relieff",
+    "nautical": "Sjøkart",
+    "nauticalHint": "Sjøkart og dybder"
+  },
+  "search": {
+    "label": "Søk etter et sted",
+    "placeholder": "f.eks. Bergen",
+    "none": "Ingen treff. Du kan dra kartet eller skrive inn koordinatene i stedet."
+  },
+  "pane": {
+    "emptyTitle": "Ingenting å vise.",
+    "emptyBody": "Stedet som var her, er borte. Legg til ett, så vises svaret i denne ruten."
+  },
+  "language": {
+    "system": "System",
+    "systemHint": "Følger språket på enheten"
+  },
+  "band": {
+    "trace": "spor",
+    "traceFeels": "så vidt målbart",
+    "drizzle": "yr",
+    "drizzleFeels": "dugg på brillene",
+    "light": "lett regn",
+    "lightFeels": "paraply er valgfritt",
+    "moderate": "moderat regn",
+    "moderateFeels": "du vil ha jakke",
+    "heavy": "kraftig regn",
+    "heavyFeels": "gjennomvåt på minutter",
+    "torrential": "styrtregn",
+    "torrentialFeels": "søk ly",
+    "dry": "opphold",
+    "describe": "{{rate}} mm/t — {{label}} ({{feels}})",
+    "rangeFrom": "{{from}}+ mm/t",
+    "rangeBetween": "{{from}}–{{to}} mm/t"
+  },
+  "level": {
+    "notObserved": "ikke observert",
+    "notObservedFeels": "utenfor radardekning — ingen påstand noen vei",
+    "noRate": "—",
+    "nearby": "i nærheten: {{label}}",
+    "nearbyFeels": "faller innenfor radiusen din, ikke på deg",
+    "incoming": "på vei: {{label}}",
+    "dry": "opphold",
+    "dryFeels": "ingenting faller, og det ser vi",
+    "rate": "{{rate}} mm/t",
+    "peak": "topp {{rate}} mm/t",
+    "under": "<{{rate}} mm/t"
+  },
+  "confidence": {
+    "readingNow": "leser nå",
+    "leadOut": "+{{min}} min fram",
+    "clearField": "klart felt",
+    "high": "høy sikkerhet",
+    "moderate": "middels sikkerhet",
+    "low": "lav sikkerhet"
+  },
+  "graph": {
+    "headerCompact": "NESTE 2 TIMER",
+    "headerExpanded": "RADARTIDSLINJE",
+    "notObserved": "ikke observert",
+    "openEnded": "varer forbi horisonten",
+    "easing": "avtar",
+    "oneBand": "ett belte",
+    "clear": "klart",
+    "now": "nå",
+    "ahead": "+{{min}} min",
+    "behind": "−{{min}} min",
+    "observed": "−{{min}} observert",
+    "forecast": "{{min}} varsel",
+    "frame": "{{at}} — {{what}}"
+  }
+}

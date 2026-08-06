@@ -44,7 +44,9 @@
     "horizon": "The horizon is 115 minutes. When a spell is still going at the horizon, byge reports a lower bound and says so. It will never round an unknown into a number.",
     "blind": "Where the radar cannot see, byge says so rather than saying “dry”. Those are different claims.",
     "appearanceSection": "Appearance",
-    "version": "Version {{version}} · offline-capable"
+    "version": "Version {{version}} · offline-capable",
+    "language": "Language",
+    "languageSection": "Language"
   },
   "attribution": {
     "dataFrom": "Data from",
@@ -254,5 +256,63 @@
   "pane": {
     "emptyTitle": "Nothing to show.",
     "emptyBody": "The place that was here is gone. Add one and its answer appears in this pane."
+  },
+  "language": {
+    "system": "System",
+    "systemHint": "Follows the device language"
+  },
+  "band": {
+    "trace": "trace",
+    "traceFeels": "barely detectable",
+    "drizzle": "drizzle",
+    "drizzleFeels": "mist on your glasses",
+    "light": "light rain",
+    "lightFeels": "umbrella optional",
+    "moderate": "moderate rain",
+    "moderateFeels": "you'll want a jacket",
+    "heavy": "heavy rain",
+    "heavyFeels": "soaked in minutes",
+    "torrential": "torrential",
+    "torrentialFeels": "seek shelter",
+    "dry": "dry",
+    "describe": "{{rate}} mm/h — {{label}} ({{feels}})",
+    "rangeFrom": "{{from}}+ mm/h",
+    "rangeBetween": "{{from}}–{{to}} mm/h"
+  },
+  "level": {
+    "notObserved": "not observed",
+    "notObservedFeels": "outside radar coverage — no claim either way",
+    "noRate": "—",
+    "nearby": "nearby: {{label}}",
+    "nearbyFeels": "falling inside your radius, not on you",
+    "incoming": "incoming: {{label}}",
+    "dry": "dry",
+    "dryFeels": "nothing falling, and we can see that",
+    "rate": "{{rate}} mm/h",
+    "peak": "peak {{rate}} mm/h",
+    "under": "<{{rate}} mm/h"
+  },
+  "confidence": {
+    "readingNow": "reading now",
+    "leadOut": "+{{min}} min out",
+    "clearField": "clear field",
+    "high": "high confidence",
+    "moderate": "moderate confidence",
+    "low": "low confidence"
+  },
+  "graph": {
+    "headerCompact": "NEXT 2 HOURS",
+    "headerExpanded": "RADAR TIMELINE",
+    "notObserved": "not observed",
+    "openEnded": "runs past the horizon",
+    "easing": "easing",
+    "oneBand": "one band",
+    "clear": "clear",
+    "now": "now",
+    "ahead": "+{{min}} min",
+    "behind": "−{{min}} min",
+    "observed": "−{{min}} observed",
+    "forecast": "{{min}} forecast",
+    "frame": "{{at}} — {{what}}"
   }
 }

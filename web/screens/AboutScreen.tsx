@@ -1,5 +1,6 @@
 import { useRouter } from "expo-router";
 import type { TFunction } from "i18next";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 import { Attribution } from "../components/Attribution";
@@ -7,6 +8,7 @@ import { BrandMark } from "../components/BrandMark";
 import { NavBar } from "../components/NavBar";
 import { SegmentedControl } from "../components/SegmentedControl";
 import { useBack } from "../hooks/useBack";
+import { chooseLanguage, type LanguageChoice, languageChoice } from "../i18n";
 import { Screen } from "../layouts/Screen";
 import { Section } from "../layouts/Section";
 import { APP_VERSION } from "../lib/version";
@@ -42,6 +44,9 @@ export function AboutScreen() {
   const goBack = useBack("/");
   const { t } = useTranslation();
   const { choice, choose } = useThemeContext();
+  // Local, because i18next's change is what actually re-renders the tree — this
+  // only keeps the control's own selected state in step.
+  const [language, setLanguage] = useState<LanguageChoice>(languageChoice());
 
   const body = { fontSize: 14, lineHeight: 23 } as const;
   const note = {
@@ -94,6 +99,32 @@ export function AboutScreen() {
           options={themeOptions(t)}
           value={choice}
           onChange={choose}
+        />
+      </Section>
+
+      {/*
+        A Norwegian app whose default is English needs a way to say so. It
+        follows the device unless told otherwise — which is the right default,
+        and also the reason the control has to exist: someone reading English on
+        a Norwegian phone, or the reverse, otherwise has no way out.
+
+        The names are each written IN their own language. "Norwegian" is no use
+        to the person who needs it; «Norsk» is.
+      */}
+      <Section title={t("about.languageSection")}>
+        <SegmentedControl<LanguageChoice>
+          label={t("about.language")}
+          labelHidden
+          options={[
+            { value: "system", label: t("language.system"), hint: t("language.systemHint") },
+            { value: "en", label: "English" },
+            { value: "nb", label: "Norsk" },
+          ]}
+          value={language}
+          onChange={(next) => {
+            chooseLanguage(next);
+            setLanguage(next);
+          }}
         />
       </Section>
 
