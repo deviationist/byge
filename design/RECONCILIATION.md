@@ -123,10 +123,14 @@ are not.
 *Live position* — viable. Browser geolocation, and `MapField` already has a
 one-shot locate.
 
-*Notifications* — **not viable on iOS without something running off-device.**
-The blocker is not MET's data, which is free and adequate, and it is not the
-service worker, which already exists. It is that nothing can run the periodic
-check.
+*Notifications* — **not viable in the PWA without something running
+off-device.** The blocker is not MET's data, which is free and adequate, and it
+is not the service worker, which already exists. It is that nothing can run the
+periodic check.
+
+> Scope note: this section was written when byge was web-only. Native changes
+> the answer — see *Amended 2026-08-06* at the end of it. The PWA reasoning
+> below is still correct for the PWA.
 
 Two false leads worth killing in writing, because both look like solutions:
 
@@ -198,9 +202,65 @@ moment, usually on the way out; a check triggered on leaving home serves it
 better than continuous monitoring, and with a 2-hour horizon very little is
 lost.
 
-> **Decided 2026-08-05: deferred.** No backend wanted, and Shortcuts is the only
-> serverless path — so notifications stay unbuilt. The other half of
-> `SettingsScreen`, live position, is unaffected and remains viable.
+### Amended 2026-08-06: native changes this, but not the conclusion
+
+Everything above was reasoned about the **PWA**, where it is correct: in a
+browser nothing runs when the tab is closed, and Web Push needs a sender. Once
+iOS and Android are real targets, that stops being the whole picture — a native
+app *can* run work in the background. It still cannot run it every five
+minutes.
+
+**The floors, and neither is five minutes:**
+
+| | Mechanism | Real floor |
+|---|---|---|
+| **iOS** | `BGAppRefreshTask` | No guaranteed interval at all. The OS decides from app-open frequency, battery and Low Power Mode — roughly hourly at best, less for infrequent users, and nothing once the app is force-quit. |
+| **Android** | `WorkManager` periodic work | **15 minutes**, a hard floor, further batched by Doze — and killed outright by some OEM battery managers regardless of what the API promises. |
+
+In Expo this is `expo-background-task` (which superseded
+`expo-background-fetch`), wrapping BGTaskScheduler and WorkManager. It needs a
+development build; it does not run in Expo Go.
+
+**Five minutes was never the requirement.** MET's nowcast publishes every ~5
+minutes with a **two-hour horizon**, so the lead time comes from the forecast,
+not the polling rate. A 15-minute check still sees rain arriving 40, 60 or 90
+minutes out. Polling every 5 minutes would report the same thing three times.
+
+So there IS a serverless path on native that the PWA never had: background task
+fires → fetch the nowcast → raise a **local** notification. No push service, no
+VAPID, no server, and the coordinates never leave the device — which keeps the
+"no account, no sync" promise rather than trading it away. On **Android** that
+is a real feature. On **iOS** it is best-effort by design: it works for people
+who open byge daily and quietly stops for everyone else, and "quietly stops" is
+the worst possible failure mode for a warning.
+
+**A backend with push is still the reliable answer**, and native makes it
+*cheaper* than the PWA version rather than dearer:
+
+- Delivery is OS-level. An alerting remote push arrives even if the app was
+  force-quit, and does not spend the app's background-refresh budget. (Silent
+  `content-available` pushes are throttled and dropped after force-quit —
+  user-visible alerts are not.)
+- The schedule is the server's, so it is exact and observable rather than
+  granted at the OS's discretion.
+- One poll serves every user, instead of every device hitting MET
+  independently.
+- Battery cost on device is ~nil.
+- `expo-notifications` plus Expo's push service removes most of the plumbing —
+  no direct APNs certificate or FCM wiring, which was the tedious half.
+
+The cost is unchanged and is not technical: a server holds a push token and a
+coordinate, which is the promise `ConfirmSheet` currently makes in as many
+words. The mitigations above (subscription-scoped, coarsened coordinates) still
+apply.
+
+> **Still deferred, 2026-08-06.** No backend wanted, and the native serverless
+> path is good on Android and unreliable on iOS. The decision is no longer
+> "impossible" but "good on one platform, best-effort on the other" — a product
+> call about whether a warning that sometimes silently stops is worth shipping,
+> not a technical blocker. A defensible middle path exists: ship it as
+> explicitly best-effort, with copy saying so, in the same register byge already
+> uses for "we cannot see here".
 
 Worth relaying to Design explicitly. They have drawn the rows as a shell, and
 none of this is visible from their side.
