@@ -31,11 +31,25 @@ import { useResolvedTheme } from "../theme/ThemeProvider";
  * Renders complete with no map present. The map link is a line of text, not a
  * hole where a map should be.
  */
-export function VerdictScreen() {
+export type VerdictScreenProps = {
+  /**
+   * Which place to show. Falls back to the route param when absent.
+   *
+   * Two-pane renders this INSIDE the list route, where there is no `[id]`
+   * segment to read — the pane's selection is the shell's state, not the URL's.
+   * Phone keeps using the route, so back behaves like a real destination.
+   */
+  id?: string;
+  /** Two-pane suppresses the back control: there is nowhere to go back to. */
+  showBack?: boolean;
+};
+
+export function VerdictScreen({ id: idProp, showBack = true }: VerdictScreenProps = {}) {
   const router = useRouter();
   const theme = useResolvedTheme();
   const { width } = useWindowDimensions();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const params = useLocalSearchParams<{ id?: string }>();
+  const id = idProp ?? params.id;
   const { byId, remove, neighbourOf } = useLocations();
   const location = byId(id);
 
@@ -65,15 +79,25 @@ export function VerdictScreen() {
     const next = neighbourOf(location.id);
     remove(location.id);
     setConfirming(false);
-    // Two-pane leaves the detail pane showing what was just deleted, so it
-    // needs a real destination rather than a blank.
+    // ALWAYS the list, never the neighbour's verdict.
     //
-    // Removing the LAST place has nowhere to point, so it lands on the list —
-    // which must then confirm what happened rather than showing the first-run
-    // welcome. The name travels as a route param because the list remounts on
-    // navigation, so component state cannot carry it across.
-    if (next) router.replace(`/location/${next.id}`);
-    else router.replace({ pathname: "/", params: { removed: location.name } });
+    // Following the neighbour is tempting — you were reading a verdict, so you
+    // get a verdict — and it is what this did until Design ruled on it. It
+    // loses on two counts. It shows an answer about a place you did not ask
+    // about, which is the one thing byge must never do. And it hides the only
+    // evidence the removal worked, because the list is where the change is
+    // visible. It also silently turns a destructive action into navigation, so
+    // a mis-tap leaves you reading Work while believing you are on Cabin.
+    //
+    // `showing` is passed for two-pane, where the detail pane DOES re-point and
+    // the notice has to name both facts. Phone ignores it.
+    router.replace({
+      pathname: "/",
+      params: {
+        removed: location.name,
+        ...(next ? { showing: next.name, select: next.id } : null),
+      },
+    });
   }
 
   const copy = removeLocationCopy(
@@ -90,8 +114,11 @@ export function VerdictScreen() {
   return (
     <Screen measure={phone ? null : 620}>
       <NavBar
-        onBack={() => router.push("/")}
-        backLabel="Back to places"
+        // No back control in the two-pane detail pane: the list is beside it,
+        // so there is nowhere to go back TO. A back button that returns you to
+        // a screen already on screen is a lie about the layout.
+        onBack={showBack ? () => router.push("/") : undefined}
+        backLabel={showBack ? "Back to places" : undefined}
         trailing={
           <OverflowMenu
             theme={theme}
