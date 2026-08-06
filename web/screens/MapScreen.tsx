@@ -7,13 +7,13 @@ import { type LatLon, MAX_ZOOM, MapCanvas, MIN_ZOOM } from "../components/MapCan
 import { MapLegend } from "../components/MapLegend";
 import { NavBar } from "../components/NavBar";
 import { PlaybackControl } from "../components/PlaybackControl";
-import { RadarGL } from "../components/RadarGL";
+import { RadarTilesGL } from "../components/RadarTilesGL";
 import { BASEMAP_OPTIONS, SegmentedControl } from "../components/SegmentedControl";
 import type { KartverketLayer } from "../components/TileLayer";
 import { ZoomControl } from "../components/ZoomControl";
 import { useBack } from "../hooks/useBack";
 import { useReducedMotion } from "../hooks/useReducedMotion";
-import { useProgressiveField } from "../hooks/useRadarField";
+import { useRadarTiles } from "../hooks/useRadarTiles";
 import { Screen } from "../layouts/Screen";
 import { useResolvedTheme } from "../theme/ThemeProvider";
 import { MONO } from "../theme/tokens";
@@ -80,15 +80,26 @@ export function MapScreen() {
   const [playing, setPlaying] = useState(false);
   const [picked, setPicked] = useState<LatLon | null>(null);
 
-  // One streaming request: frame 0 paints as soon as it lands and the rest
-  // arrive behind it. See useProgressiveField.
-  const { field, partial, loading } = useProgressiveField(
+  // Only the tiles this tab does not already hold. Frame 0 paints as soon as it
+  // lands and the rest arrive behind it; a pan or a zoom fetches the difference
+  // rather than the whole viewport. See useRadarTiles.
+  const {
+    tiles,
+    depth,
+    expected,
+    partial,
+    loading,
+    version,
+  } = useRadarTiles(
     size.width > 0
       ? { lat: view.lat, lon: view.lon, zoom, width: size.width, height: size.height }
       : null,
   );
 
-  const frameCount = field?.frames ?? 0;
+  // ONLY AS FAR AS EVERY VISIBLE TILE CAN GO. A ragged cache — 24 frames of the
+  // square you zoomed into, fewer of its new neighbours — must not animate into
+  // a hole, because a hole is indistinguishable from observed-dry.
+  const frameCount = depth;
   const reduced = useReducedMotion();
   /** The whole-frame index, for anything that shows a number or reads a cell. */
   const frame = Math.min(Math.floor(playhead), Math.max(0, frameCount - 1));
@@ -201,12 +212,13 @@ export function MapScreen() {
           label={t("map.canvasLabel")}
           attribution={t("radarMap.attribution")}
           overlay={(v) =>
-            field ? (
-              <RadarGL
-                field={field}
+            frameCount > 0 ? (
+              <RadarTilesGL
+                tiles={tiles}
+                version={version}
                 // Fractional while playing; floored under reduced motion so the
-            // slideshow stays a slideshow. RadarGL handles both.
-            frame={reduced ? frame : Math.min(playhead, Math.max(0, field.frames - 1))}
+                // slideshow stays a slideshow. The renderer handles both.
+                frame={reduced ? frame : Math.min(playhead, Math.max(0, frameCount - 1))}
                 originX={v.originX}
                 originY={v.originY}
                 zoom={v.z}
@@ -282,7 +294,7 @@ export function MapScreen() {
             playing={playing}
             index={frame}
             count={frameCount}
-            expected={field?.expected}
+            expected={expected}
             buffering={partial}
             minutes={frame * 5}
             onToggle={() => {
@@ -295,13 +307,11 @@ export function MapScreen() {
           <Text className="text-ink3" style={{ fontFamily: MONO, fontSize: 10 }}>
             {loading
               ? t("map.loadingField")
-              : field
+              : partial
                 ? // Says the animation is still arriving rather than showing a
                   // frame count that is about to change under the reader.
-                  partial
-                  ? t("map.loadingFrames")
-                  : t("map.sampling", { km: field.stride, frames: field.frames })
-                : ""}
+                  t("map.loadingFrames")
+                : t("map.sampling", { km: 1, frames: frameCount })}
           </Text>
         </View>
 
