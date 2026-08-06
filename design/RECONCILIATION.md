@@ -205,6 +205,69 @@ lost.
 Worth relaying to Design explicitly. They have drawn the rows as a shell, and
 none of this is visible from their side.
 
+## Styling is web-only, and Uniwind is installed but unused
+
+Found 2026-08-06, while asking whether an iOS/Android release is viable. This is
+not a design divergence — the rendered result matches — but it decides whether
+any of it can leave the browser.
+
+**Current state:** `className` appears **zero** times in the codebase. Every
+colour is an inline CSS custom property:
+
+```
+149  var(--…) occurrences
+ 13  distinct tokens
+ 35  files
+```
+
+and it is concentrated — `--color-ink` (29), `--color-ink2` (28),
+`--color-line2` (22), `--color-ink3` (22) are two thirds of the total.
+
+**Why it does not port.** Uniwind *does* support CSS variables on native: it
+compiles `global.css` at build time into per-theme variable maps and resolves
+them in its own runtime (`src/core/native/store.ts` holds `vars[theme]`, and
+switching theme swaps the map). But the only thing feeding that runtime is the
+**className prop**. In `src/hoc/withUniwind.native.tsx` it maps className props
+to style props, generates styles, and merges them at index 0 of a style array so
+a caller's own `style` still layers on top — it never parses the `style` prop.
+So `style={{ color: "var(--color-ink)" }}` is handed untouched to a native view,
+which has no CSS engine to resolve it. Uniwind being installed does not save it,
+because nothing routes through Uniwind.
+
+**The rule** is narrower than "avoid inline style":
+
+> Never `var()` inside an inline style. Colours come from `className` or from the
+> JS token modules. Inline style is for runtime-computed numbers.
+
+Three lanes, all legitimate:
+
+1. **`className`** — the default for anything static. The only path that
+   compiles for both targets.
+2. **`global.css` `@theme static`** — unchanged, still the single source of
+   truth. Its own comment explains why `static` is load-bearing.
+3. **JS tokens** (`theme/tokens.ts`, `lib/scale.ts`) — for values no class can
+   reach: canvas and SVG fills. Already the documented reason the band colours
+   are readable from JS.
+
+Runtime-computed geometry — bar heights from coverage, the radius ring, graph
+dimensions — stays inline as **numbers**, which are portable. That is not a
+violation; it is what inline style is for.
+
+**Adjacent, settle it during the migration:** several components take a `theme:
+Theme` prop that nothing reads, documented as "interface parity… every colour
+here is a CSS var that already switches with the root class". If native theming
+runs through Uniwind's runtime instead, those props become either genuinely
+needed or genuinely removable. Right now they are neither.
+
+**Two more web-only assumptions** surfaced by the same question, both real but
+smaller: `lib/storage.ts` writes saved places straight to `localStorage`, so on
+native nothing would persist; and `theme/useTheme.ts` already early-returns
+`"system"` when `Platform.OS !== "web"`, so the theme choice silently does not
+persist on native today. Both want one small storage abstraction behind the
+existing API. Genuinely web-only and fine to stay that way: `useInstallPrompt`
+(`beforeinstallprompt`), `public/sw.js`, and the PWA head injection in
+`scripts/postexport.mjs`.
+
 ## Open decisions
 
 Both from Library's own STILL OPEN list, both touching code that already exists.
