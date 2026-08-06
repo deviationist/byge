@@ -30,8 +30,28 @@ export const STEM =
   "radarnowcasting/yrwms-nordic.mos.pcappi-0-rr." +
   "noclass-clfilter-novpr-clcorr-block.nordiclcc-1000.{}.nc";
 
-/** MET's terms require an identifying User-Agent with contact details. */
-export const USER_AGENT = "byge/0.1 (https://github.com/deviationist/byge)";
+/**
+ * Everything goes through byge's own proxy, and it is not optional.
+ *
+ * Three things make a direct call from a browser impossible, not merely
+ * awkward. `thredds.met.no` sends no CORS headers on any of its service paths,
+ * so the fetch is blocked outright. MET's terms require an identifying
+ * User-Agent, and `User-Agent` is a forbidden header in the Fetch API — a
+ * browser physically cannot send one, so a direct call would be anonymous and
+ * in breach even if CORS allowed it. And MET ask that clients not hammer them,
+ * which one shared cache satisfies and a thousand browsers cannot.
+ *
+ * The proxy is a stateless pass-through: it adds the agent, adds CORS, and
+ * caches. It stores nothing, so byge's "everything stays on this device" is
+ * still true.
+ */
+export const API_BASE =
+  process.env.EXPO_PUBLIC_API_BASE ?? "https://byge-api.ichiva.no";
+
+/** Wrap an upstream URL for the proxy's `/fetch` route. */
+export function viaProxy(url: string): string {
+  return `${API_BASE}/fetch?url=${encodeURIComponent(url)}`;
+}
 
 /** _FillValue is 9.96921e36 — cells the radar mosaic cannot see. NOT zero. */
 export const FILL_THRESHOLD = 1e30;
@@ -107,7 +127,9 @@ export function parseAscii(body: string): Map<string, Variable> {
 }
 
 async function get(url: string, signal?: AbortSignal): Promise<string> {
-  const res = await fetch(url, { headers: { "User-Agent": USER_AGENT }, signal });
+  // No User-Agent here on purpose — the browser would drop it and the proxy
+  // sets the real one. See API_BASE.
+  const res = await fetch(viaProxy(url), { signal });
   if (!res.ok) throw new OpenDapError(`${res.status} for ${url}`, res.status);
   return res.text();
 }

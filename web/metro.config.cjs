@@ -18,8 +18,5 @@ config.resolver.blockList = existing
   ? [...(Array.isArray(existing) ? existing : [existing]), testFiles]
   : testFiles;
 
-// The Python spike is not part of the app.
-config.resolver.blockList = [...config.resolver.blockList, /\/spike\/.*/];
-
 // Uniwind (Tailwind for RN) — Metro plugin only, no Babel.
 module.exports = withUniwindConfig(config, { cssEntryFile: "./global.css" });
