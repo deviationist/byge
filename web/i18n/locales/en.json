@@ -133,7 +133,9 @@
     "editHint": "coordinate, radius and name",
     "remove": "Remove place",
     "removeHint": "cannot be undone",
-    "moreFor": "More for {{name}}"
+    "moreFor": "More for {{name}}",
+    "radarAge": "radar {{age}} min old",
+    "noRadar": "no radar signal"
   },
   "map": {
     "pick": "Pick a place — pan the map to move the marker",

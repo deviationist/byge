@@ -68,7 +68,12 @@ export function LocationsScreen({ selectedId, onSelect }: LocationsScreenProps =
   );
 
   return (
-    <Screen>
+    // Measured against the specimen: the design's masthead carries a 14 px
+    // bottom padding in the two-pane column and the standalone list screen sets
+    // its blocks on a 22 px rhythm. `Screen` applies no gap unless asked, so
+    // without this every child sat flush against the next and the list started
+    // hard against the caption.
+    <Screen gap={twoPane ? 14 : 22}>
       {/*
         The masthead replaces a nav bar. The design puts no bar on this screen
         at all — it is the root, so there is nothing to go back to, and About
