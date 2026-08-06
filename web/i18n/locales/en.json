@@ -167,7 +167,13 @@
     "outsideTitle": "Outside the radar grid",
     "outsideBody": "The Nordic radar does not reach here, so this place would have no answer to give — not a dry one, none. Pan the marker back inside the grid.",
     "zoomIn": "Zoom in",
-    "zoomOut": "Zoom out"
+    "zoomOut": "Zoom out",
+    "title": "Radar map",
+    "subtitle": "THE FIELD ITSELF · NO PLACE, NO VERDICT",
+    "canvasLabel": "Radar map — drag to pan, tap a square to read it",
+    "loadingField": "loading the field…",
+    "sampling": "sampled every {{km}} km · {{frames}} frames",
+    "footnote": "Sampling follows the zoom, so a wide view is coarser — MET decompresses a whole frame either way, so only the detail changes, never the cost. Hatched ground is outside radar coverage: not dry, unobserved."
   },
   "status": {
     "horizonHours_one": "{{count}} hour",
@@ -329,5 +335,10 @@
     "window": "The dashed rectangle is how much radar we asked for around this place. Beyond it we have not looked — which is not the same as clear.",
     "play": "Play the next two hours",
     "pause": "Pause"
+  },
+  "cell": {
+    "reading": "Reading…",
+    "unavailable": "Could not read that square.",
+    "close": "close"
   }
 }
