@@ -1,14 +1,14 @@
 import type { TFunction } from "i18next";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Text, View } from "react-native";
+import { Text, useWindowDimensions, View } from "react-native";
 import { Attribution } from "../components/Attribution";
 import { BrandMark } from "../components/BrandMark";
 import { NavBar } from "../components/NavBar";
 import { SegmentedControl } from "../components/SegmentedControl";
 import { useBack } from "../hooks/useBack";
 import { chooseLanguage, type LanguageChoice, languageChoice } from "../i18n";
-import { Screen } from "../layouts/Screen";
+import { pagePadFor, Screen } from "../layouts/Screen";
 import { Section } from "../layouts/Section";
 import { APP_VERSION } from "../lib/version";
 import { useThemeContext } from "../theme/ThemeProvider";
@@ -41,20 +41,38 @@ function themeOptions(t: TFunction) {
 export function AboutScreen() {
   const goBack = useBack("/");
   const { t } = useTranslation();
+  const { width } = useWindowDimensions();
   const { choice, choose } = useThemeContext();
   // Local, because i18next's change is what actually re-renders the tree — this
   // only keeps the control's own selected state in step.
   const [language, setLanguage] = useState<LanguageChoice>(languageChoice());
 
-  const body = { fontSize: 14, lineHeight: 23 } as const;
+  // Measured off the specimen rather than picked: 13/1.6 for the prose, mono
+  // 10/1.7 for the machinery. This screen had 14/23 and mono 11/19 — close
+  // enough to look deliberate and wrong enough that the notes sat a shade
+  // heavier than the same register does everywhere else in the app.
+  const body = { fontSize: 13, lineHeight: 21, maxWidth: "52ch" as never } as const;
   const note = {
     fontFamily: MONO,
-    fontSize: 11,
-    lineHeight: 19,
+    fontSize: 10,
+    lineHeight: 17,
   } as const;
 
   return (
-    <Screen>
+    // GAP AND PAD, both of which were missing entirely.
+    //
+    // `Screen` applies no rhythm unless it is asked for one, so every block on
+    // this page — the mark, the sentence, all four sections, the footer — was
+    // butted flush against its neighbours at zero pixels, and the page padding
+    // fell back to the tight uniform value the two-pane LIST column wants
+    // rather than the growing gutter a reading screen takes. The specimen is
+    // explicit about both: a uniform 22 px between blocks, and 18/24/10 →
+    // 40/44/26 → 62/72/34 as the viewport grows.
+    //
+    // This is the same omission the verdict screen had. Worth noticing that
+    // the default is the trap: a screen that forgets to ask looks broken rather
+    // than looking plain.
+    <Screen gap={22} pad={pagePadFor(width)}>
       <NavBar onBack={goBack} backLabel={t("nav.backToPlaces")}>
         <Text
           accessibilityRole="header"
@@ -150,11 +168,14 @@ export function AboutScreen() {
         worker makes it true — the last verdict is readable with no network.
         The design's line ends in a link to Settings; there is no Settings
         screen, so it ends here instead of pointing at nothing.
+
+        NOT `marginTop: auto`. It was, which pinned this to the bottom of the
+        viewport and opened a void between the last section and the rule on any
+        screen taller than the content — the single most visible part of the
+        spacing being wrong. In the specimen it is simply the last block in the
+        column, 22 px after the one before it like everything else.
       */}
-      <View
-        className="border-t-line"
-        style={{ marginTop: "auto", borderTopWidth: 1, paddingTop: 14 }}
-      >
+      <View className="border-t-line" style={{ borderTopWidth: 1, paddingTop: 14 }}>
         <Text className="text-ink3" style={note}>
           {t("about.version", { version: APP_VERSION })}
         </Text>
