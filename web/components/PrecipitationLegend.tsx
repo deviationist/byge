@@ -68,15 +68,18 @@ export function PrecipitationLegend({
   const body = { fontSize: 11.5, lineHeight: 17 } as const;
 
   return (
+    // A card, matching every other surface in the app. It was a bare row on a
+    // hairline rule, which read as the end of the list rather than as a thing
+    // you could open.
     <View
-      className="border-t-line"
-      style={{
-        borderTopWidth: 1,
-        paddingTop: 4,
-      }}
+      className="bg-surface border-line"
+      style={{ borderWidth: 1, borderRadius: 12, paddingHorizontal: 14 }}
     >
       <Pressable
         accessibilityRole="button"
+        // The NAME stays put and `aria-expanded` carries the state — that is the
+        // disclosure contract. Swapping the name to "Show/Hide…" on toggle would
+        // make the control appear to be a different control each press.
         accessibilityLabel={t("legend.title")}
         aria-expanded={open}
         onPress={toggle}
@@ -91,7 +94,23 @@ export function PrecipitationLegend({
         <Text className="text-ink2" style={{ fontSize: 13 }}>
           {t("legend.title")}
         </Text>
-        <Text style={[micro, { fontSize: 12 }]}>{open ? "−" : "+"}</Text>
+
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          {/*
+            The three shapes sit in the collapsed header, so the card shows what
+            it is about before you open it. Decorative here — each one is
+            labelled in words the moment the card expands, and the list rows
+            beside it already carry their status in words.
+          */}
+          <View aria-hidden style={{ flexDirection: "row", gap: 5 }}>
+            {states.map((s) => (
+              <Swatch key={s.mode} mode={s.mode} rate={s.rate} size={11} theme={theme} />
+            ))}
+          </View>
+          <Text className="text-ink3" style={[micro, { fontSize: 13 }]}>
+            {open ? "−" : "+"}
+          </Text>
+        </View>
       </Pressable>
 
       {open ? (
@@ -114,7 +133,7 @@ export function PrecipitationLegend({
 
           <View style={{ gap: 7 }}>
             <Text className="text-ink3" style={[micro, { letterSpacing: 0.5 }]}>
-              HOW HARD · MM/H
+              {t("legend.ramp")}
             </Text>
             {legend().map((r) => (
               <Row key={r.label}>
@@ -147,25 +166,23 @@ export function PrecipitationLegend({
                 style={{ width: 14, height: 14, borderRadius: 3, borderWidth: 1 }}
               />
               <Text className="text-ink" style={{ fontSize: 12, minWidth: 92 }}>
-                dry
+                {t("legend.dry")}
               </Text>
               <Text className="text-ink2" style={[body, { flex: 1 }]}>
-                we looked, nothing is falling
+                {t("legend.dryFeels")}
               </Text>
               <Text className="text-ink3" style={micro}>
-                observed
+                {t("legend.dryRange")}
               </Text>
             </Row>
           </View>
 
           <View style={{ gap: 6 }}>
             <Text className="text-ink3" style={[micro, { letterSpacing: 0.5 }]}>
-              NOT OBSERVED
+              {t("legend.notObserved")}
             </Text>
             <Text className="text-ink2" style={body}>
-              Hatching is not a level of rain and it is not dry. It means the radar mosaic
-              cannot see that place at all, so byge makes no claim either way. Dry means we
-              looked and saw nothing falling; hatched means we could not look.
+              {t("legend.notObservedBody")}
             </Text>
           </View>
         </View>

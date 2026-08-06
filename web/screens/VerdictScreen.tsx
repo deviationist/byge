@@ -122,7 +122,7 @@ export function VerdictScreen({ id: idProp, showBack = true }: VerdictScreenProp
         trailing={
           <OverflowMenu
             theme={theme}
-            label={`More for ${location.name}`}
+            label={t("verdict.moreFor", { name: location.name })}
             items={[
               {
                 label: t("verdict.edit"),
