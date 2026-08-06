@@ -25,5 +25,16 @@ export const MONO = "ui-monospace, SFMono-Regular, Menlo, monospace";
  * Kept here rather than in global.css because these are consumed as React
  * Native style objects, where `var()` is not resolvable.
  */
+/**
+ * The app background, per theme, as real values.
+ *
+ * Duplicates `--color-bg` from global.css on purpose: expo-router's
+ * `contentStyle` is a React Native style object handed to the navigator, not a
+ * component we can put a className on, so neither a `var()` nor a Uniwind class
+ * can reach it. Keep these in step with `@theme static` — they are the same two
+ * colours the manifest and SplashScreen also hardcode, for the same reason.
+ */
+export const BG = { light: "#f6f4f0", dark: "#0e1113" } as const;
+
 export const DISPLAY = 'Newsreader, Georgia, "Times New Roman", serif';
 export const BODY = '"IBM Plex Sans", system-ui, -apple-system, sans-serif';
