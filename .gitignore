@@ -32,3 +32,6 @@ bin/
 # local env (see .env.example)
 .env
 .env.prod
+
+# QA screenshots (playwright / ad-hoc)
+byge-*.png
