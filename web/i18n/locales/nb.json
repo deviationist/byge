@@ -205,7 +205,7 @@
     "clockAround": "rundt {{time}}",
     "clockRange": "{{from}}-{{to}}",
     "noEndBound": "Ingen slutt i sikte",
-    "noEndTail": " innenfor de neste {{horizon}}.",
+    "noEndTail": " innenfor serien vi kan se.",
     "rainingOpenNote": "Det regner fortsatt i det siste bildet vi har. Bygen varer lenger enn de {{horizon}} vi kan se, så vi kan ikke si når den gir seg — bare at den ikke har gjort det innen da.",
     "incomingBody": "Regn om cirka {{start}}, varer cirka {{dur}}.",
     "incomingOpenBody": "Regn om cirka {{start}}, varer ",
