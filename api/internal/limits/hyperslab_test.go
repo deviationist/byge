@@ -85,3 +85,23 @@ func TestRejectsMalformedExpressions(t *testing.T) {
 		}
 	}
 }
+
+func TestAcceptsPercentEncodedBrackets(t *testing.T) {
+	// What a browser actually sends. RFC 3986 does not permit a bare `[` in a
+	// query, so encodeURI escapes it — and MET's Tomcat rejects the unescaped
+	// form outright. Parsing the raw string would find no brackets and call an
+	// ordinary 3 km window "unbounded", which is precisely the regression this
+	// guards: the app broke against a proxy that had the cap but no decode.
+	u := base + ".ascii?lwe_precipitation_rate%5B0:1:23%5D%5B1456:1:1462%5D%5B557:1:563%5D"
+	if err := Check(u, DefaultMaxValues); err != nil {
+		t.Fatalf("encoded window rejected: %v", err)
+	}
+}
+
+func TestStillRejectsTheWholeGridWhenEncoded(t *testing.T) {
+	// Encoding must not become a way around the cap.
+	u := base + ".ascii?lwe_precipitation_rate%5B0:1:23%5D%5B0:1:2133%5D%5B0:1:1693%5D"
+	if err := Check(u, DefaultMaxValues); err == nil {
+		t.Fatal("encoded whole-grid request was allowed")
+	}
+}
