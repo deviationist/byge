@@ -1,0 +1,48 @@
+{
+  "empty": {
+    "firstRun": {
+      "title": "Nowhere saved yet",
+      "body": "Add a place — home, the cabin, a trailhead — and byge will tell you whether it is raining there and for how long, straight from MET Norway's radar. Everything stays on this device.",
+      "action": "Add a place"
+    },
+    "removed": {
+      "title": "{{name}} removed.",
+      "titleNameless": "Removed.",
+      "body": "That was your last saved place, so there is nothing left to check. It is gone from this device — there is no account and no sync, so nothing else is holding a copy."
+    }
+  },
+  "confirm": {
+    "removeTitle": "Remove {{name}}?",
+    "removeBody": "This deletes the place and its saved answer from this device. There is no account and no sync, so it cannot be brought back.",
+    "removeConfirm": "Remove {{name}}",
+    "keep": "Keep it",
+    "dismiss": "Dismiss"
+  },
+  "nav": {
+    "about": "About",
+    "back": "Back",
+    "backToPlaces": "Back to places",
+    "addPlace": "+ Add a place"
+  },
+  "install": {
+    "body": "Keep byge one tap away — add it to your home screen. Works offline with the last verdict.",
+    "action": "Install",
+    "dismiss": "Not now"
+  },
+  "stale": {
+    "offline": "Showing the verdict from {{age}} min ago — you are offline. It will refresh the moment you are back."
+  },
+  "about": {
+    "pronunciation": "byge /ˈbyːɡə/\nNorwegian: a passing shower.",
+    "what": "byge reads MET Norway’s radar nowcast for your exact coordinate and tells you whether it is raining, and for how long. Nothing else.",
+    "appearance": "Appearance",
+    "data": "Data",
+    "notAffiliated": "Not affiliated with, or endorsed by, MET Norway or NRK."
+  },
+  "attribution": {
+    "dataFrom": "Data from",
+    "met": "MET Norway",
+    "nlod": "NLOD 2.0",
+    "ccBy": "CC BY 4.0"
+  }
+}

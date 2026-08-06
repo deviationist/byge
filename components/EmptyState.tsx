@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 import { Button } from "./Button";
 
@@ -25,22 +26,20 @@ export type EmptyStateProps = {
 };
 
 export function EmptyState({ reason, removedName, onAdd }: EmptyStateProps) {
+  const { t } = useTranslation();
   const removed = reason === "removed-last";
 
   // A nameless removal still gets the removal *tone* — falling back to the
   // first-run pitch because a prop is missing would be the wrong copy for the
-  // wrong reason.
+  // wrong reason. Hence a separate key rather than an empty interpolation,
+  // which would render "removed." with a hole where the name should be.
   const title = removed
     ? removedName
-      ? `${removedName} removed.`
-      : "Removed."
-    : "Nowhere saved yet";
+      ? t("empty.removed.title", { name: removedName })
+      : t("empty.removed.titleNameless")
+    : t("empty.firstRun.title");
 
-  const body = removed
-    ? "That was your last saved place, so there is nothing left to check. It is gone from this " +
-      "device — there is no account and no sync, so nothing else is holding a copy."
-    : "Add a place — home, the cabin, a trailhead — and byge will tell you whether it is raining " +
-      "there and for how long, straight from MET Norway's radar. Everything stays on this device.";
+  const body = removed ? t("empty.removed.body") : t("empty.firstRun.body");
 
   return (
     <View
@@ -63,7 +62,7 @@ export function EmptyState({ reason, removedName, onAdd }: EmptyStateProps) {
       </Text>
       {onAdd ? (
         <Button
-          label="Add a place"
+          label={t("empty.firstRun.action")}
           onPress={onAdd}
           variant={removed ? "secondary" : "primary"}
         />
