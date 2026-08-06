@@ -40,6 +40,16 @@ export function ConfirmSheet({
 }: ConfirmSheetProps) {
   const cancelRef = useRef<View | null>(null);
 
+  // Focus lands on the SAFE option when the sheet opens, never the destructive
+  // one — an inherited Return should keep your place, not delete it. Without
+  // this, focus stays on the trigger behind the scrim and a keyboard user has
+  // to hunt for a dialog that has already taken over the screen.
+  useEffect(() => {
+    if (!open || Platform.OS !== "web") return;
+    // RN's View type does not declare focus(); the web node has it.
+    (cancelRef.current as unknown as HTMLElement | null)?.focus();
+  }, [open]);
+
   // Escape closes. A confirmation you cannot dismiss with the keyboard is a
   // trap, and this one guards a destructive action.
   useEffect(() => {
@@ -116,7 +126,12 @@ export function ConfirmSheet({
 
           <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap", paddingTop: 2 }}>
             <Button label={confirmLabel} onPress={onConfirm} variant="primary" />
-            <Button label={cancelLabel} onPress={onCancel} variant="secondary" />
+            <Button
+              ref={cancelRef}
+              label={cancelLabel}
+              onPress={onCancel}
+              variant="secondary"
+            />
           </View>
         </Pressable>
       </Pressable>

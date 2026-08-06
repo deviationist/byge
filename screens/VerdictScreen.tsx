@@ -67,7 +67,13 @@ export function VerdictScreen() {
     setConfirming(false);
     // Two-pane leaves the detail pane showing what was just deleted, so it
     // needs a real destination rather than a blank.
-    router.replace(next ? `/location/${next.id}` : "/");
+    //
+    // Removing the LAST place has nowhere to point, so it lands on the list —
+    // which must then confirm what happened rather than showing the first-run
+    // welcome. The name travels as a route param because the list remounts on
+    // navigation, so component state cannot carry it across.
+    if (next) router.replace(`/location/${next.id}`);
+    else router.replace({ pathname: "/", params: { removed: location.name } });
   }
 
   const copy = removeLocationCopy(

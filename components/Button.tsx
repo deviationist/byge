@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
-import { Pressable, Text } from "react-native";
+import { forwardRef, type ReactNode } from "react";
+import { Pressable, Text, type View } from "react-native";
 
 /**
  * Primary / secondary / ghost.
@@ -47,14 +47,15 @@ const OFFSCREEN = {
 
 let hintSeq = 0;
 
-export function Button({
-  label,
-  onPress,
-  variant = "primary",
-  disabled = false,
-  block = false,
-  hint,
-}: ButtonProps) {
+/**
+ * Ref-forwarding so a caller can move focus onto a specific button — which
+ * ConfirmSheet needs to land focus on the safe option when it opens. Same
+ * pattern as MoreButton.
+ */
+export const Button = forwardRef<View, ButtonProps>(function Button(
+  { label, onPress, variant = "primary", disabled = false, block = false, hint },
+  ref,
+) {
   const hintId = hint ? `byge-btn-hint-${++hintSeq}` : undefined;
   const palette = {
     primary: { bg: "var(--color-ink)", fg: "var(--color-bg)", border: "var(--color-ink)" },
@@ -64,6 +65,7 @@ export function Button({
 
   return (
     <Pressable
+      ref={ref}
       accessibilityRole="button"
       accessibilityLabel={label}
       aria-describedby={hintId}
@@ -93,4 +95,4 @@ export function Button({
       ) : null}
     </Pressable>
   );
-}
+});

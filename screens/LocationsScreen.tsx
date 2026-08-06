@@ -1,5 +1,4 @@
-import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { View } from "react-native";
 import { Attribution } from "../components/Attribution";
 import { Button } from "../components/Button";
@@ -27,7 +26,10 @@ export function LocationsScreen() {
   const { locations } = useLocations();
   const { data: verdicts } = useVerdicts(locations);
   const install = useInstallPrompt();
-  const [clearedName, setClearedName] = useState<string | undefined>();
+  // Set by whichever screen removed your last place. It has to arrive as a
+  // route param: this screen remounts on navigation, so local state would
+  // always be empty here and the cleared state could never fire.
+  const { removed } = useLocalSearchParams<{ removed?: string }>();
 
   const items = locations
     .map((l) => (verdicts?.[l.id] ? { ...l, verdict: verdicts[l.id] } : null))
@@ -37,8 +39,12 @@ export function LocationsScreen() {
   // your last place confirms what you did and makes no pitch.
   const empty = (
     <EmptyState
-      reason={clearedName ? "removed-last" : "first-run"}
-      removedName={clearedName}
+      // Presence of the param, not its truthiness: a place saved with a blank
+      // name still got removed, and EmptyState has copy for a nameless removal
+      // ("Removed."). Testing truthiness would show the first-run welcome —
+      // the wrong copy for the wrong reason.
+      reason={removed !== undefined ? "removed-last" : "first-run"}
+      removedName={removed}
       onAdd={() => router.push("/add")}
     />
   );
