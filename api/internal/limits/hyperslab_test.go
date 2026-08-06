@@ -44,11 +44,43 @@ func TestRejectsUnindexedVariable(t *testing.T) {
 	}
 }
 
-func TestRejectsOneHugeDimension(t *testing.T) {
-	// Narrow in two dimensions, enormous in the third — still a full-column
-	// read, and still forces the same decompression.
-	if err := Check(base+".ascii?lwe_precipitation_rate[0:1:23][0:1:2133][560:1:560]", DefaultMaxValues); err == nil {
-		t.Fatal("full-column request was allowed")
+func TestAllowsAWideSingleFrame(t *testing.T) {
+	// This is what a general radar map asks for, and the old span cap refused
+	// it. Measured against the live service a 501×501 single frame is 144 ms —
+	// FASTER than the 947 ms a legitimate 51×51 verdict takes across 24 frames,
+	// because the file is chunked one full frame per chunk. Refusing it was
+	// protecting nothing.
+	if err := Check(base+".ascii?lwe_precipitation_rate[0:1:0][1209:1:1709][310:1:810]", DefaultMaxValues); err != nil {
+		t.Fatalf("wide single frame refused: %v", err)
+	}
+}
+
+func TestAllowsAFullColumnOfOneVariable(t *testing.T) {
+	// 24 × 2134 × 1 = 51 216 values. The old cap refused this on the grounds
+	// that it decompresses every frame — which it does, and so does every
+	// verdict the app has ever issued. It costs MET the same as the request
+	// this service exists to make, so refusing it was a rule that only ever
+	// caught shapes, not costs. The frame cap is what bounds the real work.
+	if err := Check(base+".ascii?lwe_precipitation_rate[0:1:23][0:1:2133][560:1:560]", DefaultMaxValues); err != nil {
+		t.Fatalf("full column refused: %v", err)
+	}
+}
+
+func TestRejectsMoreFramesThanExist(t *testing.T) {
+	// Time is the expensive axis, so it keeps a SPAN cap: striding it still
+	// makes MET decompress every frame the range touches.
+	if err := Check(base+".ascii?lwe_precipitation_rate[0:1:47][0:1:10][0:1:10]", DefaultMaxValues); err == nil {
+		t.Fatal("over-long frame range was allowed")
+	}
+	if err := Check(base+".ascii?lwe_precipitation_rate[0:5:100][0:1:10][0:1:10]", DefaultMaxValues); err == nil {
+		t.Fatal("strided over-long frame range was allowed — span, not count")
+	}
+}
+
+func TestRejectsTheWholeCube(t *testing.T) {
+	// The request the package exists for: 86.8 million values, ~347 MB.
+	if err := Check(base+".ascii?lwe_precipitation_rate[0:1:23][0:1:2133][0:1:1693]", DefaultMaxValues); err == nil {
+		t.Fatal("whole cube was allowed")
 	}
 }
 
@@ -62,13 +94,21 @@ func TestSumsAcrossVariables(t *testing.T) {
 	}
 }
 
-func TestRejectsStridedGridWalks(t *testing.T) {
-	// A coarse stride returns fewer values but costs MET the same: the file is
-	// chunked one full time-slice per chunk, so touching row 0 and row 2100
-	// decompresses everything between. Bounding the value count instead of the
-	// span would make this the cheapest way to harvest the grid.
-	if err := Check(base+".ascii?lwe_precipitation_rate[0:1:23][0:100:2100][0:100:1600]", DefaultMaxValues); err == nil {
-		t.Fatal("strided grid walk was allowed")
+func TestAllowsACoarseSurveyOfTheGrid(t *testing.T) {
+	// A strided walk of the whole grid — 24 × 22 × 17 = 8 976 values. Refused
+	// under the old span cap, allowed now, and the reasoning is worth stating
+	// because it looks like a regression.
+	//
+	// It decompresses 24 frames. So does every verdict. It costs MET the same
+	// as the thing this service is FOR, and it returns 36 KB. What it could be
+	// used for is harvesting a coarse national picture cheaply — which the
+	// client key and the per-IP rate limit bound, and which the licence permits
+	// anyway: this is NLOD / CC-BY data that MET publishes openly.
+	//
+	// The cap's job is to stop one request doing outsized damage. This one does
+	// ordinary damage.
+	if err := Check(base+".ascii?lwe_precipitation_rate[0:1:23][0:100:2100][0:100:1600]", DefaultMaxValues); err != nil {
+		t.Fatalf("coarse survey refused: %v", err)
 	}
 }
 

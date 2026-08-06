@@ -17,23 +17,61 @@ import (
 	"strings"
 )
 
-// The ceiling is the widest thing the APP can legitimately ask for, not a round
-// number. MAX_RADIUS_KM is 25 in web/lib/storage.ts, the grid is 1 km, so the
-// largest honest window is 2×25+1 = 51 cells a side across all 24 frames.
+// What actually costs MET, measured rather than assumed.
 //
-// COUPLING: raise MAX_RADIUS_KM in the client and this must follow, or wide
-// radii start failing with a 400. That is deliberate — a cap derived from the
-// UI's own limit is one somebody can reason about, where a round number invites
-// quiet inflation.
+// The file is chunked ONE FULL TIME-SLICE PER CHUNK, so any read of a frame
+// decompresses that whole frame regardless of how little of it you asked for.
+// Timed against the live service:
+//
+//	 1 frame,  51×51        11 KB     81 ms
+//	 1 frame, 201×201      160 KB     87 ms
+//	 1 frame, 501×501      985 KB    144 ms
+//	 1 frame, ENTIRE grid   14 MB    542 ms
+//	24 frames, 51×51       245 KB    947 ms
+//
+// Area is nearly free; FRAMES are the cost. A single frame of the entire Nordic
+// mosaic is faster than a postage stamp across all 24.
+//
+// This corrects an earlier assumption. The cap used to bound every dimension's
+// SPAN at 51 cells, on the reasoning that a coarse stride reads fewer values
+// while still forcing MET to decompress every chunk it touches — so bounding
+// the count would let a sampler walk the grid for free. The chunking is real,
+// but the conclusion was wrong in one direction: because a frame is ONE chunk,
+// walking it costs no more than touching it, and the span cap was refusing wide
+// single-frame reads that are cheap while doing nothing the frame cap does not
+// already do.
+//
+// So the two things worth bounding are the two things that actually scale:
+//
+//	frames  the server's decompression work, and the only axis that grows it
+//	values  the bytes on the wire, which area does grow
+//
+// The abusive request the package exists to refuse is still refused:
+// `[0:1:23][0:1:2133][0:1:1693]` is 86.8 million values and fails the value cap
+// by two orders of magnitude, strided or not.
 const (
-	MaxRadiusKm = 25
-	MaxFrames   = 24 // NFRAMES in web/lib/grid.ts
-	// Per-dimension, so a request cannot be narrow in two axes and swallow the
-	// whole grid in the third. A total-value budget alone misses that: a
-	// full-height column is only 51k values but still reads every row.
-	MaxDim = 2*MaxRadiusKm + 1
+	// MaxFrames caps the TIME dimension specifically. This is the expensive
+	// axis, and the app never needs more than the product publishes.
+	MaxFrames = 24 // NFRAMES in web/lib/grid.ts
 
-	DefaultMaxValues = MaxFrames * MaxDim * MaxDim
+	// MaxRadiusKm is the widest radius the app offers, kept because the verdict
+	// path still reasons in radii. It no longer caps a dimension on its own.
+	//
+	// COUPLING: raise MAX_RADIUS_KM in web/lib/storage.ts and the value budget
+	// below must still admit 24 × (2r+1)².
+	MaxRadiusKm = 25
+
+	// DefaultMaxValues admits every shape the app legitimately asks for and
+	// nothing like the whole cube:
+	//
+	//	verdict, widest radius   24 × 51×51    =  62 424
+	//	map, wide single frame    1 × 501×501  = 251 001
+	//	map, animated window     24 × 128×128  = 393 216
+	//	the whole cube           24 × 2134×1694 = 86 761   (thousand) — refused
+	//
+	// It bounds transfer, not server work: 400k float32 is about 1.5 MB, which
+	// is the most this app has any business pulling in one request.
+	DefaultMaxValues = 400_000
 )
 
 type Error struct {
@@ -94,6 +132,7 @@ func countOne(part string) (int, error) {
 	}
 
 	count := 1
+	dim := 0
 	rest := part[open:]
 	for len(rest) > 0 {
 		if rest[0] != '[' {
@@ -107,15 +146,22 @@ func countOne(part string) (int, error) {
 		if err != nil {
 			return 0, err
 		}
-		// SPAN, not count. A coarse stride reads fewer values but MET still
-		// decompresses every chunk the range touches — the file is chunked one
-		// full time-slice at a time — so `[0:100:2100]` costs it exactly what
-		// `[0:1:2100]` costs. Bounding the count would let a sampler walk the
-		// whole grid for free.
-		if span > MaxDim {
-			return 0, &Error{Reason: fmt.Sprintf("dimension spans %d cells, limit is %d (the widest radius the app offers)", span, MaxDim)}
+		// The FIRST dimension is time. That is a property of this variable's
+		// shape — `lwe_precipitation_rate[time][Yc][Xc]` — and it is safe to
+		// rely on because `upstream.Allowed` admits exactly one gridded
+		// dataset. If a second one is ever allowlisted, this assumption has to
+		// be revisited with it.
+		//
+		// Capped by SPAN, not count: striding time still makes MET decompress
+		// every frame the range touches, so `[0:5:23]` costs what `[0:1:23]`
+		// costs. The spatial dimensions get no span cap, because a frame is a
+		// single chunk — walking one costs no more than touching it — and their
+		// bytes are bounded by the value budget below.
+		if dim == 0 && span > MaxFrames {
+			return 0, &Error{Reason: fmt.Sprintf("request spans %d frames, limit is %d", span, MaxFrames)}
 		}
 		count *= n
+		dim++
 		rest = rest[close+1:]
 	}
 	return count, nil
