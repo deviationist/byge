@@ -1,24 +1,23 @@
-// Package handler wires the HTTP surface. There are two routes: a proxy and a
-// health check. That is the whole API — this service holds no state and owns no
-// domain logic, because all of byge's reasoning about rain lives in the client
-// where it can be tested without a network.
+// Package handler wires the HTTP surface: four verbs and a health check, none
+// of which takes a URL. That closure is the point — see endpoints.go for why
+// `/fetch?url=` was the wrong shape rather than merely a risky one.
+//
+// The service still owns no domain logic. All of byge's reasoning about rain
+// lives in the client where it can be tested without a network; what lives here
+// is knowledge of how MET names and slices its files, which is the one thing
+// that has no business being duplicated in a browser.
 package handler
 
 import (
-	"context"
 	"crypto/subtle"
 	"encoding/json"
-	"errors"
 	"log/slog"
 	"net"
 	"net/http"
-	"net/url"
 	"slices"
-	"strconv"
 
 	"github.com/deviationist/byge/api/internal/cache"
 	"github.com/deviationist/byge/api/internal/frames"
-	"github.com/deviationist/byge/api/internal/limits"
 	"github.com/deviationist/byge/api/internal/ratelimit"
 	"github.com/deviationist/byge/api/internal/upstream"
 )
@@ -31,7 +30,6 @@ const KeyHeader = "X-Byge-Key"
 type Options struct {
 	AllowedOrigins    []string
 	ClientKey         string
-	MaxValues         int
 	TrustProxyHeaders bool
 	// ExposeCacheHeader adds X-Cache. On in development, where it answers "is
 	// the cache working?"; off in production, where it answers the same question
@@ -59,10 +57,16 @@ func New(c *cache.Cache, u *upstream.Client, l *ratelimit.Limiter, opts Options,
 func (h *Handler) Routes() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /health", h.health)
-	mux.HandleFunc("GET /fetch", h.fetch)
-	mux.HandleFunc("OPTIONS /fetch", h.preflight)
+	// Four verbs, no URL parameter anywhere. See internal/handler/endpoints.go
+	// for why the `/fetch?url=` shape was wrong rather than merely risky.
+	mux.HandleFunc("GET /analysis", h.analysis)
+	mux.HandleFunc("OPTIONS /analysis", h.preflight)
+	mux.HandleFunc("GET /slab", h.slab)
+	mux.HandleFunc("OPTIONS /slab", h.preflight)
 	mux.HandleFunc("GET /field", h.field)
 	mux.HandleFunc("OPTIONS /field", h.preflight)
+	mux.HandleFunc("GET /geocode", h.geocode)
+	mux.HandleFunc("OPTIONS /geocode", h.preflight)
 	return mux
 }
 
@@ -130,87 +134,6 @@ func (h *Handler) health(w http.ResponseWriter, r *http.Request) {
 		"cacheBytes":   bytes,
 		"clients":      h.limiter.Len(),
 	})
-}
-
-// fetch proxies one allowlisted upstream URL.
-//
-// The target arrives as a `url` query parameter rather than as a path prefix so
-// that OPeNDAP's own syntax — which is full of brackets, commas and colons —
-// survives the trip without a rewriting layer that would need to understand it.
-func (h *Handler) fetch(w http.ResponseWriter, r *http.Request) {
-	h.cors(w, r)
-
-	if !h.authorised(r) {
-		http.Error(w, "unauthorised", http.StatusUnauthorized)
-		return
-	}
-	if !h.limiter.Allow(h.clientIP(r)) {
-		w.Header().Set("Retry-After", "60")
-		http.Error(w, "rate limit exceeded", http.StatusTooManyRequests)
-		return
-	}
-
-	target := r.URL.Query().Get("url")
-	if target == "" {
-		http.Error(w, "missing url parameter", http.StatusBadRequest)
-		return
-	}
-	if _, err := url.Parse(target); err != nil {
-		http.Error(w, "malformed url parameter", http.StatusBadRequest)
-		return
-	}
-	// Allowlist first, so a rejected host never reaches the parser. The
-	// alternative order answers an off-allowlist URL with a complaint about its
-	// query string — the wrong reason, and a hint about what we parse. Both run
-	// before anything is forwarded.
-	if !upstream.Permitted(target) {
-		http.Error(w, "upstream not allowed", http.StatusForbidden)
-		return
-	}
-	// The magnitude cap is OPeNDAP-specific: it refuses a constraint expression
-	// with no index brackets, because against thredds that means the whole grid.
-	// Against the geocoder `?lat=&lon=` has no brackets and is simply a request,
-	// so an uncapped source has to be exempt or it could never be called.
-	if upstream.Capped(target) {
-		if err := limits.Check(target, h.opts.MaxValues); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-	}
-
-	entry, hit, err := h.cache.Do(target, func() (cache.Entry, error) {
-		return h.client.Fetch(r.Context(), target)
-	})
-	if err != nil {
-		var forbidden *upstream.ErrForbidden
-		if errors.As(err, &forbidden) {
-			// Deliberately not echoing the URL back: it would make this a
-			// convenient probe for what the allowlist contains.
-			http.Error(w, "upstream not allowed", http.StatusForbidden)
-			return
-		}
-		if errors.Is(err, context.Canceled) {
-			return
-		}
-		// The coordinate is NOT logged. This service is stateless and stays
-		// that way — an access log full of home coordinates is a database
-		// nobody decided to build.
-		h.log.Error("upstream fetch failed", "err", err)
-		http.Error(w, "upstream fetch failed", http.StatusBadGateway)
-		return
-	}
-
-	w.Header().Set("Content-Type", entry.ContentType)
-	w.Header().Set("Content-Length", strconv.Itoa(len(entry.Body)))
-	if h.opts.ExposeCacheHeader {
-		if hit {
-			w.Header().Set("X-Cache", "HIT")
-		} else {
-			w.Header().Set("X-Cache", "MISS")
-		}
-	}
-	w.WriteHeader(entry.Status)
-	_, _ = w.Write(entry.Body)
 }
 
 // Frames exposes the store so the warmer can fill it. The handler owns it

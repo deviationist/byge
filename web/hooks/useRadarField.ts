@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { type BandField, decodeField } from "../lib/fieldFormat";
 import { cellOf, NFRAMES, NX, NY } from "../lib/grid";
-import { API_BASE, CLIENT_KEY, latestAnalysis } from "../lib/opendap";
+import { apiHeaders, apiUrl, latestAnalysis } from "../lib/opendap";
 
 /**
  * A window of the radar field, sized to what is on screen.
@@ -48,14 +48,23 @@ export function useRadarField(req: FieldRequest | null, frames: number, enabled 
     queryFn: async ({ signal }): Promise<BandField> => {
       if (!plan) throw new Error("no window");
       const analysis = await latestAnalysis(signal);
-      const url =
-        `${API_BASE}/field?base=${encodeURIComponent(analysis.base)}` +
-        `&row0=${plan.row0}&col0=${plan.col0}&rows=${plan.rows}&cols=${plan.cols}` +
-        `&stride=${plan.stride}&frames=${frames}`;
-      const res = await fetch(url, {
-        signal,
-        headers: CLIENT_KEY ? { "X-Byge-Key": CLIENT_KEY } : undefined,
-      });
+      // A stamp, not a URL. The server knows which file that names; this side
+      // could not construct one if it wanted to.
+      const res = await fetch(
+        apiUrl("/field", {
+          stamp: analysis.stamp,
+          row0: plan.row0,
+          col0: plan.col0,
+          rows: plan.rows,
+          cols: plan.cols,
+          // No stride. It was a parameter back when the server forwarded a
+          // constraint expression the client had written; now the server slices
+          // whole frames it already holds, where sampling saves nothing. Sending
+          // one it ignores would be a parameter that lies about what it does.
+          frames,
+        }),
+        { signal, headers: apiHeaders() },
+      );
       if (!res.ok) throw new Error(`field ${res.status}`);
       // The browser has already un-gzipped this; what arrives is the quantised
       // field itself.

@@ -9,8 +9,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/deviationist/byge/api/internal/limits"
 )
 
 type Config struct {
@@ -70,9 +68,6 @@ type Config struct {
 	RatePerMinute int
 	RateBurst     int
 
-	// MaxValues caps one request's hyperslab. See internal/limits.
-	MaxValues int
-
 	// MaxInflight caps concurrent upstream fetches, so no client can open a
 	// hundred simultaneous connections to MET through us.
 	MaxInflight int
@@ -101,7 +96,6 @@ func Load() (Config, error) {
 		ClientKey:         os.Getenv("CLIENT_KEY"),
 		RatePerMinute:     int(getint("RATE_PER_MINUTE", 60)),
 		RateBurst:         int(getint("RATE_BURST", 120)),
-		MaxValues:         int(getint("MAX_VALUES", int64(limits.DefaultMaxValues))),
 		MaxInflight:       int(getint("MAX_INFLIGHT", 8)),
 		TrustProxyHeaders: os.Getenv("TRUST_PROXY_HEADERS") == "true",
 		Env:               getenv("APP_ENV", "production"),

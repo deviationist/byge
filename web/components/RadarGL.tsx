@@ -149,6 +149,7 @@ export function RadarGL({
       s.field = field;
     }
 
+    // biome-ignore lint/correctness/useHookAtTopLevel: WebGL's useProgram, not a React hook — the rule matches on the `use` prefix alone.
     gl.useProgram(s.program);
     gl.uniform2f(s.uResolution, canvas.width, canvas.height);
     gl.uniform2f(s.uOrigin, originX, originY);

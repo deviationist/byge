@@ -1,5 +1,19 @@
-// Package upstream fetches from MET, with the allowlist that stops this being
-// an open proxy.
+// Package upstream fetches from MET with an identifying agent, behind an
+// allowlist of the hosts this service is allowed to talk to.
+//
+// THE ALLOWLIST IS NO LONGER THE SECURITY BOUNDARY — it is a backstop, and the
+// demotion is deliberate. It used to be the only thing standing between a
+// `/fetch?url=` parameter and an open relay: a caller named the destination and
+// this decided whether to go there. Now no caller names anything. Every URL in
+// this service is built server-side from validated parameters, so the allowlist
+// can no longer be the thing that saves us — by the time a request reaches
+// Fetch, the question "did someone else choose this?" has no meaning.
+//
+// It stays because the failure it now catches is OURS. A bug in a URL builder,
+// a stamp that slips past its regex, a future endpoint that forgets to
+// validate: any of those produce a request we did not intend, and this refuses
+// it rather than sending it under our identifying User-Agent. A second lock on
+// a door that is no longer the way in.
 package upstream
 
 import (
@@ -12,39 +26,19 @@ import (
 	"github.com/deviationist/byge/api/internal/cache"
 )
 
-// Allowed is the complete set of upstream prefixes this service will forward
-// to. An allowlist rather than a pattern, because a proxy that will fetch
-// arbitrary URLs is an open relay someone else will find and use — and it would
-// be doing so under our identifying User-Agent, making MET's rate limits our
-// problem and our reputation the collateral.
-// Source is one allowlisted upstream.
+// Allowed is the complete set of upstream prefixes this service will fetch.
 //
-// `Capped` records whether the OPeNDAP magnitude cap governs it, and that flag
-// is load-bearing in BOTH directions. The cap refuses a constraint expression
-// with no index brackets, because against thredds that means "send the entire
-// grid" — 347 MB uncompressed. Against any other upstream the same rule is
-// nonsense: `?lat=59.9&lon=10.7` has no brackets and is a perfectly ordinary
-// request, so an uncapped source must be exempt or it can never be called at
-// all.
-type Source struct {
-	Prefix string
-	Capped bool
-}
-
-// Allowed is the complete set of upstream prefixes this service will forward
-// to. An allowlist rather than a pattern, because a proxy that will fetch
-// arbitrary URLs is an open relay someone else will find and use — and it would
-// be doing so under our identifying User-Agent, making MET's rate limits our
-// problem and our reputation the collateral.
-var Allowed = []Source{
+// It lists exactly what our own URL builders produce, and nothing wider. There
+// used to be a third entry for MET's point nowcast (`api.met.no/weatherapi/`),
+// admitted when any client could ask for any allowlisted URL; nothing in the
+// service has ever built one, so it was a door left open for a room we do not
+// use.
+var Allowed = []string{
 	// The gridded radar nowcast. This is the source product the yr tiles are
-	// rendered from — continuous mm/h plus _FillValue for "no radar here" —
-	// and it is the only place the disc model can come from at full precision.
-	{Prefix: "https://thredds.met.no/thredds/dodsC/radarnowcasting/", Capped: true},
-	// The point nowcast. Already CORS-enabled and reachable from a browser,
-	// but routed through here too so every MET request carries the same
-	// identifying agent and benefits from the same cache.
-	{Prefix: "https://api.met.no/weatherapi/nowcast/"},
+	// rendered from — continuous mm/h plus _FillValue for "no radar here" — and
+	// it is the only place the disc model can come from at full precision.
+	// Built by handler.AnalysisBase and the /slab and /field endpoints.
+	"https://thredds.met.no/thredds/dodsC/radarnowcasting/",
 	// Reverse geocoding, for the "Grünerløkka, Oslo" line under a place name.
 	//
 	// NOT here for CORS — Nominatim allows browser calls. It is here for the two
@@ -57,30 +51,17 @@ var Allowed = []Source{
 	//
 	// The prefix stops at /reverse. Their search and lookup endpoints are the
 	// ones the policy singles out as expensive, and we have no use for either.
-	{Prefix: "https://nominatim.openstreetmap.org/reverse"},
+	"https://nominatim.openstreetmap.org/reverse",
 }
 
-// Capped reports whether the OPeNDAP magnitude cap applies to this target.
-// Unknown URLs return true: an unrecognised target should get MORE scrutiny,
-// not less, and it is about to be refused by the allowlist anyway.
-func Capped(raw string) bool {
-	for _, src := range Allowed {
-		if strings.HasPrefix(raw, src.Prefix) {
-			return src.Capped
-		}
-	}
-	return true
-}
-
-// Permitted reports whether a target is on the allowlist. Exported so the
-// handler can refuse an unknown host BEFORE the magnitude cap parses it —
-// otherwise an off-allowlist URL is answered with a parser complaint about its
-// query string, which is both the wrong reason and a hint about what we parse.
+// Permitted reports whether a target is on the allowlist. Exported for the
+// tests, which are the only thing that asks — production code cannot reach
+// Fetch with an unbuilt URL, which is the property under test.
 func Permitted(raw string) bool { return permitted(raw) }
 
 func permitted(raw string) bool {
-	for _, src := range Allowed {
-		if strings.HasPrefix(raw, src.Prefix) {
+	for _, prefix := range Allowed {
+		if strings.HasPrefix(raw, prefix) {
 			return true
 		}
 	}

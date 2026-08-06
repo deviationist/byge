@@ -11,7 +11,7 @@ import {
   type Analysis,
   clampWindow,
   FILL_THRESHOLD,
-  fetchVars,
+  fetchSlab,
   frameTimes,
   latestAnalysis,
 } from "./opendap";
@@ -120,9 +120,9 @@ export async function probe(lat: number, lon: number, opts: ProbeOptions = {}): 
   const r = Math.max(1, Math.round(radiusKm)); // 1 km grid => radius in cells
   const { r0, r1, c0, c1 } = clampWindow(row, col, r);
 
-  const vars = await fetchVars(
-    analysis.base,
-    `lwe_precipitation_rate[0:1:${NFRAMES - 1}][${r0}:1:${r1}][${c0}:1:${c1}]`,
+  const vars = await fetchSlab(
+    analysis.stamp,
+    { row0: r0, col0: c0, rows: r1 - r0 + 1, cols: c1 - c0 + 1 },
     opts.signal,
   );
   const cube = vars.get("lwe_precipitation_rate");

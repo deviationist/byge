@@ -6,6 +6,10 @@ func TestPermittedIsPrefixExact(t *testing.T) {
 	// A lookalike host must not pass. `thredds.met.no.evil.example` has our
 	// allowlisted string as a prefix of its HOSTNAME, which is precisely the
 	// shape a naive `strings.Contains` would wave through.
+	//
+	// This is a backstop now rather than the boundary — no caller supplies a URL
+	// any more — but it is the backstop against OUR mistakes, and a prefix check
+	// that is subtly wrong is worse than none because it reads as protection.
 	deny := []string{
 		"https://thredds.met.no.evil.example/thredds/dodsC/radarnowcasting/x",
 		"https://example.com/",
@@ -14,6 +18,9 @@ func TestPermittedIsPrefixExact(t *testing.T) {
 		// lookup as the expensive ones, so the prefix stops at /reverse.
 		"https://nominatim.openstreetmap.org/search?q=oslo",
 		"https://nominatim.openstreetmap.org/",
+		// MET's point nowcast: a real MET endpoint, but nothing here builds one.
+		// The allowlist admits what we construct, not what we could imagine.
+		"https://api.met.no/weatherapi/nowcast/2.0/complete?lat=59&lon=10",
 	}
 	for _, u := range deny {
 		if Permitted(u) {
@@ -22,8 +29,7 @@ func TestPermittedIsPrefixExact(t *testing.T) {
 	}
 
 	allow := []string{
-		"https://thredds.met.no/thredds/dodsC/radarnowcasting/x.nc.dds",
-		"https://api.met.no/weatherapi/nowcast/2.0/complete?lat=59&lon=10",
+		"https://thredds.met.no/thredds/dodsC/radarnowcasting/x.nc.ascii?v%5B0%5D",
 		"https://nominatim.openstreetmap.org/reverse?lat=59.9&lon=10.7&format=jsonv2",
 	}
 	for _, u := range allow {
@@ -33,23 +39,18 @@ func TestPermittedIsPrefixExact(t *testing.T) {
 	}
 }
 
-func TestCappedOnlyGovernsOpendap(t *testing.T) {
-	// The magnitude cap refuses a constraint expression with no index brackets,
-	// because against thredds that means "send the entire grid" — 347 MB
-	// uncompressed. The geocoder's `?lat=&lon=` has no brackets either and is a
-	// perfectly ordinary request, so without this split every reverse geocode is
-	// rejected by a rule written for a different upstream — and rejected as a
-	// 400 about constraint expressions, which is a baffling thing to debug from
-	// the client.
-	if !Capped("https://thredds.met.no/thredds/dodsC/radarnowcasting/x.nc.ascii?v") {
-		t.Error("thredds must stay capped")
+func TestSafeURLEncodesOpendapBrackets(t *testing.T) {
+	// RFC 3986 forbids a bare `[` in a request target and MET's Tomcat enforces
+	// it, answering "400 Invalid character found in the request target" rather
+	// than serving data. Go passes RawQuery through verbatim, so nothing else
+	// would fix this.
+	got := safeURL("https://thredds.met.no/x.ascii?rate[0:1:23][10:1:20]")
+	want := "https://thredds.met.no/x.ascii?rate%5B0:1:23%5D%5B10:1:20%5D"
+	if got != want {
+		t.Errorf("safeURL = %q, want %q", got, want)
 	}
-	if Capped("https://nominatim.openstreetmap.org/reverse?lat=59.9&lon=10.7") {
-		t.Error("the geocoder must be exempt from the OPeNDAP cap")
-	}
-	// Unknown targets get MORE scrutiny, not less. They are refused by the
-	// allowlist first in practice, so this is belt to that braces.
-	if !Capped("https://example.com/whatever?x=1") {
-		t.Error("unknown targets should default to capped")
+	// Nothing before the query is touched — a path is not a place for escaping.
+	if plain := safeURL("https://example.com/a[b]"); plain != "https://example.com/a[b]" {
+		t.Errorf("safeURL rewrote a URL with no query: %q", plain)
 	}
 }
