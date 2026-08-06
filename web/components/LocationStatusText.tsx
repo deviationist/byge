@@ -246,6 +246,27 @@ export function headlineOf(v: Verdict): Headline {
     const dur = durationMin(s, v.horizonMin);
 
     if (isOpenEnded(s)) {
+      // A spell that STARTS in the last frame has a lower bound of zero, and
+      // "lasting at least 0 min" is the worst sentence this file can produce:
+      // it says nothing while wearing the costume of a measurement, and the
+      // footnote then explains that 0 min is a floor rather than a forecast,
+      // which is true and absurd. The rule the whole file turns on — an unknown
+      // end never becomes a number — has to cover the case where the number is
+      // zero, so the grammar changes again rather than the value going to print.
+      if (dur <= 0) {
+        return {
+          state: "incoming-open",
+          lead: i18next.t("status.dryLead"),
+          body: i18next.t("status.incomingOpenBody", { start: durationLong(s.startMin) }),
+          bound: i18next.t("status.incomingEdgeBound"),
+          tail: i18next.t("status.incomingEdgeTail"),
+          clock: null,
+          secondary: null,
+          secondClock: null,
+          note: i18next.t("status.incomingEdgeNote"),
+        };
+      }
+
       return {
         state: "incoming-open",
         lead: i18next.t("status.dryLead"),
@@ -334,10 +355,13 @@ export function statusLine(v: Verdict): string {
     parts.push(i18next.t("compact.dry"));
     parts.push(
       isOpenEnded(s)
-        ? i18next.t("compact.incomingOpen", {
-            start: durationShort(s.startMin),
-            dur: durationShort(dur),
-          })
+        ? dur <= 0
+          ? // Same rule in the compact register: no "at least 0m".
+            i18next.t("compact.incomingEdge", { start: durationShort(s.startMin) })
+          : i18next.t("compact.incomingOpen", {
+              start: durationShort(s.startMin),
+              dur: durationShort(dur),
+            })
         : i18next.t("compact.incoming", {
             start: durationShort(s.startMin),
             dur: durationShort(dur),

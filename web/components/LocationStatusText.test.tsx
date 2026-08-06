@@ -467,3 +467,40 @@ describe("the clock line", () => {
     expect(Number.parseFloat(small.style.fontSize)).toBeGreaterThanOrEqual(11);
   });
 });
+
+
+describe("a spell that starts at the very edge of the horizon", () => {
+  // startMin lands in the LAST frame, so the lower bound is zero. Found live:
+  // the headline read "lasting at least 0 min" and the footnote explained that
+  // "0 min is a floor, not a forecast" — true, and absurd.
+  const atEdge = V(Z(23).concat([2.8]));
+
+  it("never states a zero floor", () => {
+    const h = headline(atEdge);
+    expect(h).not.toMatch(/0\s*min/);
+    expect(h).not.toMatch(/at least 0/);
+  });
+
+  it("still says the rain is coming, and when", () => {
+    // The arrival IS observed. Only the duration is unknowable, so dropping the
+    // whole sentence would throw away the half we can see.
+    expect(headline(atEdge)).toMatch(/Rain in about/i);
+  });
+
+  it("says why there is no duration, rather than leaving a gap", () => {
+    const note = text(view(atEdge).getByTestId("status-note"));
+    expect(note).toMatch(/last frame/i);
+    expect(note).not.toMatch(/\b0\b/);
+  });
+
+  it("keeps the open-ended treatment, because the end is still unknown", () => {
+    // The dotted bound and the arrow are how an unknown end is signalled. This
+    // case is MORE uncertain than an ordinary open spell, not less.
+    expect(view(atEdge).getByTestId("status-bound")).toBeTruthy();
+  });
+
+  it("does not state a zero floor in the compact register either", () => {
+    expect(statusLine(atEdge)).not.toMatch(/0m\b/);
+    expect(statusLine(atEdge)).not.toMatch(/at least 0/);
+  });
+});
