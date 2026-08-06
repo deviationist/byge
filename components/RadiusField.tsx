@@ -118,7 +118,6 @@ const LABEL: TextStyle = {
   fontSize: 9.5,
   letterSpacing: 0.5,
   textTransform: "uppercase",
-  color: "var(--color-ink3)",
 };
 
 const NOTE: TextStyle = {
@@ -147,6 +146,7 @@ function Step({
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
+      className="border-line2"
       style={({ pressed }) => ({
         width: MIN_TARGET,
         height: MIN_TARGET,
@@ -154,11 +154,12 @@ function Step({
         justifyContent: "center",
         borderRadius: 10,
         borderWidth: 1,
-        borderColor: "var(--color-line2)",
         opacity: disabled ? 0.35 : pressed ? 0.6 : 1,
       })}
     >
-      <Text style={{ fontSize: 17, lineHeight: 20, color: "var(--color-ink2)" }}>{glyph}</Text>
+      <Text className="text-ink2" style={{ fontSize: 17, lineHeight: 20 }}>
+        {glyph}
+      </Text>
     </Pressable>
   );
 }
@@ -202,15 +203,12 @@ export function RadiusField({
           justifyContent: "space-between",
         }}
       >
-        <Text nativeID={labelId} style={LABEL}>
+        <Text nativeID={labelId} className="text-ink3" style={LABEL}>
           {label}
         </Text>
         <Text
-          style={{
-            fontFamily: "'IBM Plex Mono', monospace",
-            fontSize: 14,
-            color: "var(--color-ink)",
-          }}
+          className="text-ink"
+          style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 14 }}
         >
           {km} km
         </Text>
@@ -250,18 +248,18 @@ export function RadiusField({
           style={{ flex: 1, height: MIN_TARGET, justifyContent: "center" }}
         >
           <View
+            className="bg-sunk border-line"
             style={{
               height: TRACK_H,
               borderRadius: TRACK_H / 2,
-              backgroundColor: "var(--color-sunk)",
               borderWidth: 1,
-              borderColor: "var(--color-line)",
               justifyContent: "center",
             }}
           >
             {/* The fill grows with the radius, so "wider" reads as "more" —
                 matching the rule that a wider circle can only add rain. */}
             <View
+              className="bg-ink2"
               style={{
                 position: "absolute",
                 left: 0,
@@ -269,19 +267,18 @@ export function RadiusField({
                 bottom: 0,
                 width: `${fraction * 100}%`,
                 borderRadius: TRACK_H / 2,
-                backgroundColor: "var(--color-ink2)",
               }}
             />
             {defaultAt === null ? null : (
               <View
                 aria-hidden
+                className="bg-line2"
                 style={{
                   position: "absolute",
                   left: `${defaultAt * 100}%`,
                   width: 2,
                   top: -3,
                   bottom: -3,
-                  backgroundColor: "var(--color-line2)",
                 }}
               />
             )}
@@ -296,12 +293,18 @@ export function RadiusField({
         />
       </View>
 
-      <Text style={{ ...NOTE, color: "var(--color-ink3)" }}>{RADIUS_HINT}</Text>
+      <Text className="text-ink3" style={NOTE}>
+        {RADIUS_HINT}
+      </Text>
 
       {/* Polite, not assertive: the note appears while someone is dragging, and
           interrupting them mid-adjustment would be worse than arriving late. */}
       <View aria-live="polite">
-        {note ? <Text style={{ ...NOTE, color: "var(--color-ink2)" }}>{note}</Text> : null}
+        {note ? (
+          <Text className="text-ink2" style={NOTE}>
+            {note}
+          </Text>
+        ) : null}
       </View>
     </View>
   );

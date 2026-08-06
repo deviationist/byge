@@ -136,9 +136,13 @@ describe("MapField radius ring", () => {
   it("is a single ring, not a filled disc", () => {
     // A filled disc reads as "rain here"; this is a selection boundary.
     setup();
-    const s = (screen.getByLabelText("3 km radius") as HTMLElement).style;
-    expect(s.backgroundColor).toBe("rgba(0, 0, 0, 0)");
-    expect(Number.parseFloat(s.borderTopWidth)).toBeGreaterThan(0);
+    const el = screen.getByLabelText("3 km radius") as HTMLElement;
+    // Unfilled via the token class, so there is no inline background to read —
+    // assert the class plus an empty inline background, which also catches a
+    // literal fill sneaking in beside it.
+    expect(el.className).toContain("bg-transparent");
+    expect(el.style.backgroundColor).toBe("");
+    expect(Number.parseFloat(el.style.borderTopWidth)).toBeGreaterThan(0);
   });
 });
 

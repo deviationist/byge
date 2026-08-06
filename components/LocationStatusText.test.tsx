@@ -370,7 +370,11 @@ describe("presentation", () => {
     const { container } = render(<LocationStatusText verdict={rainingOpen} theme="dark" />);
     const scoped = within(container);
     for (const id of ["status-lead", "status-body", "status-bound"]) {
-      expect(scoped.getByTestId(id).style.color).toContain("var(--color-");
+      const el = scoped.getByTestId(id);
+      // Same invariant, now in class vocabulary — plus the stronger half: no
+      // inline colour at all, so a literal cannot ride along beside the token.
+      expect(el.className).toMatch(/\btext-ink[23]?\b/);
+      expect(el.style.color).toBe("");
     }
   });
 

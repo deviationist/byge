@@ -142,14 +142,15 @@ export function MapField({
           <View
             pointerEvents="none"
             accessibilityLabel={`${radiusKm} km radius`}
+            // Band 4 — the ring is drawn in the palette, not in chrome ink, so
+            // the circle reads as belonging to the weather it will report on.
+            className="border-b4 bg-transparent"
             style={{
               position: "absolute",
               width: ringPx,
               height: ringPx,
               borderRadius: ringPx / 2,
               borderWidth: 1.5,
-              borderColor: "var(--color-b4)",
-              backgroundColor: "transparent",
             }}
           />
           <Marker />
@@ -162,17 +163,14 @@ export function MapField({
         <View style={{ flex: 1, minWidth: 180, gap: 4 }}>
           <Text
             accessibilityLabel={`Selected coordinate ${value.lat.toFixed(4)}, ${value.lon.toFixed(4)}`}
-            style={{ fontFamily: MONO, fontSize: 14, color: "var(--color-ink)" }}
+            className="text-ink"
+            style={{ fontFamily: MONO, fontSize: 14 }}
           >
             {value.lat.toFixed(4)}, {value.lon.toFixed(4)}
           </Text>
           <Text
-            style={{
-              fontFamily: MONO,
-              fontSize: 10,
-              lineHeight: 16,
-              color: "var(--color-ink3)",
-            }}
+            className="text-ink3"
+            style={{ fontFamily: MONO, fontSize: 10, lineHeight: 16 }}
           >
             Four decimals max — MET rejects finer than that. ≈11 m, closer than the radar can
             see anyway.
@@ -241,31 +239,11 @@ function Marker() {
       role="img"
       style={{ position: "absolute", alignItems: "center", justifyContent: "center" }}
     >
+      <View className="bg-ink" style={{ position: "absolute", width: 22, height: 1.5 }} />
+      <View className="bg-ink" style={{ position: "absolute", width: 1.5, height: 22 }} />
       <View
-        style={{
-          position: "absolute",
-          width: 22,
-          height: 1.5,
-          backgroundColor: "var(--color-ink)",
-        }}
-      />
-      <View
-        style={{
-          position: "absolute",
-          width: 1.5,
-          height: 22,
-          backgroundColor: "var(--color-ink)",
-        }}
-      />
-      <View
-        style={{
-          width: 11,
-          height: 11,
-          borderRadius: 6,
-          borderWidth: 2,
-          borderColor: "var(--color-surface)",
-          backgroundColor: "var(--color-ink)",
-        }}
+        className="bg-ink border-surface"
+        style={{ width: 11, height: 11, borderRadius: 6, borderWidth: 2 }}
       />
     </View>
   );
@@ -275,17 +253,20 @@ function Notice({ title, body }: { title: string; body: string }) {
   return (
     <View
       accessibilityRole="alert"
+      className="bg-sunk border-line2"
       style={{
         borderWidth: 1,
-        borderColor: "var(--color-line2)",
-        backgroundColor: "var(--color-sunk)",
         borderRadius: 10,
         padding: 12,
         gap: 4,
       }}
     >
-      <Text style={{ fontSize: 13.5, color: "var(--color-ink)" }}>{title}</Text>
-      <Text style={{ fontSize: 12.5, lineHeight: 19, color: "var(--color-ink2)" }}>{body}</Text>
+      <Text className="text-ink" style={{ fontSize: 13.5 }}>
+        {title}
+      </Text>
+      <Text className="text-ink2" style={{ fontSize: 12.5, lineHeight: 19 }}>
+        {body}
+      </Text>
     </View>
   );
 }
