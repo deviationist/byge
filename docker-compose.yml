@@ -1,0 +1,31 @@
+# One compose file for local and production; the difference lives in the env
+# file.
+#
+#   local:       docker compose up --build     (.env)
+#   production:  make prod-up                  (.env.prod)
+#
+# In production this sits behind nginx on xavi, which terminates TLS for
+# byge-api.ichiva.no under the existing *.ichiva.no wildcard. APP_BIND
+# therefore defaults to loopback: the container should never be reachable
+# except through nginx.
+services:
+  api:
+    build: .
+    restart: ${RESTART_POLICY:-no}
+    ports:
+      - "${APP_BIND:-127.0.0.1:8080}:8080"
+    environment:
+      ADDR: 0.0.0.0:8080
+      USER_AGENT: ${USER_AGENT}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      CACHE_TTL_OK: ${CACHE_TTL_OK:-1h}
+      CACHE_TTL_MISS: ${CACHE_TTL_MISS:-30s}
+      CACHE_MAX_BYTES: ${CACHE_MAX_BYTES:-67108864}
+      UPSTREAM_TIMEOUT: ${UPSTREAM_TIMEOUT:-20s}
+    healthcheck:
+      # The binary is distroless with no shell and no curl, so the check runs
+      # the app itself in a probe mode rather than shelling out.
+      test: ["CMD", "/app", "-healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
