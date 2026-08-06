@@ -216,7 +216,6 @@
     "updatedAge": "updated {{age}} min ago",
     "offlineAge": "last updated {{age}} min ago · offline",
     "checking": "checking…",
-    "caption": "{{places}} · {{freshness}}",
-    "key": "FILLED = RAINING NOW · OUTLINE = ON THE WAY · HATCHED = NOT OBSERVED"
+    "caption": "{{places}} · {{freshness}}"
   }
 }

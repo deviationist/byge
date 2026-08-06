@@ -20,14 +20,14 @@ describe("ListHeader", () => {
     expect(screen.getByRole("heading", { name: "byge" })).toBeInTheDocument();
   });
 
-  it("keeps the key visible without anything being opened", () => {
-    // The whole complaint that produced this component: the shapes were only
-    // explained behind a collapsed disclosure, so nobody found the explanation.
+  it("does not explain the swatches a second time", () => {
+    // The shapes are explained once, in the legend card under the list, which
+    // shows them in its collapsed header. A mono key line here as well said the
+    // same thing twice on one screen — worse, in the harder-to-read of the two
+    // registers.
     render(<ListHeader count={3} ageMin={4} />);
-    const key = screen.getByTestId("list-key").textContent ?? "";
-    expect(key).toContain("FILLED");
-    expect(key).toContain("OUTLINE");
-    expect(key).toContain("HATCHED");
+    expect(screen.queryByTestId("list-key")).not.toBeInTheDocument();
+    expect(screen.queryByText(/FILLED/)).not.toBeInTheDocument();
   });
 
   it("counts the places, with the singular for one", () => {
