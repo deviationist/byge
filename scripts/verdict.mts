@@ -19,7 +19,7 @@ for (const [lat, lon, r, name] of pts) {
   console.log(desc(v));
   if (v.frames.length) {
     console.log(
-      `   centre=${v.centreRate.toFixed(2)} mm/h  edgeOnly=${v.edgeOnly}  nearest=${v.nearestKm === null ? "—" : v.nearestKm.toFixed(1) + " km"}  observed=${(v.observed * 100).toFixed(0)}%`,
+      `   centre=${v.centreRate.toFixed(2)} mm/h  edgeOnly=${v.edgeOnly}  nearest=${v.nearestKm === null ? "—" : `${v.nearestKm.toFixed(1)} km`}  observed=${(v.observed * 100).toFixed(0)}%`,
     );
   }
   console.log();

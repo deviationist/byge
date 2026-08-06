@@ -238,7 +238,6 @@ function Marker() {
     <View
       pointerEvents="none"
       accessibilityLabel="Selected point"
-      // biome-ignore lint/a11y/useSemanticElements: RN View, not DOM
       role="img"
       style={{ position: "absolute", alignItems: "center", justifyContent: "center" }}
     >

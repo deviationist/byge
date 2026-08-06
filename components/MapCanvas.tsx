@@ -269,7 +269,6 @@ export function MapCanvas({
   return (
     <View
       ref={surfaceRef}
-      // biome-ignore lint/a11y/useSemanticElements: RN View, not DOM
       role="region"
       aria-label={label}
       aria-roledescription="map"
