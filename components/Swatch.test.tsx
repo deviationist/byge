@@ -97,12 +97,19 @@ describe("Swatch rendering", () => {
   });
 
   it("draws `later` as a ring in the band colour, not a fill", () => {
-    // react-native-web expands border shorthands to longhands and normalises
-    // `transparent` to rgba(0,0,0,0), so assert on what it actually emits.
-    const { container } = render(<Swatch mode="later" rate={3.4} theme="light" />);
-    const s = styleOf(container.firstElementChild as HTMLElement);
-    expect(s.backgroundColor).toBe("rgba(0, 0, 0, 0)");
-    expect(s.borderTopColor).toBe("rgb(0, 128, 255)");
+    // The fill is now the `bg-transparent` token class, so there is no inline
+    // background to read — assert the class, and the absence of any inline
+    // background that could have quietly filled the ring.
+    //
+    // The RING keeps its resolved assertion: band colour comes from
+    // lib/scale.ts as a real value and stays inline, which is exactly the split
+    // this component is meant to preserve. react-native-web expands border
+    // shorthands to longhands, so it lands on borderTopColor.
+    const el = render(<Swatch mode="later" rate={3.4} theme="light" />).container
+      .firstElementChild as HTMLElement;
+    expect(el.className).toContain("bg-transparent");
+    expect(el.style.backgroundColor).toBe("");
+    expect(styleOf(el).borderTopColor).toBe("rgb(0, 128, 255)");
   });
 
   it("hatches when unobserved — the shape carries it, not the colour", () => {

@@ -94,8 +94,11 @@ describe("swatch", () => {
   it("draws rain-on-the-way as a ring, not a fill", () => {
     const swatch = card({ verdict: incoming }).getByRole("img");
     expect(swatch.getAttribute("aria-label")).toBe("rain on the way");
-    // react-native-web normalises `transparent`.
-    expect(swatch.style.backgroundColor).toBe("rgba(0, 0, 0, 0)");
+    // The unfilled centre is the `bg-transparent` token class now, so there is
+    // no inline background to read — assert the class, and that nothing inline
+    // has filled it in behind our back.
+    expect(swatch.className).toContain("bg-transparent");
+    expect(swatch.style.backgroundColor).toBe("");
   });
 
   it("follows the dark ramp in dark mode", () => {

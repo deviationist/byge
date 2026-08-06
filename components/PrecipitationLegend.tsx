@@ -68,14 +68,14 @@ export function PrecipitationLegend({
     onToggle?.(next);
   }
 
-  const micro = { fontFamily: MONO, fontSize: 9.5, color: "var(--color-ink3)" } as const;
-  const body = { fontSize: 11.5, lineHeight: 17, color: "var(--color-ink2)" } as const;
+  const micro = { fontFamily: MONO, fontSize: 9.5 } as const;
+  const body = { fontSize: 11.5, lineHeight: 17 } as const;
 
   return (
     <View
+      className="border-t-line"
       style={{
         borderTopWidth: 1,
-        borderTopColor: "var(--color-line)",
         paddingTop: 4,
       }}
     >
@@ -92,7 +92,9 @@ export function PrecipitationLegend({
           gap: 12,
         }}
       >
-        <Text style={{ fontSize: 13, color: "var(--color-ink2)" }}>Reading the list</Text>
+        <Text className="text-ink2" style={{ fontSize: 13 }}>
+          Reading the list
+        </Text>
         <Text style={[micro, { fontSize: 12 }]}>{open ? "−" : "+"}</Text>
       </Pressable>
 
@@ -103,56 +105,68 @@ export function PrecipitationLegend({
               <Row key={s.mode}>
                 <Swatch mode={s.mode} rate={s.rate} size={16} theme={theme} />
                 <View style={{ flex: 1, gap: 1 }}>
-                  <Text style={{ fontSize: 12.5, color: "var(--color-ink)" }}>{s.label}</Text>
-                  <Text style={body}>{s.body}</Text>
+                  <Text className="text-ink" style={{ fontSize: 12.5 }}>
+                    {s.label}
+                  </Text>
+                  <Text className="text-ink2" style={body}>
+                    {s.body}
+                  </Text>
                 </View>
               </Row>
             ))}
           </View>
 
           <View style={{ gap: 7 }}>
-            <Text style={[micro, { letterSpacing: 0.5 }]}>HOW HARD · MM/H</Text>
+            <Text className="text-ink3" style={[micro, { letterSpacing: 0.5 }]}>
+              HOW HARD · MM/H
+            </Text>
             {legend().map((r) => (
               <Row key={r.label}>
                 <View
+                  className="border-line2"
                   style={{
                     width: 14,
                     height: 14,
                     borderRadius: 3,
                     borderWidth: 1,
-                    borderColor: "var(--color-line2)",
                     // Through the same lookup the strip and the map use, so the
                     // ramp cannot drift out of step with what it explains.
                     backgroundColor: colorOf(bandOf(r.from), theme),
                   }}
                 />
-                <Text style={{ fontSize: 12, color: "var(--color-ink)", minWidth: 92 }}>
+                <Text className="text-ink" style={{ fontSize: 12, minWidth: 92 }}>
                   {r.label}
                 </Text>
-                <Text style={[body, { flex: 1 }]}>{r.feelsLike}</Text>
-                <Text style={micro}>{r.range}</Text>
+                <Text className="text-ink2" style={[body, { flex: 1 }]}>
+                  {r.feelsLike}
+                </Text>
+                <Text className="text-ink3" style={micro}>
+                  {r.range}
+                </Text>
               </Row>
             ))}
             <Row>
               <View
-                style={{
-                  width: 14,
-                  height: 14,
-                  borderRadius: 3,
-                  borderWidth: 1,
-                  borderColor: "var(--color-line2)",
-                  backgroundColor: "var(--color-dry)",
-                }}
+                className="border-line2 bg-dry"
+                style={{ width: 14, height: 14, borderRadius: 3, borderWidth: 1 }}
               />
-              <Text style={{ fontSize: 12, color: "var(--color-ink)", minWidth: 92 }}>dry</Text>
-              <Text style={[body, { flex: 1 }]}>we looked, nothing is falling</Text>
-              <Text style={micro}>observed</Text>
+              <Text className="text-ink" style={{ fontSize: 12, minWidth: 92 }}>
+                dry
+              </Text>
+              <Text className="text-ink2" style={[body, { flex: 1 }]}>
+                we looked, nothing is falling
+              </Text>
+              <Text className="text-ink3" style={micro}>
+                observed
+              </Text>
             </Row>
           </View>
 
           <View style={{ gap: 6 }}>
-            <Text style={[micro, { letterSpacing: 0.5 }]}>NOT OBSERVED</Text>
-            <Text style={body}>
+            <Text className="text-ink3" style={[micro, { letterSpacing: 0.5 }]}>
+              NOT OBSERVED
+            </Text>
+            <Text className="text-ink2" style={body}>
               Hatching is not a level of rain and it is not dry. It means the radar mosaic
               cannot see that place at all, so byge makes no claim either way. Dry means we
               looked and saw nothing falling; hatched means we could not look.
