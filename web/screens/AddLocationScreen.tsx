@@ -20,6 +20,13 @@ import { toast } from "../lib/toast";
 import { useResolvedTheme } from "../theme/ThemeProvider";
 import { MONO } from "../theme/tokens";
 
+/** A route param that is only usable if it is really a number. */
+function numeric(v: string | undefined): number | undefined {
+  if (v === undefined) return undefined;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : undefined;
+}
+
 /** Oslo, as a starting view for a brand-new place. */
 const DEFAULT_CENTRE = { lat: 59.9273, lon: 10.7607 };
 
@@ -36,7 +43,10 @@ export function AddLocationScreen() {
   const goBack = useBack("/");
   const { t } = useTranslation();
   const theme = useResolvedTheme();
-  const { id } = useLocalSearchParams<{ id?: string }>();
+  // `lat`/`lon` arrive from the radar map's "Save this point as a place", which
+  // is the one route from browsing back into what byge does. They only seed the
+  // starting centre — the pin, the radius and the name are all still yours.
+  const { id, lat, lon } = useLocalSearchParams<{ id?: string; lat?: string; lon?: string }>();
   const { byId, add, update, remove, neighbourOf } = useLocations();
 
   const existing = id ? byId(id) : undefined;
@@ -44,8 +54,8 @@ export function AddLocationScreen() {
 
   const [name, setName] = useState(existing?.name ?? "");
   const [centre, setCentre] = useState({
-    lat: existing?.lat ?? DEFAULT_CENTRE.lat,
-    lon: existing?.lon ?? DEFAULT_CENTRE.lon,
+    lat: existing?.lat ?? numeric(lat) ?? DEFAULT_CENTRE.lat,
+    lon: existing?.lon ?? numeric(lon) ?? DEFAULT_CENTRE.lon,
   });
   const [radiusKm, setRadiusKm] = useState(existing?.radiusKm ?? DEFAULT_RADIUS_KM);
   const [confirming, setConfirming] = useState(false);

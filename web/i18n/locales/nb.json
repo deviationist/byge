@@ -245,7 +245,8 @@
     "updatedAge": "oppdatert for {{age}} min siden",
     "offlineAge": "sist oppdatert for {{age}} min siden · uten nett",
     "checking": "sjekker …",
-    "caption": "{{places}} · {{freshness}}"
+    "caption": "{{places}} · {{freshness}}",
+    "radarEntry": "Radarkart · se på været, uten et sted knyttet til"
   },
   "basemap": {
     "label": "Kartstil",
@@ -341,6 +342,33 @@
   "cell": {
     "reading": "Leser …",
     "unavailable": "Fikk ikke lest den ruten.",
-    "close": "lukk"
+    "close": "Lukk avlesningen",
+    "notObserved": "Ikke observert",
+    "notObservedBody": "Denne ruten er utenfor radardekning, så det er ingenting å melde noen vei.",
+    "dry": "Opphold",
+    "dryBody": "Radaren ser denne ruten, og ser ikke regn i den.",
+    "rate": "INTENSITET",
+    "frame": "BILDE",
+    "cell": "RUTE",
+    "resolution": "OPPLØSNING",
+    "resolutionValue": "1 km · 5 min",
+    "disclaimer": "En avlesning fra én radarrute — ikke et varsel for et sted. byge påstår bare noe om steder du har lagret, der den kjenner radiusen.",
+    "save": "Lagre dette punktet som et sted"
+  },
+  "mapLegend": {
+    "key": "TEGN",
+    "hide": "SKJUL",
+    "show": "Vis hele tegnforklaringen",
+    "dry": "Opphold",
+    "drySub": "Radaren ser ruten og ser ikke regn — kartet står urørt.",
+    "noRadar": "Ingen radardekning",
+    "noRadarSub": "Ikke opphold. Ingen påstand noen vei."
+  },
+  "playback": {
+    "clock": "{{when}}  ·  {{time}}",
+    "frame": "BILDE {{i}} AV {{n}}",
+    "playing": "SPILLER · BILDE {{i}} AV {{n}}",
+    "ended": "SLUTT PÅ SERIEN · SPILL PÅ NYTT",
+    "horizon": "Så langt rekker radarserien. Det som fortsatt faller her, har ingen kjent slutt."
   }
 }
