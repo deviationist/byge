@@ -1,4 +1,5 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { useWindowDimensions, View } from "react-native";
 import { Attribution } from "../components/Attribution";
@@ -46,6 +47,7 @@ export type VerdictScreenProps = {
 
 export function VerdictScreen({ id: idProp, showBack = true }: VerdictScreenProps = {}) {
   const router = useRouter();
+  const { t } = useTranslation();
   const theme = useResolvedTheme();
   const { width } = useWindowDimensions();
   const params = useLocalSearchParams<{ id?: string }>();
@@ -66,10 +68,7 @@ export function VerdictScreen({ id: idProp, showBack = true }: VerdictScreenProp
   if (!location) {
     return (
       <Screen>
-        <ErrorState
-          detail="This place is not saved on this device."
-          onRetry={() => router.replace("/")}
-        />
+        <ErrorState detail={t("verdict.notSaved")} onRetry={() => router.replace("/")} />
       </Screen>
     );
   }
@@ -118,22 +117,22 @@ export function VerdictScreen({ id: idProp, showBack = true }: VerdictScreenProp
         // so there is nowhere to go back TO. A back button that returns you to
         // a screen already on screen is a lie about the layout.
         onBack={showBack ? () => router.push("/") : undefined}
-        backLabel={showBack ? "Back to places" : undefined}
+        backLabel={showBack ? t("nav.backToPlaces") : undefined}
         trailing={
           <OverflowMenu
             theme={theme}
             label={`More for ${location.name}`}
             items={[
               {
-                label: "Edit place",
+                label: t("verdict.edit"),
                 key: "edit",
-                hint: "coordinate, radius and name",
+                hint: t("verdict.editHint"),
                 onSelect: () => router.push(`/edit/${location.id}`),
               },
               {
-                label: "Remove place",
+                label: t("verdict.remove"),
                 key: "remove",
-                hint: "cannot be undone",
+                hint: t("verdict.removeHint"),
                 onSelect: () => setConfirming(true),
               },
             ]}
@@ -155,7 +154,7 @@ export function VerdictScreen({ id: idProp, showBack = true }: VerdictScreenProp
       {isError && !verdict ? (
         <ErrorState
           variant="inline"
-          detail="MET Norway did not answer, and nothing is cached for this place yet."
+          detail={t("verdict.unreachable")}
           onRetry={() => void refresh()}
         />
       ) : null}

@@ -104,11 +104,11 @@ export function RefreshControl({
   return (
     <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
       <Button
-        label="Refresh"
+        label={i18next.t("refresh.action")}
         variant="secondary"
         onPress={onRefresh}
         disabled={status === "refreshing"}
-        hint="Check MET Norway for a newer radar analysis"
+        hint={i18next.t("refresh.hint")}
       />
 
       {/* A live region, so the outcome reaches a screen reader too. Pressing a

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Text, View } from "react-native";
 import { MONO } from "../theme/tokens";
 import { cellOf, clampCoord, OutsideGridError } from "../lib/grid";
@@ -74,6 +75,7 @@ export function MapField({
   basemap = "grey",
   geolocation,
 }: MapFieldProps) {
+  const { t } = useTranslation();
   const [status, setStatus] = useState<LocateStatus>("idle");
 
   // getCurrentPosition can answer long after the screen is gone.
@@ -134,8 +136,8 @@ export function MapField({
           onZoomChange={onZoomChange}
           basemap={basemap}
           theme={theme}
-          label="Pick a place — pan the map to move the marker"
-          attribution="© Kartverket"
+          label={t("map.pick")}
+          attribution={t("map.attribution")}
         >
           {/* Ring first so the marker sits on top of it. */}
           <View
@@ -177,46 +179,40 @@ export function MapField({
         </View>
 
         <Button
-          label={status === "locating" ? "Finding you…" : "Use my location"}
+          label={status === "locating" ? t("map.locating") : t("map.locate")}
           variant="secondary"
           disabled={status === "locating"}
           onPress={locate}
-          hint="Centres the map on your device. You still confirm the place."
+          hint={t("map.locateHint")}
         />
       </View>
 
       {status === "denied" ? (
         <Notice
-          title="Location is blocked for this site"
+          title={t("map.blockedTitle")}
           // iOS gives no in-page way back from a denial, so an apology would be
           // useless. Name the actual path, then point at the two routes that
           // still work — the map is not a dead end even when this button is.
-          body="Your browser will not ask again from here. On iOS: Settings › Safari › Location. On Android and desktop: the padlock in the address bar. Meanwhile you can pan the map or type the coordinates."
+          body={t("map.blockedBody")}
         />
       ) : null}
 
       {status === "unavailable" ? (
-        <Notice
-          title="This device cannot report a location"
-          body="Pan the map or type the coordinates instead."
-        />
+        <Notice title={t("map.unsupportedTitle")} body={t("map.unsupportedBody")} />
       ) : null}
 
       {status === "failed" ? (
-        <Notice
-          title="Could not get a fix"
-          body="The device did not answer in time. Try again, or pan the map instead."
-        />
+        <Notice title={t("map.failedTitle")} body={t("map.failedBody")} />
       ) : null}
 
       {!inside ? (
         <Notice
-          title="Outside the radar grid"
+          title={t("map.outsideTitle")}
           // Warned here, while panning, rather than after saving — a place this
           // far out yields no answer at all, which is a different and worse
           // outcome than a dry one, and the user should learn it before they
           // name the thing and press save.
-          body="The Nordic radar does not reach here, so this place would have no answer to give — not a dry one, none. Pan the marker back inside the grid."
+          body={t("map.outsideBody")}
         />
       ) : null}
     </View>
@@ -231,10 +227,11 @@ export function MapField({
  * cover, and at 3 km the difference is most of the radius.
  */
 function Marker() {
+  const { t } = useTranslation();
   return (
     <View
       pointerEvents="none"
-      accessibilityLabel="Selected point"
+      accessibilityLabel={t("map.selectedPoint")}
       role="img"
       style={{ position: "absolute", alignItems: "center", justifyContent: "center" }}
     >
