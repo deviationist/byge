@@ -84,6 +84,14 @@ export type MapCanvasProps = {
    * chosen with. See the note at the call site.
    */
   overlay?: (viewport: MapViewport) => ReactNode;
+  /**
+   * A tap that did not travel — the coordinate under the pointer.
+   *
+   * Distinguished from a pan by DISTANCE, not by timing: a slow deliberate drag
+   * is still a drag, and a quick tap on a phone always moves a pixel or two. A
+   * time-based test gets both of those wrong.
+   */
+  onPick?: (point: LatLon) => void;
   /** Basemap credit. Required by most tile providers, so it is a first-class prop. */
   attribution?: string;
   /** Overlays — markers, rings, legends. Rendered centred over the surface. */
@@ -166,6 +174,15 @@ const BASEMAP: Record<Basemap, string> = {
   nautical: "#dfe8ee",
 };
 
+/**
+ * How far a press may travel and still count as a tap.
+ *
+ * Distance, not time. A slow deliberate drag is still a drag however long it
+ * takes, and a tap on a phone always moves a pixel or two — a timing test gets
+ * both of those wrong in opposite directions.
+ */
+const PICK_SLOP = 4;
+
 /** Pixels panned per arrow-key press. Shift multiplies it. */
 const KEY_STEP = 48;
 const GRATICULE = 52;
@@ -183,14 +200,17 @@ export function MapCanvas({
   attribution,
   children,
   overlay,
+  onPick,
 }: MapCanvasProps) {
   const surfaceRef = useRef<View | null>(null);
 
   // Every handler below reads the *current* props through this ref, so the DOM
   // listeners can be attached once and never re-bound mid-gesture.
-  const live = useRef({ center, zoom, onMove, onMoveEnd, onZoomChange, interactive });
+  const live = useRef({ center, zoom, onMove, onMoveEnd, onZoomChange, interactive, onPick });
+  // Where the pointer went down, so a tap can be told from a pan by distance.
+  const press = useRef<{ x: number; y: number } | null>(null);
   useEffect(() => {
-    live.current = { center, zoom, onMove, onMoveEnd, onZoomChange, interactive };
+    live.current = { center, zoom, onMove, onMoveEnd, onZoomChange, interactive, onPick };
   });
 
   const drag = useRef<{ ox: number; oy: number; cx: number; cy: number; zoom: number } | null>(
@@ -230,6 +250,7 @@ export function MapCanvas({
       // would fold the parent's 4-decimal clamp back into the gesture, and the
       // map would visibly drift away from the finger over a long drag.
       drag.current = { ox: p.x, oy: p.y, cx: e.clientX, cy: e.clientY, zoom: z };
+      press.current = { x: e.clientX, y: e.clientY };
       // jsdom has no pointer capture, and neither do older Safaris.
       el.setPointerCapture?.(e.pointerId);
       e.preventDefault();
@@ -242,7 +263,26 @@ export function MapCanvas({
       emit(pxToLonLat(d.ox - (e.clientX - d.cx), d.oy - (e.clientY - d.cy), d.zoom), false);
     };
 
-    const onUp = () => {
+    const onUp = (e: PointerEvent) => {
+      // A press that never travelled is a pick, not a pan. Measured against the
+      // press origin rather than the last move, so a drag that returns to where
+      // it started is still a drag.
+      const p0 = press.current;
+      press.current = null;
+      if (p0 && Math.hypot(e.clientX - p0.x, e.clientY - p0.y) <= PICK_SLOP) {
+        const L = live.current;
+        if (L.onPick && el) {
+          const r = el.getBoundingClientRect();
+          const c = lonLatToPx(L.center, L.zoom);
+          L.onPick(
+            pxToLonLat(
+              c.x + (e.clientX - r.left) - r.width / 2,
+              c.y + (e.clientY - r.top) - r.height / 2,
+              L.zoom,
+            ),
+          );
+        }
+      }
       if (!drag.current) return;
       drag.current = null;
       if (last.current) live.current.onMoveEnd?.(last.current);

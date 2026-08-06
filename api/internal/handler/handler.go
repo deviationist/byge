@@ -55,6 +55,8 @@ func (h *Handler) Routes() http.Handler {
 	mux.HandleFunc("GET /health", h.health)
 	mux.HandleFunc("GET /fetch", h.fetch)
 	mux.HandleFunc("OPTIONS /fetch", h.preflight)
+	mux.HandleFunc("GET /field", h.field)
+	mux.HandleFunc("OPTIONS /field", h.preflight)
 	return mux
 }
 

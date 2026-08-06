@@ -167,7 +167,13 @@
     "outsideTitle": "Utenfor radarrutenettet",
     "outsideBody": "Den nordiske radaren når ikke hit, så dette stedet ville ikke hatt noe svar å gi — ikke et tørt et, ingen. Dra markøren tilbake innenfor rutenettet.",
     "zoomIn": "Zoom inn",
-    "zoomOut": "Zoom ut"
+    "zoomOut": "Zoom ut",
+    "title": "Radarkart",
+    "subtitle": "SELVE FELTET · INGEN STED, INGEN DOM",
+    "canvasLabel": "Radarkart — dra for å flytte, trykk på en rute for å lese den",
+    "loadingField": "laster feltet …",
+    "sampling": "målt hver {{km}}. km · {{frames}} bilder",
+    "footnote": "Oppløsningen følger zoomen, så et vidt utsnitt er grovere — MET pakker ut et helt bilde uansett, så det er bare detaljene som endrer seg, aldri kostnaden. Skravert bakke er utenfor radardekning: ikke opphold, men uobservert."
   },
   "status": {
     "horizonHours_one": "{{count}} time",
@@ -329,5 +335,10 @@
     "window": "Den stiplede firkanten viser hvor mye radar vi ba om rundt dette stedet. Utenfor har vi ikke sett etter — som ikke er det samme som klart.",
     "play": "Spill av de neste to timene",
     "pause": "Sett på pause"
+  },
+  "cell": {
+    "reading": "Leser …",
+    "unavailable": "Fikk ikke lest den ruten.",
+    "close": "lukk"
   }
 }
