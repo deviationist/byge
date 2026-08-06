@@ -1,11 +1,12 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { View } from "react-native";
+import { Text, View } from "react-native";
 import { Button } from "../components/Button";
 import { ConfirmSheet, removeLocationCopy } from "../components/ConfirmSheet";
 import { MapField } from "../components/MapField";
 import { NavBar } from "../components/NavBar";
+import { PlaceSearch } from "../components/PlaceSearch";
 import { RadiusField } from "../components/RadiusField";
 import { TextField } from "../components/TextField";
 import { useBack } from "../hooks/useBack";
@@ -17,6 +18,7 @@ import { clampCoord } from "../lib/grid";
 import { DEFAULT_RADIUS_KM } from "../lib/storage";
 import { toast } from "../lib/toast";
 import { useResolvedTheme } from "../theme/ThemeProvider";
+import { MONO } from "../theme/tokens";
 
 /** Oslo, as a starting view for a brand-new place. */
 const DEFAULT_CENTRE = { lat: 59.9273, lon: 10.7607 };
@@ -132,17 +134,86 @@ export function AddLocationScreen() {
 
   return (
     <Screen>
-      <NavBar onBack={goBack} backLabel="Back">
-        <View />
+      {/*
+        The title sits IN the bar beside the caret, set in the display face —
+        the design puts it there, and it was a mono section label reading "ADD A
+        PLACE", which is the register byge uses for instrumentation. A screen's
+        own name is not instrumentation.
+      */}
+      <NavBar onBack={goBack} backLabel={t("nav.back")}>
+        <Text
+          accessibilityRole="header"
+          className="text-ink font-display"
+          style={{ fontSize: 24 }}
+        >
+          {editing ? t("add.titleEdit") : t("add.titleAdd")}
+        </Text>
       </NavBar>
 
-      <Section title={editing ? t("add.titleEdit") : t("add.titleAdd")}>
+      {/*
+        Search first, because it is how you get to a place you can NAME, and the
+        map is how you get to a place you can only point at. Editing skips it:
+        the pin is already where you put it, and a search box above it invites
+        you to throw that away.
+      */}
+      {editing ? null : (
+        <Section title={t("add.search")}>
+          <PlaceSearch
+            theme={theme}
+            onPick={(p) => {
+              setCentre({ lat: clampCoord(p.lat), lon: clampCoord(p.lon) });
+              // Pre-fills the name, because the thing you searched for is
+              // almost always what you would have typed. Still editable — it is
+              // a suggestion, and "Grünerløkka" is not what everyone calls home.
+              if (!name.trim()) setName(p.name);
+            }}
+          />
+        </Section>
+      )}
+
+      <Section title={t("add.orCoordinates")}>
         <MapField
           value={centre}
           onChange={(v) => setCentre({ lat: clampCoord(v.lat), lon: clampCoord(v.lon) })}
           radiusKm={radiusKm}
           theme={theme}
         />
+
+        {/*
+          Typable coordinates, which the design draws and which `TextField`'s
+          `coordinate` variant was built for — clamping, decimal keypad, the MET
+          hint — and then used nowhere, so the numbers under the map were
+          read-only text. Pasting a coordinate from somewhere else was
+          impossible; the only way in was to pan until the digits matched.
+        */}
+        <View style={{ flexDirection: "row", gap: 10 }}>
+          <View style={{ flex: 1 }}>
+            <TextField
+              theme={theme}
+              variant="coordinate"
+              label={t("add.lat")}
+              // Suppressed on the boxes so the note appears once beneath the
+              // pair; it is one fact about both of them, not two facts.
+              hint=""
+              value={String(centre.lat)}
+              onChangeText={(v) => setCentre((c) => ({ ...c, lat: Number(v) || c.lat }))}
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <TextField
+              theme={theme}
+              variant="coordinate"
+              label={t("add.lon")}
+              hint=""
+              value={String(centre.lon)}
+              onChangeText={(v) => setCentre((c) => ({ ...c, lon: Number(v) || c.lon }))}
+            />
+          </View>
+        </View>
+
+        <Text className="text-ink3" style={{ fontFamily: MONO, fontSize: 10, lineHeight: 16 }}>
+          {t("add.coordHint")}
+        </Text>
       </Section>
 
       <Section title={t("add.howFar")}>

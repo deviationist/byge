@@ -3,16 +3,21 @@ import { CLIENT_KEY, viaProxy } from "./opendap";
 /**
  * "Grünerløkka, Oslo" — the line under a place's name.
  *
- * WHY THIS IS NOT KARTVERKET, when everything else about the map is. Kartverket
- * is the authority byge already credits and the tiles come from them, so they
- * were the obvious first choice. They cannot answer this question. Their
- * place-name register (SSR) has no entry for `Grünerløkka` within 2 km of
- * Grünerløkka: the nearest names are parks ("Birkelunden", 117 m), streets and
- * squares, and the nearest administrative division is the county. Their address
- * API answers "Schleppegrells gate 14A" — a street address, which is both the
- * wrong register and far more precise than anyone wants stored about where they
- * live. OSM carries urban neighbourhoods as `suburb`, and it is the only open
- * source that does.
+ * WHY THIS IS NOT KARTVERKET, when everything else about the map is — and the
+ * reason is narrower than it first looked. Their register DOES hold
+ * `Grünerløkka`, as an "Administrativ bydel" 800 m from this coordinate; a name
+ * search returns it as the top hit, which is exactly why `lib/search.ts` uses
+ * them. The problem is their point lookup. It returns everything within a
+ * radius ordered by distance — 742 names inside 2 km here, 423 of them street
+ * names — and the `navneobjekttype` filter is silently ignored on that
+ * endpoint, so the one settlement-scale name is buried under hundreds of parks
+ * and streets with no way to ask for it. Paging through all of them per pin is
+ * not a lookup. Their address API answers "Schleppegrells gate 14A", which is
+ * both the wrong register and far more precise than anyone wants stored about
+ * where they live.
+ *
+ * So: OSM for reverse, Kartverket for search. Each where it is actually good,
+ * rather than one provider for tidiness.
  *
  * WHY IT GOES THROUGH OUR PROXY, when Nominatim allows browser calls. Two
  * things a browser cannot do. Their usage policy requires a User-Agent naming
