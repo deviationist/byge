@@ -48,6 +48,14 @@ export const STEM =
 export const API_BASE =
   process.env.EXPO_PUBLIC_API_BASE ?? "https://byge-api.ichiva.no";
 
+/**
+ * Shared key for the proxy. Deterrence, not authentication — anyone reading
+ * this bundle can lift it, which is understood. It means encountering the API
+ * is not the same as being able to consume it, and the real bound on volume is
+ * the per-IP rate limit behind it.
+ */
+const CLIENT_KEY = process.env.EXPO_PUBLIC_CLIENT_KEY ?? "";
+
 /** Wrap an upstream URL for the proxy's `/fetch` route. */
 export function viaProxy(url: string): string {
   return `${API_BASE}/fetch?url=${encodeURIComponent(url)}`;
@@ -129,7 +137,10 @@ export function parseAscii(body: string): Map<string, Variable> {
 async function get(url: string, signal?: AbortSignal): Promise<string> {
   // No User-Agent here on purpose — the browser would drop it and the proxy
   // sets the real one. See API_BASE.
-  const res = await fetch(viaProxy(url), { signal });
+  const res = await fetch(viaProxy(url), {
+    signal,
+    headers: CLIENT_KEY ? { "X-Byge-Key": CLIENT_KEY } : undefined,
+  });
   if (!res.ok) throw new OpenDapError(`${res.status} for ${url}`, res.status);
   return res.text();
 }

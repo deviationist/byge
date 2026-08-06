@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/deviationist/byge/api/internal/limits"
 )
 
 type Config struct {
@@ -56,6 +58,34 @@ type Config struct {
 
 	// UpstreamTimeout bounds a single fetch from MET.
 	UpstreamTimeout time.Duration
+
+	// ClientKey, when set, must arrive as X-Byge-Key. Deterrence rather than
+	// authentication — it is extractable from a static bundle, and we know it.
+	// What it buys is that stumbling across the API is not the same as being
+	// able to use it. Empty disables the check, which is what local dev wants.
+	ClientKey string
+
+	// RatePerMinute and RateBurst bound volume per client IP. This is the
+	// protection that actually holds, since the key is not scarce.
+	RatePerMinute int
+	RateBurst     int
+
+	// MaxValues caps one request's hyperslab. See internal/limits.
+	MaxValues int
+
+	// MaxInflight caps concurrent upstream fetches, so no client can open a
+	// hundred simultaneous connections to MET through us.
+	MaxInflight int
+
+	// TrustProxyHeaders reads the client IP from X-Real-Ip instead of the
+	// socket. True behind nginx; false direct, where the header is spoofable
+	// and would let anyone forge a fresh identity per request.
+	TrustProxyHeaders bool
+
+	// Env is "production" (default) or "development". Development exposes the
+	// X-Cache header, which is useful for debugging and tells a prober exactly
+	// how to probe.
+	Env string
 }
 
 func Load() (Config, error) {
@@ -67,6 +97,17 @@ func Load() (Config, error) {
 		CacheTTLMiss:    getdur("CACHE_TTL_MISS", 30*time.Second),
 		CacheMaxBytes:   getint("CACHE_MAX_BYTES", 64<<20),
 		UpstreamTimeout: getdur("UPSTREAM_TIMEOUT", 20*time.Second),
+
+		ClientKey:         os.Getenv("CLIENT_KEY"),
+		RatePerMinute:     int(getint("RATE_PER_MINUTE", 60)),
+		RateBurst:         int(getint("RATE_BURST", 120)),
+		MaxValues:         int(getint("MAX_VALUES", int64(limits.DefaultMaxValues))),
+		MaxInflight:       int(getint("MAX_INFLIGHT", 8)),
+		TrustProxyHeaders: os.Getenv("TRUST_PROXY_HEADERS") == "true",
+		Env:               getenv("APP_ENV", "production"),
+	}
+	if cfg.Env != "production" && cfg.Env != "development" {
+		return cfg, errors.New("APP_ENV must be production or development")
 	}
 	if strings.TrimSpace(cfg.UserAgent) == "" {
 		return cfg, errors.New("USER_AGENT is required — MET's terms need an identifying agent with contact details (see .env.example)")

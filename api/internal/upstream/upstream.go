@@ -62,10 +62,18 @@ func safeURL(raw string) string {
 type Client struct {
 	http      *http.Client
 	userAgent string
+	// sem caps concurrent fetches. One client should not be able to open a
+	// hundred simultaneous connections to MET through us — the coalescing in
+	// `cache` collapses identical requests, but a hundred DIFFERENT windows
+	// would still all go out at once.
+	sem chan struct{}
 }
 
-func New(hc *http.Client, userAgent string) *Client {
-	return &Client{http: hc, userAgent: userAgent}
+func New(hc *http.Client, userAgent string, maxInflight int) *Client {
+	if maxInflight < 1 {
+		maxInflight = 1
+	}
+	return &Client{http: hc, userAgent: userAgent, sem: make(chan struct{}, maxInflight)}
 }
 
 // ErrForbidden is returned for a URL outside the allowlist.
@@ -80,6 +88,14 @@ func (c *Client) Fetch(ctx context.Context, rawURL string) (cache.Entry, error) 
 	if !permitted(rawURL) {
 		return cache.Entry{}, &ErrForbidden{URL: rawURL}
 	}
+	// Wait for a slot, but never past the caller giving up.
+	select {
+	case c.sem <- struct{}{}:
+		defer func() { <-c.sem }()
+	case <-ctx.Done():
+		return cache.Entry{}, ctx.Err()
+	}
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, safeURL(rawURL), nil)
 	if err != nil {
 		return cache.Entry{}, err
