@@ -102,6 +102,36 @@ describe("Slider", () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
+  it("moves on a pointer press at a position on the track", () => {
+    // THE REGRESSION THIS REPLACES. It was a Pressable reading
+    // `e.nativeEvent.locationX`, which react-native-web does not put on these
+    // press events — so the value was undefined, the arithmetic made NaN, and
+    // once that was guarded the control silently did nothing at all. Guarding a
+    // bad input is not the same as having a good one.
+    const onChange = setup();
+    const el = screen.getByRole("slider");
+    // jsdom reports a zero-width rect, so the geometry is stubbed rather than
+    // measured: what is under test is that a POINTER event drives the control.
+    el.getBoundingClientRect = () => ({ left: 0, width: 100, right: 100 }) as DOMRect;
+    fireEvent.pointerDown(el, { clientX: 50, pointerId: 1 });
+    expect(onChange).toHaveBeenCalled();
+    expect(Number.isFinite(onChange.mock.calls[0][0])).toBe(true);
+  });
+
+  it("keeps tracking a drag that leaves the row", () => {
+    // Move and up are on the document, so a sweep past the end keeps scrubbing
+    // and — more importantly — still ends.
+    const onChange = setup();
+    const el = screen.getByRole("slider");
+    el.getBoundingClientRect = () => ({ left: 0, width: 100, right: 100 }) as DOMRect;
+    fireEvent.pointerDown(el, { clientX: 10, pointerId: 1 });
+    fireEvent.pointerMove(document, { clientX: 90 });
+    const last = onChange.mock.calls.at(-1)?.[0];
+    fireEvent.pointerUp(document);
+    fireEvent.pointerMove(document, { clientX: 20 });
+    expect(onChange.mock.calls.at(-1)?.[0]).toBe(last);
+  });
+
   it("does not emit NaN when a press carries no position", () => {
     // THE CRASH THIS FIXES. `Math.max(0, NaN)` is NaN, not 0, so a clamp built
     // from min/max does not sanitise a bad input — it passes it through. The

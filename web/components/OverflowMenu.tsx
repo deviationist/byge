@@ -180,6 +180,14 @@ export function OverflowMenu({
     };
 
     const onKey = (e: KeyboardEvent) => {
+      // THE FOOTER KEEPS ITS OWN KEYS. This handler is on the document, so it
+      // fires wherever focus is — including on a control in the footer. Arrow
+      // keys were being consumed to move the roving selection, so the opacity
+      // slider could be focused and could not be operated: every press stepped
+      // the menu instead. Escape still closes from anywhere, which is the one
+      // key a menu must always own.
+      const inFooter = (e.target as Element | null)?.closest?.("[data-menu-footer]");
+      if (inFooter && e.key !== "Escape" && e.key !== "Tab") return;
       switch (e.key) {
         case "Escape":
           e.preventDefault();
@@ -314,7 +322,13 @@ export function OverflowMenu({
             // row, so arrow keys must reach IT, not step past it to the next
             // menuitem. The rule above it is what says the two are different
             // kinds of thing.
-            <View className="border-t-line2" style={{ borderTopWidth: 1, padding: 12 }}>
+            <View
+              // Marks the region the menu's own key handler must keep out of.
+              // See the guard in the document listener above.
+              {...({ "data-menu-footer": "" } as object)}
+              className="border-t-line2"
+              style={{ borderTopWidth: 1, padding: 12 }}
+            >
               {footer}
             </View>
           ) : null}
