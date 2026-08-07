@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Text, useWindowDimensions, View } from "react-native";
 import { CellReadout } from "../components/CellReadout";
-import { type LatLon, MAX_ZOOM, MapCanvas, MIN_ZOOM } from "../components/MapCanvas";
+import { type LatLon, MAX_ZOOM, MapCanvas, metersPerPixel, MIN_ZOOM } from "../components/MapCanvas";
 import { MapLegend } from "../components/MapLegend";
 import { NavBar } from "../components/NavBar";
 import { PlaybackControl } from "../components/PlaybackControl";
@@ -12,6 +12,9 @@ import { BasemapMenu } from "../components/BasemapMenu";
 import type { KartverketLayer } from "../components/TileLayer";
 import { ZoomControl } from "../components/ZoomControl";
 import { useBack } from "../hooks/useBack";
+import { useLocations } from "../hooks/useLocations";
+import { useVerdict } from "../hooks/useVerdict";
+import { PrecipitationGraph } from "../components/PrecipitationGraph";
 import { useReducedMotion } from "../hooks/useReducedMotion";
 import { useRadarTiles } from "../hooks/useRadarTiles";
 import { Screen } from "../layouts/Screen";
@@ -45,6 +48,9 @@ const HORIZON_DWELL_MS = MS_PER_FRAME * 4;
 const START: LatLon = { lat: 60.5, lon: 9.0 };
 const START_ZOOM = 7;
 
+/** Close enough that a 3 km radius ring reads as a ring. */
+const PLACE_ZOOM = 9;
+
 /**
  * The radar, with no place in mind.
  *
@@ -66,11 +72,31 @@ const START_ZOOM = 7;
  * whole frame regardless. Frames are the budget, so a national view trades them
  * for area and a close view gets all 24.
  */
-export function MapScreen() {
+export type MapScreenProps = {
+  /**
+   * A saved place to mark, or nothing.
+   *
+   * THE ONLY DIFFERENCE BETWEEN THE TWO MAP ROUTES. `/map/<id>` used to be a
+   * second implementation — a 51x51 float probe painted on a 2D canvas at a
+   * fixed zoom, with no pan, no cell picking and an integer playhead — so it
+   * was the worse map on every axis and a fix to one was not a fix to the
+   * other. It is now this screen with a marker on it.
+   */
+  placeId?: string;
+};
+
+export function MapScreen({ placeId }: MapScreenProps = {}) {
   const router = useRouter();
   const { t } = useTranslation();
   const theme = useResolvedTheme();
-  const goBack = useBack("/");
+  const { byId } = useLocations();
+  const place = byId(placeId);
+  // The verdict's own reading of the saved disc, for the strip. A small window
+  // at the saved radius — nothing like the 51x51 float grid this screen used to
+  // fetch to paint with.
+  const { data: verdict } = useVerdict(place);
+  // Back to the verdict when we came from one; to the list otherwise.
+  const goBack = useBack(place ? `/location/${place.id}` : "/");
   const { width: winWidth } = useWindowDimensions();
   const phone = winWidth < 720;
 
@@ -82,9 +108,14 @@ export function MapScreen() {
   // when the gesture settles. Wiring the query to `centre` meant a drag minted
   // a new window every couple of pixels: a request each, and a multi-megabyte
   // field retained for each. That is what crashed the tab.
-  const [centre, setCentre] = useState<LatLon>(START);
-  const [view, setView] = useState<LatLon>(START);
-  const [zoom, setZoom] = useState(START_ZOOM);
+  // Opens on the place when there is one, and close enough that its radius ring
+  // is legible rather than a dot. It is a starting VIEW, not a lock: the map
+  // pans and zooms away from it exactly like the unanchored one, because the
+  // question "what is coming toward my cabin" is answered by looking around it.
+  const start = place ? { lat: place.lat, lon: place.lon } : START;
+  const [centre, setCentre] = useState<LatLon>(start);
+  const [view, setView] = useState<LatLon>(start);
+  const [zoom, setZoom] = useState(place ? PLACE_ZOOM : START_ZOOM);
   const [basemap, setBasemap] = useState<KartverketLayer>("grey");
   const [size, setSize] = useState({ width: 0, height: 0 });
   // THE PLAYHEAD IS FRACTIONAL — 3.4 is 40 % of the way from frame 3 to 4, and
@@ -276,13 +307,19 @@ export function MapScreen() {
               className="text-ink font-display"
               style={{ fontSize: 20 }}
             >
-              {t("map.title")}
+              {place ? place.name : t("map.title")}
             </Text>
+            {/*
+              The screen states its own limit, which is Design's ruling for the
+              unanchored map and reads just as true here: this is the field, not
+              a verdict about it. With a place we say which place instead — the
+              verdict for it is one back-tap away and does the claiming.
+            */}
             <Text
               className="text-ink3"
               style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: 0.3, marginTop: 2 }}
             >
-              {t("map.subtitle")}
+              {place ? t("radarMap.subtitle") : t("map.subtitle")}
             </Text>
           </View>
         </NavBar>
@@ -326,6 +363,18 @@ export function MapScreen() {
             ) : null
           }
         >
+          {/*
+            THE PLACE, and nothing more. `/map/<id>` used to fetch a separate
+            51x51 float window to paint at a fixed zoom; the radar here is the
+            same tiled field the unanchored map draws, and the id only adds
+            these two marks.
+
+            The ring is the disc the verdict is about, drawn in the band palette
+            like the add-a-place picker's, so the circle reads as belonging to
+            the weather it reports on. Sized from the projection rather than
+            assumed, so it stays true through a zoom.
+          */}
+          {place ? <PlaceMark place={place} zoom={zoom} /> : null}
           <ZoomControl zoom={zoom} min={MIN_ZOOM} max={MAX_ZOOM} onChange={setZoom} />
         </MapCanvas>
 
@@ -411,6 +460,29 @@ export function MapScreen() {
           </Text>
         </View>
 
+        {/*
+          The graph only when there is a point to graph. Bar height is the share
+          of the saved disc under rain, which needs a disc — with no place the
+          strip would have no subject, and inventing one ("share of the visible
+          map") is a different quantity that should not wear the same shape
+          without saying so.
+
+          It is the verdict's own small fetch, not a second radar path: the
+          51x51 float window this screen used to pull is gone.
+        */}
+        {place && verdict ? (
+          <PrecipitationGraph
+            frames={verdict.frames}
+            theme={theme}
+            density="expanded"
+            selectedIndex={frame}
+            onScrub={(i) => {
+              setPlaying(false);
+              setPlayhead(i);
+            }}
+          />
+        ) : null}
+
         <Text
           className="text-ink3"
           style={{ fontFamily: MONO, fontSize: 10, lineHeight: 17, maxWidth: "70ch" as never }}
@@ -419,5 +491,51 @@ export function MapScreen() {
         </Text>
       </View>
     </Screen>
+  );
+}
+
+/**
+ * The saved place, drawn on the map: a ring for the disc and a dot for the
+ * coordinate.
+ *
+ * The ring is sized from the PROJECTION rather than from a constant, so it
+ * stays the right number of kilometres through a zoom — the same maths the
+ * add-a-place picker uses, and the same band-palette colour, so a circle means
+ * the same thing on both screens.
+ */
+function PlaceMark({
+  place,
+  zoom,
+}: {
+  place: { lat: number; lon: number; radiusKm: number; name: string };
+  zoom: number;
+}) {
+  const ringPx = (2 * place.radiusKm * 1000) / metersPerPixel(place.lat, zoom);
+  return (
+    <>
+      <View
+        testID="place-ring"
+        aria-hidden
+        className="border-b4"
+        style={{
+          position: "absolute",
+          width: ringPx,
+          height: ringPx,
+          borderRadius: ringPx / 2,
+          borderWidth: 1.5,
+        }}
+      />
+      <View
+        accessibilityLabel={place.name}
+        style={{
+          width: 11,
+          height: 11,
+          borderRadius: 6,
+          borderWidth: 2,
+          borderColor: "rgba(21,24,27,.75)",
+          backgroundColor: "rgba(255,255,255,.9)",
+        }}
+      />
+    </>
   );
 }
