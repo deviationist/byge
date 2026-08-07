@@ -27,6 +27,20 @@ import { MONO } from "../theme/tokens";
  */
 const MS_PER_FRAME = 220;
 
+/**
+ * How long the horizon frame holds before the run wraps, ms.
+ *
+ * THE LAST FRAME NEVER GOT ITS TURN. Playback stopped the moment the playhead
+ * REACHED `frameCount - 1`, so +115 was on screen for one animation frame and
+ * then the run was over — you could not pause on it, and it read as a reset
+ * rather than as an ending. It is also the single most important frame on the
+ * screen: it is where the data runs out, the same edge the verdict means by "no
+ * end in sight".
+ *
+ * Four steps' worth, so it registers as a deliberate pause rather than a stall.
+ */
+const HORIZON_DWELL_MS = MS_PER_FRAME * 4;
+
 /** Oslo, as a starting view. Nothing is saved here, so something has to be first. */
 const START: LatLon = { lat: 60.5, lon: 9.0 };
 const START_ZOOM = 7;
@@ -125,34 +139,66 @@ export function MapScreen() {
   useEffect(() => {
     if (!playing || frameCount <= 1) return;
     if (reduced) {
-      const id = setInterval(() => setPlayhead((f) => Math.min(f + 1, frameCount - 1)), 900);
+      // Same loop, same dwell, in whole steps: the horizon gets one extra beat
+      // before the wrap rather than four, because at 900 ms a step is already
+      // long enough to read.
+      let held = false;
+      const id = setInterval(() => {
+        setPlayhead((f) => {
+          if (f < frameCount - 1) {
+            held = false;
+            return f + 1;
+          }
+          if (!held) {
+            held = true;
+            return f;
+          }
+          held = false;
+          return 0;
+        });
+      }, 900);
       return () => clearInterval(id);
     }
     let raf = 0;
     let last = performance.now();
+    let dwell = 0;
     const tick = (now: number) => {
       // Clamped: a backgrounded tab resumes with a huge delta, and without this
       // the run would jump most of the way to the horizon on return.
       const dt = Math.min(now - last, 250);
       last = now;
-      setPlayhead((f) => Math.min(f + dt / MS_PER_FRAME, frameCount - 1));
+      const max = frameCount - 1;
+      setPlayhead((f) => {
+        if (f < max) {
+          dwell = 0;
+          return Math.min(f + dt / MS_PER_FRAME, max);
+        }
+        // At the horizon: hold, then wrap. Holding is what makes the last frame
+        // legible and pausable; wrapping is what makes it a loop.
+        dwell += dt;
+        if (dwell < HORIZON_DWELL_MS) return max;
+        dwell = 0;
+        return 0;
+      });
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [playing, frameCount, reduced]);
 
-  // Stops at the horizon rather than looping — see RadarMapScreen for why the
-  // end of the data is a place worth leaving the reader.
+  // IT LOOPS, and that overrides a design ruling deliberately.
   //
-  // BUT NOT WHILE THE RUN IS STILL ARRIVING. Frames stream in, so the last one
-  // we hold is usually not the last one there is; stopping there would end the
-  // animation two seconds after it started and call a half-loaded run finished.
-  // Sitting on the newest frame means "caught up", and playback resumes by
-  // itself the moment another lands.
-  useEffect(() => {
-    if (playing && !partial && frameCount > 0 && playhead >= frameCount - 1) setPlaying(false);
-  }, [playing, partial, playhead, frameCount]);
+  // Design confirmed stopping at the horizon twice: "looping is the convention
+  // and the convention is wrong here — it turns a two-hour forecast into
+  // wallpaper and erases the single most important frame, where the data runs
+  // out." That reasoning is good, and it was asked for anyway: in practice the
+  // run is five seconds long and reaching for REPLAY every five seconds to
+  // watch a band cross the country is friction, not emphasis.
+  //
+  // What is kept is the POINT of the ruling rather than its mechanism. The
+  // horizon frame holds for four steps before the wrap — long enough to read,
+  // long enough to pause on — so the end of the data is still a moment rather
+  // than a seam. The dwell lives in the playback loop above.
 
   // Settles a beat after the gesture stops, so a flick-and-flick-again asks
   // once rather than twice.
@@ -298,8 +344,10 @@ export function MapScreen() {
             buffering={partial}
             minutes={frame * 5}
             onToggle={() => {
-              // Replaying from a finished run rewinds; resuming a caught-up
-              // stream does not — there is nothing behind the reader to see.
+              // Pressing play while parked at the horizon rewinds, so the
+              // button does the obvious thing after a manual scrub to the end.
+              // A caught-up STREAM does not rewind — there is nothing behind
+              // the reader to see, and the next frame is about to arrive.
               if (!playing && !partial && playhead >= frameCount - 1) setPlayhead(0);
               setPlaying((p) => !p);
             }}
