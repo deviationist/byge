@@ -388,6 +388,10 @@
     "playing": "PLAYING · FRAME {{i}} OF {{n}}",
     "waiting": "LOADING THE RUN…",
     "buffering": "FRAME {{i}} · {{total}} ON THE WAY",
+    "stepBack": "Previous frame",
+    "stepForward": "Next frame",
+    "toNow": "Jump to now",
+    "toHorizon": "Jump to the last frame",
     "ended": "END OF RUN · REPLAY",
     "horizon": "This is as far as the radar run goes. Anything still falling here has no known end."
   }
