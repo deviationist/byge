@@ -101,4 +101,30 @@ describe("Slider", () => {
     fireEvent.keyDown(screen.getByRole("slider"), { key: "Escape" });
     expect(onChange).not.toHaveBeenCalled();
   });
+
+  it("does not emit NaN when a press carries no position", () => {
+    // THE CRASH THIS FIXES. `Math.max(0, NaN)` is NaN, not 0, so a clamp built
+    // from min/max does not sanitise a bad input — it passes it through. The
+    // value reached the overlay as `opacity: NaN`, which React rejects
+    // outright: "NaN is an invalid value for the opacity css style property".
+    const onChange = setup();
+    fireEvent.click(screen.getByRole("slider"));
+    for (const call of onChange.mock.calls) {
+      expect(Number.isFinite(call[0])).toBe(true);
+    }
+  });
+
+  it("reports a usable value even if handed a broken one", () => {
+    // A slider whose own aria-valuenow is NaN is unreadable to assistive tech,
+    // and its fill would be NaN wide.
+    render(
+      <Slider value={Number.NaN} min={0.1} max={0.9} step={0.1} onChange={() => {}} />,
+    );
+    const s = screen.getAllByRole("slider").at(-1);
+    expect(s).toHaveAttribute("aria-valuenow", "0.1");
+  });
+
+  it("keys never produce NaN from a broken value", () => {
+    expect(sliderFromKey("ArrowRight", Number.NaN, 0.1, 0.9, 0.1)).toBe(0.2);
+  });
 });
