@@ -468,8 +468,8 @@ export function LocationStatusText({
 
   const line = {
     fontSize: size,
-    lineHeight: size * 1.04,
-    letterSpacing: size * -0.015,
+    lineHeight: size * 1.03,
+    letterSpacing: size * -0.016,
     // Newsreader is loaded as a 200-400 variable face; without an explicit
     // weight it renders at 400 and the headline sits heavier than the design.
     fontWeight: "300" as const,
@@ -489,9 +489,20 @@ export function LocationStatusText({
   // Second spell is 0.46x, and its clock is the SAME size as the primary's:
   // it is the same class of information, so it does not shrink again.
   const secondSize = Math.max(13, Math.round(size * 0.46));
+  // Every remaining measurement on this component is a ratio of the headline,
+  // straight from the design file. Fixed pixels were close at 40 px and drifted
+  // at every other size — the specimen scales the whole block together.
+  const arrowSize = Math.round(size * 0.28);
+  const noteSize = Math.max(10, Math.round(size * 0.24));
+  const secondGap = Math.round(size * 0.42);
+  const ruleW = Math.round(size * 0.34);
+  const ruleTop = Math.round(size * 0.3);
 
   return (
-    <View style={{ gap: 16 }}>
+    // No uniform gap: the specimen spaces these three blocks differently and
+    // scales each offset off the headline. A single `gap` flattened that, which
+    // read as "evenly spaced" rather than as "the answer, then a footnote".
+    <View>
       <View testID="status-headline" accessibilityRole="header">
         <Text testID="status-lead" className="text-ink font-display" style={line}>
           {h.lead}
@@ -519,10 +530,7 @@ export function LocationStatusText({
                 testID="status-bound-mark"
                 aria-hidden
                 className="text-ink3"
-                style={[
-                  { fontSize: Math.round(size * 0.3) },
-                  { verticalAlign: "super" } as object,
-                ]}
+                style={[{ fontSize: arrowSize }, { verticalAlign: "super" } as object]}
               >
                 {" →"}
               </Text>
@@ -543,33 +551,48 @@ export function LocationStatusText({
       </View>
 
       {h.secondary ? (
-        // Subordinate by size and colour, not hidden. See secondaryOf().
-        <View>
-          <Text
-            testID="status-secondary"
-            className="text-ink2 font-display"
-            style={{ fontSize: secondSize, lineHeight: Math.round(secondSize * 1.45) }}
-          >
-            {h.secondary}
-          </Text>
-          {h.secondClock ? (
+        // Subordinate by size, colour AND a rule, not hidden. See secondaryOf().
+        //
+        // The short rule to its left is the design's actual subordination
+        // device, and it was missing: without it the second spell is only
+        // smaller text, which at a glance reads as a continuation of the
+        // headline rather than as a separate, lesser claim.
+        <View style={{ marginTop: secondGap, flexDirection: "row", gap: 11 }}>
+          <View
+            aria-hidden
+            className="bg-line2"
+            style={{ flex: 0, marginTop: ruleTop, width: ruleW, height: 1 }}
+          />
+          <View style={{ flex: 1, minWidth: 0, gap: 5 }}>
             <Text
-              testID="status-second-clock"
-              className="text-ink2 font-mono"
-              style={{ ...clockStyle, marginTop: Math.round(clockSize * 0.5) }}
+              testID="status-secondary"
+              className="text-ink font-display"
+              style={{ fontSize: secondSize, lineHeight: Math.round(secondSize * 1.2) }}
             >
-              {h.secondClock}
+              {h.secondary}
             </Text>
-          ) : null}
+            {h.secondClock ? (
+              <Text
+                testID="status-second-clock"
+                className="text-ink2 font-mono"
+                style={{ ...clockStyle, marginTop: 0 }}
+              >
+                {h.secondClock}
+              </Text>
+            ) : null}
+          </View>
         </View>
       ) : null}
 
       {h.note ? (
-        <View testID="status-note" style={{ flexDirection: "row", gap: 10, maxWidth: 420 }}>
+        <View
+          testID="status-note"
+          style={{ marginTop: 18, flexDirection: "row", gap: 11, maxWidth: "46ch" as never }}
+        >
           <View className="bg-line2" style={{ width: 2, borderRadius: 1 }} aria-hidden />
           <Text
             className="text-ink2 font-mono"
-            style={{ flex: 1, fontSize: 11, lineHeight: 18 }}
+            style={{ flex: 1, fontSize: noteSize, lineHeight: Math.round(noteSize * 1.65) }}
           >
             {h.note}
           </Text>
