@@ -15,7 +15,11 @@ const grid = (props: Partial<Parameters<typeof TileLayer>[0]> = {}) =>
       z={4}
       width={512}
       height={512}
-      layer="grey"
+      // The GRID tests use the single-layer case on purpose. A Kartverket layer
+      // is stacked over the global base, so its image count is doubled — which
+      // says nothing about whether the geometry covers the viewport, and would
+      // make every count here a puzzle. Stacking has its own tests below.
+      layer="nordic"
       {...props}
     />,
   ).container.querySelectorAll("img");
@@ -95,11 +99,17 @@ describe("edges of the world", () => {
 
 describe("zoom", () => {
   it("uses integer zoom for tile indices", () => {
-    // A fractional zoom would ask for tile 5.4 and get nothing back.
-    const urls = [...grid({ z: 6 })].map((i) => i.getAttribute("src"));
-    for (const u of urls) {
-      expect(u).toMatch(/webmercator\/6\/\d+\/\d+\.png$/);
-    }
+    // A fractional zoom would ask for tile 5.4 and get nothing back. Checked on
+    // the Kartverket layer, whose path carries the zoom in a distinctive place —
+    // and on the stack, so the base is asked at the same zoom as the sheet over
+    // it. A base one level off would be a subtly misregistered map.
+    const urls = [...grid({ z: 6, layer: "grey" })].map((i) => i.getAttribute("src") ?? "");
+    const kv = urls.filter((u) => u.includes("kartverket"));
+    const base = urls.filter((u) => u.includes("cartocdn"));
+    expect(kv.length).toBeGreaterThan(0);
+    expect(base.length).toBe(kv.length);
+    for (const u of kv) expect(u).toMatch(/webmercator\/6\/\d+\/\d+\.png$/);
+    for (const u of base) expect(u).toMatch(/\/6\/\d+\/\d+\.png$/);
   });
 });
 
@@ -132,8 +142,48 @@ describe("the basemap that covers the radar", () => {
     // correct only while there was one provider.
     expect(creditFor("nordic")).toContain("OpenStreetMap");
     expect(creditFor("nordic")).toContain("CARTO");
+    // A Kartverket layer is drawn ON TOP of the global base, so both served
+    // tiles and both are credited. Only the global layer stands alone.
     expect(creditFor("grey")).toContain("Kartverket");
+    expect(creditFor("grey")).toContain("CARTO");
     expect(creditFor("nautical")).toContain("Kartverket");
-    expect(creditFor("grey")).not.toContain("CARTO");
+    expect(creditFor("nordic")).not.toContain("Kartverket");
+  });
+});
+
+describe("stacking", () => {
+  /**
+   * Kartverket's tiles are RGBA and FULLY TRANSPARENT outside Norway — measured
+   * pixel by pixel across all four layers: 0 % opaque over Hamburg, 55-66 % over
+   * Oslo, the rest being sea and inland water, also transparent. So they are not
+   * basemaps at all. They are overlays that happened to have nothing beneath
+   * them, which is why the map was white across most of the radar's range.
+   */
+  const urls = (layer: Parameters<typeof TileLayer>[0]["layer"]) =>
+    [...grid({ layer })].map((n) => n.getAttribute("src") ?? "");
+
+  it("draws the global base beneath a Norwegian sheet", () => {
+    const u = urls("grey");
+    expect(u.some((s) => s.includes("cartocdn"))).toBe(true);
+    expect(u.some((s) => s.includes("kartverket"))).toBe(true);
+  });
+
+  it("puts the base FIRST, because array order is paint order", () => {
+    // Reversed, the global layer would paint over the detail it exists to
+    // support — and the map would look correct everywhere except Norway.
+    const u = urls("grey");
+    expect(u[0]).toContain("cartocdn");
+    expect(u[u.length - 1]).toContain("kartverket");
+  });
+
+  it("does not stack the global layer under itself", () => {
+    const u = urls("nordic");
+    expect(u.every((s) => s.includes("cartocdn"))).toBe(true);
+  });
+
+  it("stacks every Norwegian layer, including the sea charts", () => {
+    for (const layer of ["grey", "topo", "detailed", "nautical"] as const) {
+      expect(urls(layer).some((s) => s.includes("cartocdn"))).toBe(true);
+    }
   });
 });

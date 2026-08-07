@@ -173,6 +173,13 @@ function clampZoom(z: number): number {
 }
 
 /**
+ * The paper colour under the tiles, shown until they load.
+ *
+ * ALWAYS THE GLOBAL LAYER'S, whichever layer is selected, because the global
+ * layer is always the one at the bottom of the stack now — the Kartverket
+ * sheets are transparent overlays drawn on top of it. A per-layer colour was
+ * right when they were alternatives.
+ *
  * Placeholder basemaps. Flat token colours, no tiles.
  *
  * They stay LIGHT in dark mode on purpose: MET renders the radar imagery light,
@@ -398,7 +405,7 @@ export function MapCanvas({
           flex: 1,
           minHeight,
           overflow: "hidden",
-          backgroundColor: BASEMAP[basemap],
+          backgroundColor: BASEMAP.nordic,
           borderRadius: 12,
           borderWidth: 1,
         },
