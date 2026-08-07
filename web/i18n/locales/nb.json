@@ -268,12 +268,14 @@
   "basemap": {
     "label": "Kartstil",
     "grey": "Dempet",
-    "greyHint": "Rolig, så sirkelen bærer",
+    "greyHint": "Gråtonekart · roligst under laget",
     "topo": "Terreng",
     "detailed": "Detaljert",
-    "detailedHint": "Koter og relieff",
+    "detailedHint": "Skannet 1:50 000",
     "nautical": "Sjøkart",
-    "nauticalHint": "Sjøkart og dybder"
+    "nauticalHint": "Offisielle sjøkart",
+    "topoHint": "Terrengskygge",
+    "showing": "{{note}} · vises nå"
   },
   "search": {
     "label": "Søk etter et sted",

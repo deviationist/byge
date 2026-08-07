@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { BASEMAP_OPTIONS, nextIndex, SegmentedControl, themeOptions } from "./SegmentedControl";
+import { basemapSegments, nextIndex, SegmentedControl, themeOptions } from "./SegmentedControl";
 import type { KartverketLayer } from "./TileLayer";
 
 const MIN_TARGET = 44;
@@ -110,7 +110,7 @@ describe("SegmentedControl", () => {
       <SegmentedControl<KartverketLayer>
         label="Basemap"
         labelHidden
-        options={BASEMAP_OPTIONS}
+        options={basemapSegments()}
         value="grey"
         onChange={() => {}}
       />,
@@ -124,7 +124,7 @@ describe("SegmentedControl", () => {
     render(
       <SegmentedControl<KartverketLayer>
         label="Basemap"
-        options={BASEMAP_OPTIONS}
+        options={basemapSegments()}
         value="grey"
         onChange={onChange}
       />,

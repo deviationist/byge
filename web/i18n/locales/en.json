@@ -268,12 +268,14 @@
   "basemap": {
     "label": "Map style",
     "grey": "Muted",
-    "greyHint": "Quiet, so the circle carries",
+    "greyHint": "Greyscale topo · quietest under the overlay",
     "topo": "Terrain",
     "detailed": "Detailed",
-    "detailedHint": "Contours and relief",
+    "detailedHint": "Scanned 1:50 000",
     "nautical": "Nautical",
-    "nauticalHint": "Sea charts and depths"
+    "nauticalHint": "Official sea charts",
+    "topoHint": "Shaded relief",
+    "showing": "{{note}} · showing"
   },
   "search": {
     "label": "Search for a place",

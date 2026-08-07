@@ -10,7 +10,7 @@ import { NavBar } from "../components/NavBar";
 import { PlaybackControl } from "../components/PlaybackControl";
 import { PrecipitationGraph } from "../components/PrecipitationGraph";
 import { RadarLayer } from "../components/RadarLayer";
-import { BASEMAP_OPTIONS, SegmentedControl } from "../components/SegmentedControl";
+import { BasemapMenu } from "../components/BasemapMenu";
 import type { KartverketLayer } from "../components/TileLayer";
 import { useBack } from "../hooks/useBack";
 import { useLocations } from "../hooks/useLocations";
@@ -206,24 +206,10 @@ export function RadarMapScreen() {
           over topography and effectively unreadable — the design wraps it in a
           card for exactly this reason.
         */}
-        <View
-          className="bg-surface border-line"
-          style={{
-            position: "absolute",
-            left: 12,
-            top: 12,
-            borderWidth: 1,
-            borderRadius: 10,
-            padding: 4,
-          }}
-        >
-          <SegmentedControl<KartverketLayer>
-            label={t("basemap.label")}
-            labelHidden
-            options={BASEMAP_OPTIONS}
-            value={basemap}
-            onChange={setBasemap}
-          />
+        {/* Bottom-left, where the design puts it — the top edge belongs to the
+            screen's own name, and a picker up there competed with it. */}
+        <View style={{ position: "absolute", left: 12, bottom: 12 }}>
+          <BasemapMenu value={basemap} onChange={setBasemap} theme={theme} />
         </View>
 
         {/*

@@ -4,6 +4,7 @@ import type { TextStyle, View as ViewType } from "react-native";
 import { Pressable, Text, View } from "react-native";
 import { MONO } from "../theme/tokens";
 import type { ThemeChoice } from "../theme/useTheme";
+import { basemapOptions } from "./BasemapMenu";
 import type { KartverketLayer } from "./TileLayer";
 
 /**
@@ -92,20 +93,18 @@ export const themeOptions = (): readonly SegmentedOption<ThemeChoice>[] => [
  * them at: Kartverket's open cache serves four layers and all four are maps.
  * See the note in TileLayer.
  */
-export const BASEMAP_OPTIONS: readonly SegmentedOption<KartverketLayer>[] = [
-  { value: "grey", label: i18next.t("basemap.grey"), hint: i18next.t("basemap.greyHint") },
-  { value: "topo", label: i18next.t("basemap.topo") },
-  {
-    value: "detailed",
-    label: i18next.t("basemap.detailed"),
-    hint: i18next.t("basemap.detailedHint"),
-  },
-  {
-    value: "nautical",
-    label: i18next.t("basemap.nautical"),
-    hint: i18next.t("basemap.nauticalHint"),
-  },
-];
+/**
+ * Built at call time, never as a module constant.
+ *
+ * It WAS a `const`, and every label called `t()` at import — which can precede
+ * i18n init, pinning English into values no language switch can reach. The same
+ * bug the About screen documents for its own labels, live here for the four
+ * basemap names. The single source is `basemapOptions()` in BasemapMenu; this
+ * adapts it for the segmented shape the add-a-place picker still uses.
+ */
+export function basemapSegments(): readonly SegmentedOption<KartverketLayer>[] {
+  return basemapOptions().map((o) => ({ value: o.value, label: o.label, hint: o.note }));
+}
 
 /**
  * Where an arrow key should land. Wraps, because a group of three that stops
