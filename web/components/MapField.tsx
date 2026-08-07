@@ -153,7 +153,8 @@ export function MapField({
 
   // The ring is drawn in real-world units, so it has to ask the projection how
   // big a pixel currently is rather than assume a scale.
-  const ringPx = (2 * radiusKm * 1000) / metersPerPixel(value.lat, currentZoom);
+  const px = (2 * radiusKm * 1000) / metersPerPixel(value.lat, currentZoom);
+  const ringPx = Number.isFinite(px) ? px : 0;
 
   return (
     <View style={{ gap: 12 }}>

@@ -582,7 +582,8 @@ function PlaceMark({
   place: { lat: number; lon: number; radiusKm: number; name: string };
   zoom: number;
 }) {
-  const ringPx = (2 * place.radiusKm * 1000) / metersPerPixel(place.lat, zoom);
+  const px = (2 * place.radiusKm * 1000) / metersPerPixel(place.lat, zoom);
+  const ringPx = Number.isFinite(px) ? px : 0;
   return (
     <>
       <View

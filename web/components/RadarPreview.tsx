@@ -72,7 +72,8 @@ const PREVIEW_ZOOM = 9;
  * produces it.
  */
 export function ringDiameterPx(radiusKm: number, lat: number): number {
-  return (2 * radiusKm * 1000) / metersPerPixel(lat, PREVIEW_ZOOM);
+  const px = (2 * radiusKm * 1000) / metersPerPixel(lat, PREVIEW_ZOOM);
+  return Number.isFinite(px) ? px : 0;
 }
 
 export function RadarPreview({

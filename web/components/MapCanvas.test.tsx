@@ -434,3 +434,42 @@ describe("controls drawn over the map", () => {
     expect(onMove).toHaveBeenCalled();
   });
 });
+
+describe("the projection refuses what is not a number", () => {
+  /**
+   * `Math.min(a, Math.max(b, NaN))` is NaN — a clamp built from min/max does not
+   * sanitise its input, it FORWARDS it. That cost a crash in the opacity slider
+   * ("NaN is an invalid value for the opacity css style property"), and this is
+   * the more dangerous instance of the same trap: `clampLat` feeds `lonLatToPx`,
+   * which places every tile and every mesh vertex, and `metersPerPixel`, which
+   * sizes every radius ring. One NaN here does not misplace something slightly.
+   * It makes the whole map's geometry NaN.
+   */
+  it("clamps a latitude that is not a latitude", () => {
+    expect(clampLat(Number.NaN)).toBe(0);
+    expect(clampLat(Number.POSITIVE_INFINITY)).toBe(0);
+    // And still clamps ordinary out-of-range values to the Mercator cut.
+    expect(clampLat(90)).toBeCloseTo(MAX_LAT, 5);
+    expect(clampLat(59.9)).toBe(59.9);
+  });
+
+  it("wraps a longitude that is not a longitude", () => {
+    expect(wrapLon(Number.NaN)).toBe(0);
+    expect(wrapLon(190)).toBe(-170);
+  });
+
+  it("never turns a bad coordinate into a NaN pixel", () => {
+    const p = lonLatToPx({ lat: Number.NaN, lon: Number.NaN }, 9);
+    expect(Number.isFinite(p.x)).toBe(true);
+    expect(Number.isFinite(p.y)).toBe(true);
+  });
+
+  it("never returns a NaN scale", () => {
+    // Callers DIVIDE by this to size a ring, so NaN would propagate into a
+    // width. Infinity is honest for a zoom that is not a number, and yields a
+    // ring of zero pixels rather than a crash.
+    expect(Number.isNaN(metersPerPixel(Number.NaN, 9))).toBe(false);
+    expect(Number.isNaN(metersPerPixel(59.9, Number.NaN))).toBe(false);
+    expect(metersPerPixel(59.9, 9)).toBeGreaterThan(0);
+  });
+});
