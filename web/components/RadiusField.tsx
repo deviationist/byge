@@ -1,7 +1,8 @@
 import i18next from "i18next";
-import { useId, useState } from "react";
-import type { LayoutChangeEvent, TextStyle } from "react-native";
+import { useId } from "react";
+import type { TextStyle } from "react-native";
 import { Pressable, Text, View } from "react-native";
+import { Slider } from "./Slider";
 import { MONO } from "../theme/tokens";
 
 /**
@@ -36,9 +37,6 @@ export const RADIUS_COSTLY = 20;
 const STEP = 1;
 /** PageUp/PageDown — 2 to 25 in single steps is 23 presses. */
 export const BIG_STEP = 5;
-
-type WebProps = { onKeyDown?: (e: { key: string; preventDefault: () => void }) => void };
-const web = (p: WebProps) => p as object;
 
 const MIN_TARGET = 44;
 
@@ -123,7 +121,6 @@ const NOTE: TextStyle = {
   lineHeight: 16,
 };
 
-const TRACK_H = 6;
 
 function Step({
   label,
@@ -171,11 +168,9 @@ export function RadiusField({
 }: RadiusFieldProps) {
   const id = useId();
   const labelId = `${id}-label`;
-  const [trackWidth, setTrackWidth] = useState(0);
 
   const km = clampRadius(value, min, max);
   const note = radiusNote(km);
-  const fraction = max === min ? 0 : (km - min) / (max - min);
   // The default's position on the track, drawn as a tick. It is the anchor the
   // copy keeps referring to, so it should be visible rather than only spoken.
   const defaultAt =
@@ -186,10 +181,6 @@ export function RadiusField({
   const set = (next: number) => {
     if (next !== km) onChange(next);
   };
-
-  function onLayout(e: LayoutChangeEvent) {
-    setTrackWidth(e.nativeEvent.layout.width);
-  }
 
   return (
     <View style={{ gap: 9 }} testID={testID}>
@@ -216,68 +207,24 @@ export function RadiusField({
           onPress={() => set(clampRadius(km - STEP, min, max))}
         />
 
-        <Pressable
-          role="slider"
-          aria-labelledby={labelId}
-          aria-valuemin={min}
-          aria-valuemax={max}
-          aria-valuenow={km}
-          aria-valuetext={radiusValueText(km)}
-          tabIndex={0}
-          onLayout={onLayout}
-          onPress={(e) => {
-            // Tap-to-set. Without it, 2 → 25 is 23 taps on the + button.
-            if (trackWidth <= 0) return;
-            const t = Math.min(1, Math.max(0, e.nativeEvent.locationX / trackWidth));
-            set(clampRadius(min + t * (max - min), min, max));
-          }}
-          {...web({
-            onKeyDown: (e) => {
-              const next = radiusFromKey(e.key, km, min, max);
-              if (next === null) return;
-              e.preventDefault();
-              set(next);
-            },
-          })}
-          style={{ flex: 1, height: MIN_TARGET, justifyContent: "center" }}
-        >
-          <View
-            className="bg-sunk border-line"
-            style={{
-              height: TRACK_H,
-              borderRadius: TRACK_H / 2,
-              borderWidth: 1,
-              justifyContent: "center",
-            }}
-          >
-            {/* The fill grows with the radius, so "wider" reads as "more" —
-                matching the rule that a wider circle can only add rain. */}
-            <View
-              className="bg-ink2"
-              style={{
-                position: "absolute",
-                left: 0,
-                top: 0,
-                bottom: 0,
-                width: `${fraction * 100}%`,
-                borderRadius: TRACK_H / 2,
-              }}
-            />
-            {defaultAt === null ? null : (
-              <View
-                aria-hidden
-                className="bg-line2"
-                style={{
-                  position: "absolute",
-                  left: `${defaultAt * 100}%`,
-                  width: 2,
-                  top: -3,
-                  bottom: -3,
-                }}
-              />
-            )}
-          </View>
-        </Pressable>
+        {/*
+          The slider itself is `Slider` — this file had grown its own, and a
+          second one for the map overlay would have been the same interaction
+          implemented twice. What stays here is everything that is about a
+          RADIUS: the stepper buttons either side, the default marker, and the
+          copy that explains what widening a circle can and cannot do.
+        */}
+        <Slider
+          testID="radius-slider"
+          value={km}
+          min={min}
+          max={max}
+          step={STEP}
+          onChange={set}
+          labelledBy={labelId}
+          valueText={radiusValueText(km)}
+          markAt={defaultAt}
+        />
 
         <Step
           label={i18next.t("radius.wider")}
