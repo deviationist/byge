@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="foundation.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root, [data-theme="light"] {
+    --bg:#F6F4F0; --surface:#FFF; --sunk:#EFEDE8; --ink:#15181B; --ink2:rgba(21,24,27,.62); --ink3:rgba(21,24,27,.40);
+    --line:rgba(21,24,27,.10); --line2:rgba(21,24,27,.18); --dry:rgba(21,24,27,.07); --nodata:#FFF; --nodata-line:rgba(21,24,27,.28);
+  }
+  [data-theme="dark"] {
+    --bg:#0E1113; --surface:#16191C; --sunk:#1B1F22; --ink:#ECEEF0; --ink2:rgba(236,238,240,.60); --ink3:rgba(236,238,240,.38);
+    --line:rgba(236,238,240,.12); --line2:rgba(236,238,240,.20); --dry:rgba(236,238,240,.07); --nodata:#2A2E31; --nodata-line:rgba(236,238,240,.30);
+  }
+</style>
+</helmet>
+<div data-theme="{{ theme }}" style="width:100%;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink);border:1px solid var(--line);border-radius:12px;background:{{ background }};overflow:hidden">
+
+  <button onClick="{{ toggle }}" style="width:100%;min-height:48px;cursor:pointer;font:inherit;color:inherit;background:transparent;border:none;padding:14px 16px;display:flex;align-items:center;gap:12px;text-align:left">
+    <span style="display:flex;gap:5px;align-items:center">
+      <dc-import name="Swatch" mode="now" rate="{{ sampleRate }}" size="{{ dot }}" theme="{{ theme }}" hint-size="12px,12px"></dc-import>
+      <dc-import name="Swatch" mode="later" rate="{{ sampleRate }}" size="{{ dot }}" theme="{{ theme }}" hint-size="12px,12px"></dc-import>
+      <dc-import name="Swatch" mode="blind" size="{{ dot }}" theme="{{ theme }}" hint-size="12px,12px"></dc-import>
+    </span>
+    <span style="flex:1;font-size:13.5px">Reading the list</span>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink3)">{{ caret }}</span>
+  </button>
+
+  <sc-if value="{{ open }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:4px 16px 18px;display:flex;flex-direction:column;gap:20px">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <sc-for list="{{ shapes }}" as="s" hint-placeholder-count="4">
+          <div style="display:grid;grid-template-columns:20px 1fr;gap:14px;align-items:start">
+            <dc-import name="Swatch" mode="{{ s.mode }}" rate="{{ s.rate }}" size="{{ s.size }}" theme="{{ theme }}" hint-size="18px,18px"></dc-import>
+            <span style="display:flex;flex-direction:column;gap:3px">
+              <span style="font-size:13px">{{ s.label }}</span>
+              <span style="font-size:12px;color:var(--ink2);line-height:1.45">{{ s.sub }}</span>
+            </span>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:9px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.05em;color:var(--ink3)">HOW HARD IT IS FALLING</div>
+        <div style="display:flex;border-radius:6px;overflow:hidden;height:16px">
+          <sc-for list="{{ ramp }}" as="r" hint-placeholder-count="6">
+            <span title="{{ r.title }}" style="flex:1;background:{{ r.bg }}"></span>
+          </sc-for>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ink3)">
+          <span>trace</span><span>light</span><span>moderate</span><span>heavy</span><span>torrential</span>
+        </div>
+        <div style="font-size:12px;color:var(--ink2);line-height:1.5">Six bands, from a mist you would not call rain to weather you shelter from. Every band carries a plain-language name and a “feels like” — the millimetres are there if you want them.</div>
+      </div>
+
+      <div style="font-size:12px;color:var(--ink2);line-height:1.55;border-top:1px solid var(--line);padding-top:14px">
+        <strong style="font-weight:500;color:var(--ink)">“Not observed” is not “dry”.</strong> The radar mosaic does not cover everywhere. Where we cannot see, byge says so and makes no claim — it never paints an unseen place as clear.
+      </div>
+    </div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:380,&quot;height&quot;:420},&quot;open&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;''|'light'|'dark'&quot;}}">
+// PrecipitationLegend — one-time orientation, so it is collapsed by default and
+// remembers its state. A labelled disclosure sits BENEATH the list, where the
+// legend belongs; not a "?" in the nav bar, which nobody taps. Nothing in the
+// app is explained only here — every row carries its status in words — so
+// collapsing costs nothing. Absent from the verdict screen, where one swatch
+// sits beside a card that already labels it.
+class Component extends DCLogic {
+  state = {};
+  componentDidMount() {
+    if (!window.BYGE) this._t = setInterval(() => { if (window.BYGE) { clearInterval(this._t); this.forceUpdate(); } }, 40);
+    try { this.setState({ open: localStorage.getItem('byge.legend.open') === '1' }); } catch (e) {}
+  }
+  componentWillUnmount() { clearInterval(this._t); }
+  renderVals() {
+    const B = window.BYGE, theme = this.props.theme ?? '';
+    const open = this.state.open ?? (this.props.open ?? false);
+    const th = theme === 'dark' ? 'dark' : 'light';
+    return {
+      theme, open, caret: open ? '−' : '+', dot: 12, sampleRate: 3.4,
+      background: open ? 'var(--surface)' : 'transparent',
+      toggle: () => { const n = !open; this.setState({ open: n }); try { localStorage.setItem('byge.legend.open', n ? '1' : '0'); } catch (e) {} },
+      shapes: [
+        { mode: 'now', rate: 6.0, size: 18, label: 'Raining there now', sub: 'Filled, in the colour of how hard it is falling.' },
+        { mode: 'later', rate: 3.1, size: 18, label: 'Rain on the way', sub: 'Outlined, in the colour of the band that is coming.' },
+        { mode: 'dry', rate: 0, size: 18, label: 'Dry, and we can see that it is dry', sub: 'A faint fill — an observation, not an absence.' },
+        { mode: 'blind', rate: 0, size: 18, label: 'Not observed', sub: 'Hatched. Outside radar coverage, so there is no answer either way.' }
+      ],
+      ramp: B ? B.BANDS.map(b => ({ bg: th === 'dark' ? b.dark : b.light, title: b.label + ' · ' + b.range + ' mm/h · ' + b.feels })) : []
+    };
+  }
+}
+
+</script>
+</body>
+</html>

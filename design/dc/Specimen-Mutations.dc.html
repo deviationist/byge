@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200;0,6..72,300;0,6..72,400&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="foundation.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; background: #C9C5BD; }
+  a { color: #15181B; } a:hover { opacity: .7; }
+</style>
+</helmet>
+<div style="font-family:'IBM Plex Sans',system-ui,sans-serif;color:#15181B;padding:44px 48px 90px;display:flex;flex-direction:column;gap:42px">
+
+  <header style="display:flex;flex-direction:column;gap:11px;max-width:76ch">
+    <div style="font-family:Newsreader,serif;font-size:34px;font-weight:300">After the change</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.7;color:rgba(21,24,27,.62)">The screen a person actually lands on after every mutation, at both breakpoints. The harness renders fixed scenarios, so it cannot show a list mutating — this page is where that behaviour is specified, and it doubles as the design file for the two-pane layout.</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.7;color:rgba(21,24,27,.62)">Two rules run through all of it. <strong style="font-weight:500;color:#15181B">The confirmation lives where the change is visible</strong> — a removal is confirmed above the list that is now shorter, not on the screen you were on when you asked. And <strong style="font-weight:500;color:#15181B">no notice offers undo</strong>, because there is none: the confirmation happened before the deletion, and a dead “Undo” would be worse than no undo at all.</div>
+  </header>
+
+  <sc-for list="{{ cases }}" as="c" hint-placeholder-count="6">
+    <section style="display:flex;flex-direction:column;gap:13px;border-top:1px solid rgba(21,24,27,.16);padding-top:24px">
+      <div style="display:flex;align-items:baseline;gap:13px;flex-wrap:wrap">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;background:#1A1C1E;color:#E9E7E2;border-radius:4px;padding:3px 8px">{{ c.tag }}</span>
+        <span style="font-family:Newsreader,serif;font-size:21px;font-weight:300">{{ c.title }}</span>
+      </div>
+      <div style="font-size:13px;line-height:1.65;color:rgba(21,24,27,.72);max-width:80ch">{{ c.rationale }}</div>
+
+      <div style="display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start;margin-top:4px">
+        <div style="display:flex;flex-direction:column;gap:9px">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;color:rgba(21,24,27,.5)">PHONE</span>
+          <div style="width:390px;height:720px;border-radius:26px;overflow:hidden;border:1px solid rgba(21,24,27,.16);background:#F6F4F0">
+            <div style="width:100%;height:100%;overflow:auto">
+              <sc-if value="{{ c.phoneIsList }}" hint-placeholder-val="{{ true }}">
+                <dc-import name="LocationsScreen" device="phone" places="{{ c.places }}" selected="{{ c.selected }}" notice="{{ c.notice }}" empty="{{ c.empty }}" emptyReason="{{ c.reason }}" lastRemoved="{{ c.lastRemoved }}" showInstall="{{ false }}" theme="light" hint-size="100%,100%"></dc-import>
+              </sc-if>
+              <sc-if value="{{ c.phoneIsVerdict }}" hint-placeholder-val="{{ false }}">
+                <dc-import name="VerdictScreen" scenario="{{ c.selected }}" device="phone" notice="{{ c.verdictNotice }}" radiusKm="{{ c.radiusKm }}" theme="light" hint-size="100%,100%"></dc-import>
+              </sc-if>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:9px">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;color:rgba(21,24,27,.5)">TWO-PANE · TABLET AND DESKTOP</span>
+          <div style="width:900px;height:720px;border-radius:12px;overflow:hidden;border:1px solid rgba(21,24,27,.16);background:#F6F4F0;display:flex">
+            <div style="flex:none;width:320px;border-right:1px solid rgba(21,24,27,.10);overflow:auto;background:#FFF">
+              <dc-import name="LocationsScreen" device="tablet" places="{{ c.places }}" selected="{{ c.selected }}" notice="{{ c.paneNotice }}" empty="{{ c.empty }}" emptyReason="{{ c.reason }}" lastRemoved="{{ c.lastRemoved }}" showInstall="{{ false }}" theme="light" hint-size="100%,100%"></dc-import>
+            </div>
+            <div style="flex:1;min-width:0;overflow:auto">
+              <sc-if value="{{ c.paneHasVerdict }}" hint-placeholder-val="{{ true }}">
+                <dc-import name="VerdictScreen" scenario="{{ c.selected }}" device="tablet" notice="{{ c.verdictNotice }}" radiusKm="{{ c.radiusKm }}" theme="light" hint-size="100%,100%"></dc-import>
+              </sc-if>
+              <sc-if value="{{ c.paneIsEmpty }}" hint-placeholder-val="{{ false }}">
+                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding:48px">
+                  <div style="max-width:34ch;display:flex;flex-direction:column;gap:12px;text-align:left">
+                    <span style="font-family:Newsreader,serif;font-size:26px;font-weight:300;line-height:1.2;color:rgba(21,24,27,.40)">{{ c.paneEmptyText }}</span>
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;line-height:1.7;color:rgba(21,24,27,.40)">{{ c.paneEmptyMeta }}</span>
+                  </div>
+                </div>
+              </sc-if>
+            </div>
+          </div>
+        </div>
+
+        <div style="max-width:32ch;display:flex;flex-direction:column;gap:11px;padding-top:24px">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;color:rgba(21,24,27,.5)">NOTICE COPY</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.7;color:#15181B">{{ c.surface }}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.7;color:#15181B">phone · {{ c.noticeQuoted }}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.7;color:#15181B">two-pane · {{ c.paneNoticeQuoted }}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.7;color:rgba(21,24,27,.5)">{{ c.noticeNote }}</span>
+        </div>
+      </div>
+    </section>
+  </sc-for>
+
+  <section style="display:flex;flex-direction:column;gap:14px;border-top:1px solid rgba(21,24,27,.16);padding-top:26px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;color:rgba(21,24,27,.5)">THE TWO-PANE CONTRACT</div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <sc-for list="{{ contract }}" as="r" hint-placeholder-count="6">
+        <div style="display:grid;grid-template-columns:200px 1fr;gap:18px;align-items:baseline">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(21,24,27,.55)">{{ r.k }}</span>
+          <span style="font-size:13px;line-height:1.65;color:rgba(21,24,27,.72);max-width:74ch">{{ r.v }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <div style="display:flex;flex-wrap:wrap;gap:10px;font-family:'IBM Plex Mono',monospace;font-size:10.5px">
+    <a href="byge.dc.html" style="border:1px solid rgba(21,24,27,.2);border-radius:8px;padding:8px 12px;text-decoration:none">The app →</a>
+    <a href="Library.dc.html" style="border:1px solid rgba(21,24,27,.2);border-radius:8px;padding:8px 12px;text-decoration:none">Component index →</a>
+    <a href="Specimen-InContext.dc.html" style="border:1px solid rgba(21,24,27,.2);border-radius:8px;padding:8px 12px;text-decoration:none">In device frames →</a>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+// Specimen-Mutations — the answer to round 3's general check: for everything a
+// person can CHANGE, what does the app look like immediately after? Also the
+// design file for TwoPane, which round 2 specified only as prose.
+class Component extends DCLogic {
+  componentDidMount() { if (!window.BYGE) this._t = setInterval(() => { if (window.BYGE) { clearInterval(this._t); this.forceUpdate(); } }, 40); }
+  componentWillUnmount() { clearInterval(this._t); }
+  renderVals() {
+    const full = ['s1', 's3', 's8', 's2', 's5', 's6'];
+    const minusCabin = ['s1', 's3', 's8', 's5', 's6'];      // s2 = Cabin
+    const C = (o) => Object.assign({
+      places: full, selected: 's1', notice: '', paneNotice: '', verdictNotice: '', radiusKm: 0, empty: false,
+      surface: 'carried by · the list',
+      reason: 'firstRun', lastRemoved: '', phoneIsList: true, phoneIsVerdict: false,
+      paneHasVerdict: true, paneIsEmpty: false, paneEmptyText: '', paneEmptyMeta: '',
+      noticeNote: ''
+    }, o, {
+      noticeQuoted: '“' + (o.notice || o.verdictNotice || '—') + '”',
+      paneNoticeQuoted: '“' + (o.paneNotice || o.verdictNotice || o.notice || '—') + '”'
+    });
+    return {
+      cases: [
+        C({
+          tag: 'REMOVE · not your last',
+          title: 'Removed a place, others remain',
+          rationale: 'Phone returns to the LIST, not to the neighbour’s verdict. The build currently follows to the neighbour, and the argument for it is real — you were reading a verdict, so you get a verdict — but it is wrong here for two reasons. It shows you an answer about a place you did not ask about, which is the one thing byge must never do; and it hides the only evidence that the removal worked, because the list is where the change is visible. Following the neighbour also silently turns a destructive action into navigation, so a mis-tap leaves you reading Work and believing you are still on Cabin.',
+          places: minusCabin, selected: 's1',
+          notice: 'Removed Cabin.',
+          paneNotice: 'Removed Cabin. Showing Work.',
+          noticeNote: 'Two-pane names both facts because both changed: the row is gone AND the detail pane is now a different place. On phone only one thing changed, so the notice says one thing.'
+        }),
+        C({
+          tag: 'REMOVE · your last',
+          title: 'Removed the last place',
+          rationale: 'The cleared state, which is deliberately not the welcome. First-run says “here is what byge answers”; this says “you just cleared this out” — no mark, no pitch, and it names what went so the screen is a receipt rather than a fresh start. In two-pane it fills BOTH panes: a detail pane holding the verdict of a place that no longer exists is the worst possible outcome, so the pane is emptied and says why.',
+          places: [], selected: 's1', empty: true, reason: 'cleared', lastRemoved: 'Cabin',
+          notice: '', paneHasVerdict: false, paneIsEmpty: true,
+          paneEmptyText: 'Nothing to show.',
+          paneEmptyMeta: 'The place that was here is gone. Add one and its answer appears in this pane.',
+          noticeNote: 'No notice line — the empty state IS the notice, and stacking both would say it twice.'
+        }),
+        C({
+          tag: 'SAVE · new place',
+          title: 'Saved a new place',
+          rationale: 'Back to the list with the new row in it, confirmed by name. On two-pane the new place also becomes the detail pane, because you just told us it is what you care about — and unlike removal there is no risk in showing it: it is the place you asked for.',
+          places: full, selected: 's2', notice: 'Saved Cabin.',
+          paneNotice: 'Saved Cabin. Showing it now.',
+          noticeNote: 'Same slot, same treatment as a removal — the list confirms every mutation the same way, so the pattern is learnable.'
+        }),
+        C({
+          tag: 'EDIT · radius or coordinate',
+          title: 'Edited a place',
+          rationale: 'Back to that place’s VERDICT, not the list — because an edit changes the answer, and the answer is the thing you were adjusting. Widening the radius from 3 km to 15 km can turn “Dry” into “Rain within 8 km”, so landing on the list would hide the consequence of the edit. The verdict refetches; the notice names what changed rather than just that something did.',
+          places: ['s1', 's3', 'edge', 's5', 's6'], selected: 'edge',
+          phoneIsList: false, phoneIsVerdict: true,
+          notice: '', paneNotice: '',
+          verdictNotice: 'Valley watch now covers 15 km.', radiusKm: 15,
+          surface: 'carried by · the verdict',
+          noticeNote: 'On the verdict, in the slot the stale banner uses — the list is unchanged, so a line above it would be confirming nothing. The header reads 15 km, so the claim is checkable against the screen rather than asserted.'
+        }),
+        C({
+          tag: 'REFRESH',
+          title: 'Pulled to refresh',
+          rationale: 'Nothing moves. The verdict stays exactly where it is and updates in place; the only change is the age line and, when there is genuinely nothing newer, a line saying so. This is the case most apps get wrong by resolving a spinner into an unchanged screen, which reads as failure.',
+          places: full, selected: 's1', phoneIsList: false, phoneIsVerdict: true,
+          notice: '', paneNotice: '',
+          verdictNotice: 'Already the latest — radar 7 min old.',
+          surface: 'carried by · the verdict',
+          noticeNote: 'RefreshControl owns this line in the build; drawn here in the same slot to show where it lands. It belongs to the thing that was refreshed, so it never appears above the list.'
+        }),
+        C({
+          tag: 'THEME',
+          title: 'Changed appearance',
+          rationale: 'No notice, no navigation, no confirmation — the change IS the feedback, and it is total. The only subtlety is that “System” keeps a caption naming how the device currently resolves, so following the system is visible rather than implied.',
+          places: full, selected: 's1', notice: '',
+          noticeNote: 'The one mutation that needs no notice, because you cannot fail to notice it.'
+        })
+      ],
+      contract: [
+        { k: 'list pane', v: 'Always present, always the full list, never collapsible. It is navigation, so it does not scroll away with the answer.' },
+        { k: 'detail pane', v: 'Holds exactly one place’s verdict, or an explicit empty message. It is never blank and never holds a stale place.' },
+        { k: 'selection', v: 'Exactly one row is selected whenever the detail pane holds a verdict, and the selected row is the place shown. There is no state where they disagree.' },
+        { k: 'after a removal', v: 'The detail pane re-points to the nearest surviving neighbour — the row below, or the row above if the last was removed — and the notice names it.' },
+        { k: 'reading measure', v: 'The detail pane caps at 620 px regardless of pane width. Extra width becomes whitespace; the headline never stretches to fill it.' },
+        { k: 'no navigation', v: 'Comparing two places needs no navigation at all on two-pane, which is the entire reason the layout exists. Back therefore does not appear in the detail pane.' },
+        { k: 'phone', v: 'The same two screens, one at a time. List and verdict are separate destinations with a real back — not a collapsed pane.' }
+      ]
+    };
+  }
+}
+
+</script>
+</body>
+</html>

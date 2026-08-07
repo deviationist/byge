@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root, [data-theme="light"] { --surface:#FFF; --sunk:#EFEDE8; --ink:#15181B; --ink2:rgba(21,24,27,.62); --ink3:rgba(21,24,27,.40); --line:rgba(21,24,27,.10); --line2:rgba(21,24,27,.18); }
+  [data-theme="dark"] { --surface:#16191C; --sunk:#1B1F22; --ink:#ECEEF0; --ink2:rgba(236,238,240,.60); --ink3:rgba(236,238,240,.38); --line:rgba(236,238,240,.12); --line2:rgba(236,238,240,.20); }
+  @keyframes byge-menu { from { opacity: 0; transform: translateY(-5px) } to { opacity: 1; transform: none } }
+</style>
+</helmet>
+<sc-if value="{{ open }}" hint-placeholder-val="{{ true }}">
+  <span data-theme="{{ theme }}">
+    <span onClick="{{ onClose }}" style="position:fixed;inset:0;z-index:70"></span>
+    <span role="menu" aria-label="{{ label }}" style="position:absolute;{{ vEdge }}:{{ vOffset }}px;{{ side }}:0;z-index:71;min-width:{{ minWidth }}px;background:var(--surface);border:1px solid var(--line2);border-radius:12px;padding:6px;box-shadow:0 16px 40px -12px rgba(0,0,0,.42);display:flex;flex-direction:column;gap:2px;animation:byge-menu 130ms cubic-bezier(.2,.7,.3,1)">
+      <sc-for list="{{ rows }}" as="r" hint-placeholder-count="2">
+        <button role="menuitem" onClick="{{ r.press }}" style="cursor:pointer;text-align:left;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink);background:transparent;border:none;border-radius:8px;padding:9px 12px;min-height:44px;width:100%;display:flex;flex-direction:column;justify-content:center;gap:2px" style-hover="background:var(--sunk)" style-focus="outline:2px solid var(--ink);outline-offset:-2px">
+          <span style="font-size:14px">{{ r.label }}</span>
+          <sc-if value="{{ r.hasNote }}" hint-placeholder-val="{{ false }}">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;line-height:1.4;color:var(--ink3)">{{ r.note }}</span>
+          </sc-if>
+        </button>
+      </sc-for>
+    </span>
+  </span>
+</sc-if>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:260,&quot;height&quot;:220},&quot;open&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;label&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Actions&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;direction&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;down&quot;,&quot;up&quot;],&quot;default&quot;:&quot;down&quot;,&quot;tsType&quot;:&quot;'down'|'up'&quot;},&quot;align&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;right&quot;,&quot;left&quot;],&quot;default&quot;:&quot;right&quot;,&quot;tsType&quot;:&quot;'right'|'left'&quot;},&quot;minWidth&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:178,&quot;min&quot;:140,&quot;max&quot;:320,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;offsetTop&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:50,&quot;min&quot;:0,&quot;max&quot;:120,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;offsetBottom&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:52,&quot;min&quot;:0,&quot;max&quot;:120,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;''|'light'|'dark'&quot;},&quot;items&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;{label:string,note?:string,onPress:()=&gt;void}[]&quot;},&quot;onClose&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;}}">
+// DropdownMenu — the popover, and only the popover. Controlled: the parent owns
+// `open` and passes `onClose`, so the same menu can hang off a ⋮ button, a row,
+// or a labelled button without this file knowing which.
+//
+// Positions absolutely against the nearest positioned ancestor, so the caller
+// supplies that. Rows are 44 px, each with an optional monospace note for the
+// case where the verb alone does not warn you ("cannot be undone"). Escape and
+// a full-viewport backdrop both close it; the backdrop is a click target, not a
+// scrim, because a menu over a verdict should not dim the answer.
+// CSS DEPENDENCY — box-shadow (web only). DECORATIVE, safe to drop on native.
+// The popover's boundary is carried by its 1 px --line2 border, not the shadow;
+// the shadow only adds lift, and it opens over app chrome rather than over
+// imagery. Do NOT substitute an elevation that changes the surface colour — the
+// menu must stay --surface so its rows match every other surface in the app.
+class Component extends DCLogic {
+  componentDidMount() {
+    this._esc = (e) => { if (e.key === 'Escape' && this.props.open && this.props.onClose) this.props.onClose(); };
+    document.addEventListener('keydown', this._esc);
+  }
+  componentWillUnmount() { document.removeEventListener('keydown', this._esc); }
+  renderVals() {
+    const items = this.props.items ?? [];
+    return {
+      theme: this.props.theme ?? '',
+      open: this.props.open ?? false,
+      label: this.props.label ?? 'Actions',
+      minWidth: this.props.minWidth ?? 178,
+      // 'down' hangs below the trigger; 'up' anchors its BOTTOM above it, so a
+      // menu whose rows wrap cannot creep back over the button that opened it.
+      vEdge: (this.props.direction ?? 'down') === 'up' ? 'bottom' : 'top',
+      vOffset: (this.props.direction ?? 'down') === 'up' ? (this.props.offsetBottom ?? 52) : (this.props.offsetTop ?? 50),
+      side: (this.props.align ?? 'right') === 'right' ? 'right' : 'left',
+      onClose: this.props.onClose,
+      rows: items.map(i => ({
+        label: i.label, note: i.note ?? '', hasNote: !!i.note,
+        press: () => { if (this.props.onClose) this.props.onClose(); if (i.onPress) i.onPress(); }
+      }))
+    };
+  }
+}
+
+</script>
+</body>
+</html>

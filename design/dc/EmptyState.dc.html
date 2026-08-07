@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200;0,6..72,300;0,6..72,400&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root, [data-theme="light"] { --bg:#F6F4F0; --surface:#FFF; --sunk:#EFEDE8; --ink:#15181B; --ink2:rgba(21,24,27,.62); --ink3:rgba(21,24,27,.40); --line:rgba(21,24,27,.10); --line2:rgba(21,24,27,.18); }
+  [data-theme="dark"] { --bg:#0E1113; --surface:#16191C; --sunk:#1B1F22; --ink:#ECEEF0; --ink2:rgba(236,238,240,.60); --ink3:rgba(236,238,240,.38); --line:rgba(236,238,240,.12); --line2:rgba(236,238,240,.20); }
+</style>
+</helmet>
+<div data-theme="{{ theme }}" style="width:100%;display:flex;flex-direction:column;gap:{{ gap }}px;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink);max-width:36ch">
+
+  <sc-if value="{{ isFirstRun }}" hint-placeholder-val="{{ true }}">
+    <dc-import name="BrandMark" size="{{ markSize }}" variant="standard" hint-size="44px,44px"></dc-import>
+  </sc-if>
+
+  <div style="font-family:Newsreader,serif;font-weight:300;font-size:{{ size }}px;line-height:1.08;letter-spacing:-.015em;text-wrap:pretty">{{ headline }}</div>
+  <div style="font-size:14px;line-height:1.6;color:var(--ink2)">{{ body }}</div>
+
+  <button onClick="{{ onAdd }}" style="cursor:pointer;align-self:flex-start;font:inherit;font-size:14.5px;font-weight:500;min-height:48px;padding:0 22px;border-radius:11px;border:1px solid var(--ink);background:var(--ink);color:var(--bg)" style-hover="filter:brightness(1.08)" style-focus="outline:2px solid var(--ink);outline-offset:2px">{{ cta }}</button>
+
+  <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;line-height:1.7;color:var(--ink3);border-top:1px solid var(--line);padding-top:14px">{{ footnote }}</div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:420,&quot;height&quot;:420},&quot;reason&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;firstRun&quot;,&quot;cleared&quot;],&quot;default&quot;:&quot;firstRun&quot;,&quot;tsType&quot;:&quot;'firstRun'|'cleared'&quot;},&quot;lastRemoved&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;size&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:38,&quot;min&quot;:24,&quot;max&quot;:64,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;''|'light'|'dark'&quot;},&quot;onAdd&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;}}">
+// EmptyState — two reasons, two tones. Same layout, different voice.
+//
+//   firstRun  a welcome. The mark is present, the copy explains what byge answers,
+//             and the footnote sets expectations about radar.
+//   cleared   you just removed your last place, deliberately, seconds ago. No
+//             mark (you know what app you are in), no pitch, no "welcome back",
+//             and no scolding. It states what happened, confirms the deletion
+//             went through, and offers the one way forward.
+//
+// Getting this wrong is how an app congratulates you on an empty list.
+class Component extends DCLogic {
+  renderVals() {
+    const reason = this.props.reason ?? 'firstRun';
+    const cleared = reason === 'cleared';
+    const last = this.props.lastRemoved ?? '';
+    const copy = cleared ? {
+      headline: 'No places left.',
+      body: last
+        ? 'Removed ' + last + '. That was the last one, so there is nothing for byge to answer about — add a place whenever you want it back.'
+        : 'You have removed all of your places, so there is nothing for byge to answer about. Add one whenever you want it back.',
+      cta: 'Add a place',
+      footnote: 'Nothing is kept elsewhere — no account, no sync — so removing really did remove it. Adding the same coordinate again gives you a fresh reading, not the old one.'
+    } : {
+      headline: 'Do I need a jacket, and for how long?',
+      body: 'Add a place and byge will answer that, and only that — whether it is raining there now, when it stops, and when the next band arrives.',
+      cta: 'Add your first place',
+      footnote: 'Radar, not a forecast model. It sees the rain that exists right now and slides it forward two hours. Data from MET Norway.'
+    };
+    return Object.assign({
+      theme: this.props.theme ?? '', size: this.props.size ?? 38,
+      markSize: 44, isFirstRun: !cleared, gap: cleared ? 20 : 26,
+      onAdd: this.props.onAdd
+    }, copy);
+  }
+}
+
+</script>
+</body>
+</html>

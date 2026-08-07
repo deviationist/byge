@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200;0,6..72,300;0,6..72,400&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="foundation.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; background: #C9C5BD; }
+  a { color: #15181B; } a:hover { opacity: .7; }
+</style>
+</helmet>
+<div style="font-family:'IBM Plex Sans',system-ui,sans-serif;color:#15181B;padding:44px 48px 90px;display:flex;flex-direction:column;gap:44px">
+
+  <header style="display:flex;flex-direction:column;gap:11px;max-width:78ch">
+    <div style="font-family:Newsreader,serif;font-size:34px;font-weight:300">The map, decided</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.7;color:rgba(21,24,27,.62)">Answers to the map brief. The rulings are stated first, because they are what was asked for; the screens beneath them are the rulings drawn.</div>
+  </header>
+
+  <section style="display:flex;flex-direction:column;gap:16px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;color:rgba(21,24,27,.5)">RULINGS</div>
+    <div style="display:flex;flex-direction:column;gap:14px;max-width:96ch">
+      <sc-for list="{{ rulings }}" as="r" hint-placeholder-count="5">
+        <div style="display:grid;grid-template-columns:150px 1fr;gap:20px;align-items:baseline;border-top:1px solid rgba(21,24,27,.14);padding-top:14px">
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.05em;color:rgba(21,24,27,.5)">{{ r.q }}</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;background:#1A1C1E;color:#E9E7E2;border-radius:4px;padding:3px 7px;align-self:flex-start">{{ r.verdict }}</span>
+          </div>
+          <span style="font-size:13.5px;line-height:1.6;color:rgba(21,24,27,.74);text-wrap:pretty">{{ r.why }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:14px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;color:rgba(21,24,27,.5)">1 · /MAP · DESKTOP — AN INSTRUMENT, NOT A VIEW OF YOUR DAY</div>
+    <div style="width:1100px;border-radius:12px;overflow:hidden;border:1px solid rgba(21,24,27,.16);box-shadow:0 12px 30px -14px rgba(0,0,0,.3)">
+      <dc-import name="RadarBrowseScreen" device="desktop" height="{{ 900 }}" bar-density="full" scenario="s2" basemap="muted" maskWidth="{{ 10 }}" theme="light" hint-size="100%,900px"></dc-import>
+    </div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.7;color:rgba(21,24,27,.55);max-width:88ch">Header names the screen and its limit in one breath: Radar, and “no place, so no verdict”. Bottom bar carries the transport and the same PrecipitationGraph, subject switched to the visible map — one time component, not two. Legend bottom-right, basemap switcher bottom-left, exit to places top-right.</div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:14px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;color:rgba(21,24,27,.5)">2 · /MAP · PHONE, AND THE MARITIME CASE</div>
+    <div style="display:flex;gap:30px;flex-wrap:wrap;align-items:flex-start">
+      <sc-for list="{{ phones }}" as="p" hint-placeholder-count="3">
+        <div style="display:flex;flex-direction:column;gap:9px;width:390px">
+          <div style="border-radius:26px;overflow:hidden;border:1px solid rgba(21,24,27,.16);background:#F6F4F0">
+            <dc-import name="RadarBrowseScreen" device="phone" height="{{ 860 }}" bar-density="{{ p.bar }}" scenario="{{ p.scenario }}" basemap="{{ p.basemap }}" showReadout="{{ p.readout }}" cellRate="{{ p.rate }}" cellCovered="{{ p.covered }}" cellCoords="{{ p.coords }}" maskWidth="{{ p.mask }}" offBasemapWidth="{{ p.off }}" theme="{{ p.theme }}" hint-size="100%,860px"></dc-import>
+          </div>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.65;color:rgba(21,24,27,.58)">{{ p.label }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:14px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;color:rgba(21,24,27,.5)">3 · CELLREADOUT · A READING, NEVER A VERDICT</div>
+    <div style="display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start">
+      <sc-for list="{{ readouts }}" as="r" hint-placeholder-count="3">
+        <div style="display:flex;flex-direction:column;gap:9px;width:288px">
+          <div style="padding:20px;border-radius:12px;background:{{ r.pane }};border:1px solid rgba(21,24,27,.14)">
+            <dc-import name="CellReadout" rate="{{ r.rate }}" covered="{{ r.covered }}" frameMinutes="{{ r.min }}" coords="{{ r.coords }}" placement="{{ r.placement }}" theme="{{ r.theme }}" hint-size="268px,250px"></dc-import>
+          </div>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.65;color:rgba(21,24,27,.58)">{{ r.label }}</span>
+        </div>
+      </sc-for>
+      <div style="max-width:32ch;display:flex;flex-direction:column;gap:12px;padding-top:6px">
+        <div style="font-family:Newsreader,serif;font-size:21px;font-weight:300;line-height:1.35">No duration, no bound, no radius.</div>
+        <div style="font-size:13px;line-height:1.65;color:rgba(21,24,27,.72)">A verdict is a claim about a place someone told us they care about. A tapped square has no radius and no spell model, so giving it a sentence would be byge answering a question nobody asked — in the app's own headline voice, on something that does not qualify for it. The card reports what the instrument saw, and offers the one action that turns a reading into an answer.</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.7;color:rgba(21,24,27,.5)">Anchored to the cell, not a corner: on a running animation, a corner card loses the link to which square you hit within two frames. It flips above when the tap lands low.</div>
+      </div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:14px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;color:rgba(21,24,27,.5)">4 · TRANSPORT AND LEGEND</div>
+    <div style="display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start">
+      <div style="display:flex;flex-direction:column;gap:9px;width:440px">
+        <div style="padding:20px;border-radius:12px;background:#FFF;border:1px solid rgba(21,24,27,.14);display:flex;flex-direction:column;gap:18px">
+          <dc-import name="PlaybackControl" frameCount="{{ 24 }}" theme="light" hint-size="100%,44px"></dc-import>
+          <dc-import name="PlaybackControl" frameCount="{{ 24 }}" frameIndex="{{ 23 }}" openEnded="{{ true }}" theme="light" hint-size="100%,44px"></dc-import>
+        </div>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.65;color:rgba(21,24,27,.58)">Paused at the present, and stopped at the horizon. It does not loop: looping turns a two-hour forecast into wallpaper and erases the frame where the data runs out — the same edge the verdict means by “no end in sight”. At the end it becomes REPLAY, so stopping reads as a state.</span>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:9px">
+        <div style="padding:20px;border-radius:12px;background:#ECEAE6;border:1px solid rgba(21,24,27,.14);display:flex;gap:16px;align-items:flex-start">
+          <dc-import name="MapLegend" density="full" theme="light" hint-size="186px,240px"></dc-import>
+          <dc-import name="MapLegend" density="compact" force-collapsed="{{ true }}" theme="light" hint-size="150px,60px"></dc-import>
+        </div>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.65;color:rgba(21,24,27,.58);max-width:46ch">Collapsed, it drops the band NAMES and keeps the two non-rain states. The ramp is learnable; “no radar” and “dry” are not guessable, and they are the two the design refuses to leave ambiguous.</span>
+      </div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:14px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;color:rgba(21,24,27,.5)">5 · DEAD ENDS · ONE COMPONENT, FOUR THINGS IT CAN HONESTLY SAY</div>
+    <div style="display:flex;gap:26px;flex-wrap:wrap;align-items:flex-start">
+      <sc-for list="{{ errors }}" as="e" hint-placeholder-count="4">
+        <div style="display:flex;flex-direction:column;gap:9px;width:390px">
+          <div style="height:560px;border-radius:26px;overflow:hidden;border:1px solid rgba(21,24,27,.16)">
+            <dc-import name="ErrorScreen" kind="{{ e.kind }}" name="{{ e.name }}" path="{{ e.path }}" device="phone" theme="{{ e.theme }}" hint-size="100%,100%"></dc-import>
+          </div>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.65;color:rgba(21,24,27,.58)">{{ e.label }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <div style="display:flex;flex-wrap:wrap;gap:10px;font-family:'IBM Plex Mono',monospace;font-size:10.5px">
+    <a href="RadarMap.dc.html" style="border:1px solid rgba(21,24,27,.2);border-radius:8px;padding:8px 12px;text-decoration:none">The anchored map →</a>
+    <a href="Specimen-Mutations.dc.html" style="border:1px solid rgba(21,24,27,.2);border-radius:8px;padding:8px 12px;text-decoration:none">After the change →</a>
+    <a href="Library.dc.html" style="border:1px solid rgba(21,24,27,.2);border-radius:8px;padding:8px 12px;text-decoration:none">Component index →</a>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() { if (!window.BYGE) this._t = setInterval(() => { if (window.BYGE) { clearInterval(this._t); this.forceUpdate(); } }, 40); }
+  componentWillUnmount() { clearInterval(this._t); }
+  renderVals() {
+    return {
+      rulings: [
+        { q: '§1 · does /map ship?', verdict: 'YES — (c) + (d)', why: 'It ships, with a real entry point on the list and the framing reworked. It answers a question the anchored map cannot — where is the weather, for someone whose place is moving — and the maritime case is the strongest version of that: a sea chart and a coverage boundary are precisely what that reader needs, and a saved coordinate cannot serve them. Refusing to ship it because it is engaging would be the wrong lesson from the right worry.' },
+        { q: '§1 · the guard', verdict: 'STRUCTURAL', why: 'The risk is not that the map exists, it is that the map becomes the front door — so the guards are structural rather than tonal. Never a tab bar, never the landing view, and the launcher always opens the list; the app must not remember the map as “where I was”. The entry point is a line of text under the places, the same weight as “See why — radar map →” on the verdict. And the screen states its own limit: Radar, no place, so no verdict.' },
+        { q: '§3 · stops at horizon', verdict: 'CONFIRMED', why: 'Keep it. Looping is the convention and the convention is wrong here: it turns a forecast into wallpaper and erases the one frame that matters most, where the data runs out. Stopping leaves the reader at the same edge the sentence means by “no end in sight”. REPLAY at the end makes the stop a state rather than a failure.' },
+        { q: '§3 · no autoplay', verdict: 'CONFIRMED', why: 'Arriving into motion means the first frame a reader sees is not the present, and the present is the frame the verdict is about. Reduced motion slowing to 900 ms rather than removing the control is also right — stepping through frames is how this screen is read, so removing it would take away the point instead of the motion.' },
+        { q: '§3 · a slider', verdict: 'NO — AFFORDANCE', why: 'Your read is correct: it was a request for affordance, not for a second control. A slider would be two widgets for one quantity with the graph demoted to a readout. The graph now carries a playhead — a full-height rule, a 12 px knob, ‹ › cues — and takes a drag across the whole strip rather than a click per column. One time control, and now it looks like one.' },
+        { q: '§4.2 · a card?', verdict: 'CARD, TETHERED', why: 'A card is right, anchored to the tapped cell rather than to a corner. A reading is a statement about one square kilometre, and a corner card leaves the reader to remember which square they hit — on a running animation that link is gone in two frames. It flips above the cell when the tap lands low. It stays a reading: no duration, no bound, no radius.' },
+        { q: '§5 · basemaps', verdict: 'FOUR, MUTED FIRST', why: 'satellite and hybrid are removed from the design — an option we cannot serve is a promise we cannot keep. Muted is the default: a basemap under a data overlay should lose every argument with the data, and greyscale topo is the only one of the four that reliably does. Beyond Kartverket, blank ground is itself a claim, so it renders as a distinct neutral field saying the radar is still valid there.' }
+      ],
+      phones: [
+        { scenario: 's2', basemap: 'muted', bar: 'full', readout: false, rate: 4.2, covered: true, coords: '59.913 N, 10.752 E', mask: 14, off: 0, theme: 'light', label: 'Phone · compact legend, full-width switcher, transport and strip in the bottom bar. The legend keeps the two non-rain states and drops the band names.' },
+        { scenario: 's1', basemap: 'nautical', bar: 'lean', readout: true, rate: 8.4, covered: true, coords: '58.402 N, 4.118 E', mask: 30, off: 0, theme: 'light', label: 'Maritime · nautical chart, a reading tethered above the tapped cell, coverage boundary at the mosaic edge. Strip in its LEAN density — scrubber and playhead intact, coverage bars and footnote dropped — so the map keeps the height. The switcher yields to the readout.' },
+        { scenario: 'partial', basemap: 'muted', bar: 'lean', readout: true, rate: 0, covered: false, coords: '61.108 N, 2.240 E', mask: 24, off: 18, theme: 'dark', label: 'Dark, off the mosaic and off the basemap · the reading says “not observed” rather than dry, and the eastern field says the basemap ended, not the radar.' }
+      ],
+      readouts: [
+        { rate: 6.1, covered: true, min: 0, coords: '59.913 N, 10.752 E', placement: 'below', theme: 'light', pane: '#ECEAE6', label: 'Heavy rain, now — band name, what it feels like, exact rate, cell, resolution.' },
+        { rate: 0, covered: true, min: 45, coords: '60.391 N, 5.325 E', placement: 'below', theme: 'light', pane: '#ECEAE6', label: 'Dry, and observed — “radar sees this square and sees no rain in it”, which is a measurement, not an absence.' },
+        { rate: 0, covered: false, min: 45, coords: '61.108 N, 2.240 E', placement: 'above', theme: 'dark', pane: '#16191C', label: 'Not observed, flipped above the cell — no rate, no claim either way.' }
+      ],
+      errors: [
+        { kind: 'deleted', name: 'Cabin', path: '/location/7f2a9c/map', theme: 'light', label: 'A shared link to a place that was removed. The only case that names a cause, because it is the only one we know.' },
+        { kind: 'notFound', name: '', path: '/location/7f2a9/mapp', theme: 'light', label: '404 · shows the path, because a truncated shared link is the likely cause and the path is the evidence.' },
+        { kind: 'offline', name: '', path: '', theme: 'dark', label: 'Offline · nothing is broken and nothing is lost, so the tone is not failure.' },
+        { kind: 'crash', name: '', path: '', theme: 'dark', label: 'Fault · the one case we cannot explain, so it does not pretend to, and does not blame the reader.' }
+      ]
+    };
+  }
+}
+
+</script>
+</body>
+</html>

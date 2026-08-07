@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200;0,6..72,300;0,6..72,400;1,6..72,300&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="foundation.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root, [data-theme="light"] {
+    --bg:#F6F4F0; --surface:#FFF; --sunk:#EFEDE8; --ink:#15181B; --ink2:rgba(21,24,27,.62); --ink3:rgba(21,24,27,.40);
+    --line:rgba(21,24,27,.10); --line2:rgba(21,24,27,.18); --dry:rgba(21,24,27,.07); --nodata:#FFF; --nodata-line:rgba(21,24,27,.28);
+  }
+  [data-theme="dark"] {
+    --bg:#0E1113; --surface:#16191C; --sunk:#1B1F22; --ink:#ECEEF0; --ink2:rgba(236,238,240,.60); --ink3:rgba(236,238,240,.38);
+    --line:rgba(236,238,240,.12); --line2:rgba(236,238,240,.20); --dry:rgba(236,238,240,.07); --nodata:#2A2E31; --nodata-line:rgba(236,238,240,.30);
+  }
+</style>
+</helmet>
+<div data-theme="{{ theme }}" style="display:flex;flex-direction:column;color:var(--ink);max-width:{{ maxw }}">
+
+  <div style="font-family:Newsreader,serif;font-weight:300;font-size:{{ size }}px;line-height:1.03;letter-spacing:-.016em;text-wrap:pretty">
+    <span style="display:block">{{ lead }}</span>
+    <span style="display:block;color:var(--ink2)">{{ bodyA }}<sc-if value="{{ openEnded }}" hint-placeholder-val="{{ false }}"><span style="color:var(--ink);border-bottom:2px dotted var(--ink3);padding-bottom:.04em">{{ bound }}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:{{ supSize }}px;vertical-align:super;letter-spacing:.02em;color:var(--ink3);margin-left:.22em">→</span></sc-if>{{ bodyC }}</span>
+  </div>
+
+  <sc-if value="{{ hasClock }}" hint-placeholder-val="{{ false }}">
+    <div style="margin-top:{{ clockGap }}px;font-family:'IBM Plex Mono',monospace;font-size:{{ clockSize }}px;color:var(--ink2);letter-spacing:.04em;font-variant-numeric:tabular-nums">{{ clock }}</div>
+  </sc-if>
+
+  <sc-if value="{{ hasSecond }}" hint-placeholder-val="{{ false }}">
+    <div style="margin-top:{{ secondGap }}px;display:flex;gap:11px;align-items:flex-start">
+      <span style="flex:none;margin-top:{{ ruleTop }}px;width:{{ ruleW }}px;height:1px;background:var(--line2)"></span>
+      <span style="display:flex;flex-direction:column;gap:5px">
+        <span style="font-family:Newsreader,serif;font-weight:300;font-size:{{ secondSize }}px;line-height:1.2;color:var(--ink)">{{ second }}<sc-if value="{{ secondOpenEnded }}" hint-placeholder-val="{{ false }}"><span style="border-bottom:2px dotted var(--ink3);padding-bottom:.04em">{{ secondBound }}</span></sc-if>{{ secondC }}</span>
+        <sc-if value="{{ hasSecondClock }}" hint-placeholder-val="{{ false }}">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:{{ clockSize }}px;color:var(--ink2);letter-spacing:.04em;font-variant-numeric:tabular-nums">{{ secondClock }}</span>
+        </sc-if>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:{{ metaSize }}px;color:var(--ink3);letter-spacing:.03em">{{ gapText }}</span>
+      </span>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasNote }}" hint-placeholder-val="{{ false }}">
+    <div style="margin-top:18px;display:flex;gap:11px;max-width:46ch">
+      <span style="flex:none;width:2px;background:var(--line2);border-radius:1px"></span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:{{ noteSize }}px;line-height:1.65;color:var(--ink2)">{{ note }}</span>
+    </div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:460,&quot;height&quot;:300},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;s1&quot;,&quot;s2&quot;,&quot;s3&quot;,&quot;s4&quot;,&quot;s5&quot;,&quot;s8&quot;,&quot;s9&quot;,&quot;partial&quot;,&quot;edge&quot;,&quot;s6&quot;],&quot;default&quot;:&quot;s1&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;size&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:44,&quot;min&quot;:20,&quot;max&quot;:80,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;showNote&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;showSecond&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;showClock&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;measure&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;22ch&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;''|'light'|'dark'&quot;}}">
+// LocationStatusText — the answer. The most important component in the app.
+//
+// It owns the open-ended treatment, and carries it FOUR redundant ways because
+// no single one survives every reading condition:
+//   1. the grammar changes      "no end in sight" / "at least 75 min"
+//   2. the bound is dot-underlined and inked, not greyed
+//   3. a superscript → says the value continues past what we can see
+//   4. a monospace footnote states the bound in words
+// A second spell gets a secondary line beneath, never equal billing: the first
+// spell is what you act on. But the clear gap is drawn and named, because
+// "it'll clear at six" is the sentence people plan around.
+//
+// CLOCK TREATMENT (round 3 decision — relative primary, clock secondary):
+// Own line at EVERY breakpoint, never inline. Three reasons, in order of weight:
+//   1. Inline would put the clock in the same line as the open-ended bound —
+//      two subordinate treatments in one line, which is exactly where the
+//      open-ended signal starts to blur. The bound must own that line.
+//   2. Inline needs a third ink level to stay subordinate inside the ink2 body
+//      span; on its own line ink2 is already subordinate to the ink lead.
+//   3. It is one rule that survives all eleven states and translation. Norwegian
+//      relative phrases run longer, and an inline clock would wrap first.
+// Size is 0.28× the headline with an 11 px floor (phone 11 / tablet 13 /
+// desktop 15) — the old 0.22× floor of 9.5 px was caption-sized for a value
+// people plan around. Tabular numerals so times do not shift between states.
+// The second spell's clock uses the SAME size as the primary's: one clock size
+// per breakpoint, because it is the same class of information.
+// An open-ended spell renders NO clock line, and that absence is a signal.
+class Component extends DCLogic {
+  componentDidMount() { if (!window.BYGE) this._t = setInterval(() => { if (window.BYGE) { clearInterval(this._t); this.forceUpdate(); } }, 40); }
+  componentWillUnmount() { clearInterval(this._t); }
+  renderVals() {
+    const B = window.BYGE;
+    const key = this.props.scenario ?? 's1';
+    const size = this.props.size ?? 44;
+    if (!B) return { theme: this.props.theme ?? '', size, lead: '', bodyA: '', bodyC: '' };
+    const fx = B.FIXTURES[key], v = B.verdict(fx), d = B.describe(v, fx.name + ' · ' + fx.place);
+    const showNote = this.props.showNote ?? true;
+    return {
+      theme: this.props.theme ?? '', size, maxw: this.props.measure ?? '22ch',
+      supSize: Math.round(size * 0.28), metaSize: Math.max(9.5, Math.round(size * 0.22)),
+      clockSize: Math.max(11, Math.round(size * 0.28)), clockGap: Math.round(size * 0.26),
+      secondClock: d.secondClock, hasSecondClock: !!d.secondClock && (this.props.showClock ?? true),
+      noteSize: Math.max(10, Math.round(size * 0.24)), secondSize: Math.round(size * 0.46),
+      secondGap: Math.round(size * 0.42), ruleW: Math.round(size * 0.34), ruleTop: Math.round(size * 0.3),
+      lead: d.lead, bodyA: d.bodyA, bound: d.bound, bodyC: d.bodyC, openEnded: !!d.bound,
+      clock: d.clock, hasClock: !!d.clock && (this.props.showClock ?? true),
+      hasSecond: !!d.second && (this.props.showSecond ?? true),
+      second: d.second, secondBound: d.secondBound, secondC: d.secondC, secondOpenEnded: !!d.secondBound,
+      gapText: d.gap ? d.gap + ' min clear in between' : '',
+      note: d.note, hasNote: !!d.note && showNote
+    };
+  }
+}
+
+</script>
+</body>
+</html>

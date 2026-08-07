@@ -190,10 +190,33 @@ export function RadarPreview({
         The link text stays. Without it the strip is a decorative image that
         happens to navigate, and nothing on screen says where. It also keeps the
         screen readable when the field has not loaded, or cannot.
+
+        Set as the design sets the link this replaced — 13 px, ink2, an
+        underline in `line2` and the arrow held 7 px off. The preview is the tap
+        target now, so the design's 44 px min-height is satisfied by the strip
+        rather than by this line; the underline is what still says "link".
       */}
-      <Text className="text-ink2" style={{ fontSize: 12.5 }}>
-        {t("radarMap.seeWhy")} <Text style={{ fontFamily: MONO }}>→</Text>
-      </Text>
+      <View
+        className="border-b-line2"
+        style={{
+          alignSelf: "flex-start",
+          borderBottomWidth: 1,
+          paddingBottom: 3,
+          flexDirection: "row",
+          alignItems: "baseline",
+          // The arrow is held off the words rather than following a space —
+          // a space is a character whose width is the font's business, and this
+          // gap is the design's.
+          gap: 7,
+        }}
+      >
+        <Text className="text-ink2" style={{ fontSize: 13 }}>
+          {t("radarMap.seeWhy")}
+        </Text>
+        <Text aria-hidden className="text-ink2" style={{ fontFamily: MONO, fontSize: 13 }}>
+          →
+        </Text>
+      </View>
     </Pressable>
   );
 }

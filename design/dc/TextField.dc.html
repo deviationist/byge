@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root, [data-theme="light"] { --bg:#F6F4F0; --surface:#FFF; --ink:#15181B; --ink2:rgba(21,24,27,.62); --ink3:rgba(21,24,27,.40); --line:rgba(21,24,27,.10); --line2:rgba(21,24,27,.18); }
+  [data-theme="dark"] { --bg:#0E1113; --surface:#16191C; --ink:#ECEEF0; --ink2:rgba(236,238,240,.60); --ink3:rgba(236,238,240,.38); --line:rgba(236,238,240,.12); --line2:rgba(236,238,240,.20); }
+  input.byge-input { width: 100%; border: none; background: transparent; outline: none; color: var(--ink); font: inherit; }
+  input.byge-input::placeholder { color: var(--ink3); }
+</style>
+</helmet>
+<label data-theme="{{ theme }}" style="width:100%;display:flex;flex-direction:column;gap:8px;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink)">
+  <sc-if value="{{ hasLabel }}" hint-placeholder-val="{{ true }}">
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;color:var(--ink3)">{{ label }}</span>
+  </sc-if>
+  <span style="display:flex;align-items:center;gap:10px;border:1px solid {{ border }};border-radius:11px;background:var(--surface);padding:0 15px;min-height:50px">
+    <input class="byge-input" value="{{ value }}" onChange="{{ onChange }}" placeholder="{{ placeholder }}" inputMode="{{ inputMode }}" style="font-family:{{ font }};font-size:{{ size }}px"></input>
+    <sc-if value="{{ hasSuffix }}" hint-placeholder-val="{{ false }}">
+      <span style="flex:none;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--ink3)">{{ suffix }}</span>
+    </sc-if>
+  </span>
+  <sc-if value="{{ hasHint }}" hint-placeholder-val="{{ false }}">
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.6;color:{{ hintColor }}">{{ hint }}</span>
+  </sc-if>
+</label>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:360,&quot;height&quot;:120},&quot;label&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;NAME IT&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;value&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;placeholder&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Home&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;kind&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;text&quot;,&quot;coord&quot;,&quot;search&quot;],&quot;default&quot;:&quot;text&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;suffix&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;hint&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;invalid&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;''|'light'|'dark'&quot;},&quot;onChange&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(v: string) =&gt; void&quot;}}">
+// TextField — search, coordinate and name inputs. Coordinates are monospace and
+// numeric-keyboard, and clamp to four decimals on the way in: MET returns 403
+// above that, and it is better to prevent the error than to explain it.
+class Component extends DCLogic {
+  state = {};
+  renderVals() {
+    const kind = this.props.kind ?? 'text';       // text | coord | search
+    const coord = kind === 'coord';
+    const invalid = this.props.invalid ?? false;
+    const val = this.state.v ?? (this.props.value ?? '');
+    return {
+      theme: this.props.theme ?? '', label: this.props.label ?? '', hasLabel: !!(this.props.label ?? ''),
+      value: val, placeholder: this.props.placeholder ?? '',
+      font: coord ? "'IBM Plex Mono',monospace" : "'IBM Plex Sans',system-ui,sans-serif",
+      size: coord ? 15 : 15.5, inputMode: coord ? 'decimal' : 'text',
+      border: invalid ? 'var(--ink)' : 'var(--line2)',
+      hasSuffix: !!(this.props.suffix ?? ''), suffix: this.props.suffix ?? '',
+      hint: this.props.hint ?? '', hasHint: !!(this.props.hint ?? ''),
+      hintColor: invalid ? 'var(--ink)' : 'var(--ink3)',
+      onChange: (e) => {
+        let v = e.target.value;
+        if (coord) { const m = v.match(/^-?\d*(\.\d{0,4})?/); v = m ? m[0] : ''; }
+        this.setState({ v });
+        if (this.props.onChange) this.props.onChange(v);
+      }
+    };
+  }
+}
+
+</script>
+</body>
+</html>

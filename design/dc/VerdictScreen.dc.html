@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200;0,6..72,300;0,6..72,400&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="foundation.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root, [data-theme="light"] { --bg:#F6F4F0; --surface:#FFF; --sunk:#EFEDE8; --ink:#15181B; --ink2:rgba(21,24,27,.62); --ink3:rgba(21,24,27,.40); --line:rgba(21,24,27,.10); --line2:rgba(21,24,27,.18); --dry:rgba(21,24,27,.07); --nodata:#FFF; --nodata-line:rgba(21,24,27,.28); }
+  @keyframes byge-settle { from { opacity: 0; transform: translateY(-4px) } to { opacity: 1; transform: none } }
+  [data-theme="dark"] { --bg:#0E1113; --surface:#16191C; --sunk:#1B1F22; --ink:#ECEEF0; --ink2:rgba(236,238,240,.60); --ink3:rgba(236,238,240,.38); --line:rgba(236,238,240,.12); --line2:rgba(236,238,240,.20); --dry:rgba(236,238,240,.07); --nodata:#2A2E31; --nodata-line:rgba(236,238,240,.30); }
+</style>
+</helmet>
+<div data-theme="{{ theme }}" style="position:relative;width:100%;min-height:100%;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif;padding:{{ pad }};display:flex;flex-direction:column">
+  <div style="width:100%;max-width:{{ measure }};margin:0 auto;display:flex;flex-direction:column;flex:1">
+
+    <dc-import name="NavBar" title="{{ title }}" subtitle="{{ subtitle }}" onBack="{{ onBack }}" backTitle="{{ backTitle }}" actions="{{ actions }}" menu="{{ menu }}" menuTitle="{{ menuTitle }}" theme="{{ theme }}" hint-size="100%,52px"></dc-import>
+
+    <sc-if value="{{ stale }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-top:20px">
+        <dc-import name="StaleBanner" mode="{{ staleMode }}" ageMin="{{ ageMin }}" theme="{{ theme }}" hint-size="100%,74px"></dc-import>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ hasNotice }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-top:20px;display:flex;gap:11px;align-items:center;border:1px solid var(--line);background:var(--sunk);border-radius:11px;padding:12px 14px;animation:byge-settle 200ms ease">
+        <span style="flex:none;width:6px;height:6px;border-radius:50%;background:var(--ink3)"></span>
+        <span style="font-size:12.5px;line-height:1.45;color:var(--ink2)">{{ notice }}</span>
+      </div>
+    </sc-if>
+
+    <div style="margin-top:{{ gapHead }}px">
+      <dc-import name="LocationStatusText" scenario="{{ scenario }}" size="{{ hlSize }}" measure="{{ hlMeasure }}" theme="{{ theme }}" hint-size="100%,180px"></dc-import>
+    </div>
+
+    <sc-if value="{{ showCoverage }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-top:24px">
+        <dc-import name="CoverageNotice" scenario="{{ scenario }}" theme="{{ theme }}" hint-size="100%,120px"></dc-import>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ hasReading }}" hint-placeholder-val="{{ true }}">
+      <div style="margin-top:{{ gapBadge }}px;display:flex;flex-wrap:wrap;gap:12px 22px;align-items:center">
+        <dc-import name="PrecipitationLevelCard" scenario="{{ scenario }}" theme="{{ theme }}" hint-size="300px,46px"></dc-import>
+        <dc-import name="PrecipitationConfidence" scenario="{{ scenario }}" theme="{{ theme }}" hint-size="250px,20px"></dc-import>
+      </div>
+
+      <div style="margin-top:{{ gapGraph }}px">
+        <dc-import name="PrecipitationGraph" scenario="{{ scenario }}" height="{{ stripH }}" theme="{{ theme }}" hint-size="100%,110px"></dc-import>
+      </div>
+    </sc-if>
+
+    <div style="margin-top:auto;padding-top:28px;display:flex;flex-direction:column;gap:16px">
+      <sc-if value="{{ hasReading }}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{ onMap }}" style="cursor:pointer;align-self:flex-start;font:inherit;font-size:13px;color:var(--ink2);background:transparent;border:none;border-bottom:1px solid var(--line2);padding:0 0 3px;min-height:44px;display:flex;align-items:flex-end" style-hover="color:var(--ink)">See why — radar map <span style="font-family:'IBM Plex Mono',monospace;margin-left:7px">→</span></button>
+      </sc-if>
+      <dc-import name="RefreshControl" ageMin="{{ ageMin }}" nextOutcome="{{ nextOutcome }}" showHint="{{ showPullHint }}" theme="{{ theme }}" hint-size="100%,60px"></dc-import>
+      <dc-import name="Attribution" theme="{{ theme }}" hint-size="100%,20px"></dc-import>
+    </div>
+  </div>
+
+  <dc-import name="ConfirmSheet" open="{{ confirming }}" title="{{ confirmTitle }}" body="{{ confirmBody }}" detail="{{ confirmDetail }}" confirmLabel="{{ removeLabel }}" onConfirm="{{ doRemove }}" onCancel="{{ cancelRemove }}" theme="{{ theme }}" hint-size="100%,100%"></dc-import>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:760},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;s1&quot;,&quot;s2&quot;,&quot;s3&quot;,&quot;s4&quot;,&quot;s5&quot;,&quot;s8&quot;,&quot;s9&quot;,&quot;partial&quot;,&quot;edge&quot;,&quot;s6&quot;],&quot;default&quot;:&quot;s1&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;device&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;phone&quot;,&quot;tablet&quot;,&quot;desktop&quot;],&quot;default&quot;:&quot;phone&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;notice&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;radiusKm&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:0,&quot;min&quot;:0,&quot;max&quot;:25,&quot;unit&quot;:&quot;km&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;insetTop&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:0,&quot;min&quot;:0,&quot;max&quot;:80,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Safe area&quot;},&quot;stale&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;staleMode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;offline&quot;,&quot;refreshing&quot;],&quot;default&quot;:&quot;offline&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;nextOutcome&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;same&quot;,&quot;updated&quot;,&quot;failed&quot;],&quot;default&quot;:&quot;same&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;''|'light'|'dark'&quot;},&quot;onBack&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;onMap&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;onEdit&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;onRemove&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;actions&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;any[]&quot;}}">
+// VerdictScreen — a composition, not markup. Order is the argument:
+// answer → what it feels like → how sure we are → the shape of the next 2 h →
+// only then a small link to the map. The headline stays typographically dominant
+// at every size; on desktop the extra width goes to whitespace and the reading
+// measure is capped, so a verdict sentence is never set across 1400 px.
+// Renders complete with no map present — the link is a line of text, not a hole.
+class Component extends DCLogic {
+  state = {};
+  componentDidMount() { if (!window.BYGE) this._t = setInterval(() => { if (window.BYGE) { clearInterval(this._t); this.forceUpdate(); } }, 40); }
+  componentWillUnmount() { clearInterval(this._t); }
+  renderVals() {
+    const B = window.BYGE, theme = this.props.theme ?? '';
+    const dev = this.props.device ?? 'phone', phone = dev === 'phone';
+    const key = this.props.scenario ?? 's1';
+    const stale = this.props.stale ?? false;
+    const inset = this.props.insetTop ?? 0;
+    const base = {
+      theme, scenario: key,
+      // Background fills the screen; CONTENT clears the status bar. In the build
+      // this is env(safe-area-inset-top) — the app is standalone, so nothing
+      // else reserves that space for us.
+      pad: (phone ? (14 + inset) : dev === 'tablet' ? (30 + inset) : (48 + inset)) + 'px ' +
+           (phone ? '22px 18px' : dev === 'tablet' ? '40px 26px' : '64px 34px'),
+      measure: phone ? '100%' : '620px',
+      hlSize: phone ? 38 : dev === 'tablet' ? 46 : 54,
+      hlMeasure: phone ? '100%' : '22ch',
+      gapHead: phone ? 26 : 36, gapBadge: phone ? 26 : 32, gapGraph: phone ? 28 : 36,
+      stripH: phone ? 46 : 56,
+      stale, staleMode: this.props.staleMode ?? 'offline',
+      showPullHint: phone,
+      nextOutcome: this.props.nextOutcome ?? 'same',
+      onBack: this.props.onBack, backTitle: this.props.backTitle ?? 'Back to places',
+      onMap: this.props.onMap,
+      // A mutation that changes the ANSWER is confirmed here, not on the list:
+      // an edit's consequence is visible on this screen, so the receipt belongs
+      // beside it. Same slot the stale banner uses, so there is one place where
+      // "something about this reading changed" appears.
+      notice: this.props.notice ?? '', hasNotice: !!(this.props.notice ?? ''),
+      confirming: this.state.confirming ?? false,
+      cancelRemove: () => this.setState({ confirming: false })
+    };
+    if (!B) return Object.assign(base, { title: '', subtitle: '', hasReading: true, showCoverage: false, ageMin: 5, actions: [] });
+    const fx = B.FIXTURES[key], v = B.verdict(fx);
+    // A place's own actions sit behind one ⋯ menu, not as bare buttons in the
+    // bar: the bar is for navigation, and a destructive verb should not be one
+    // stray tap from the answer. Still a real menu — 44 px trigger, 44 px rows,
+    // keyboard reachable, Escape closes — never swipe-only.
+    const menu = [
+      { label: 'Edit place', note: 'coordinate · radius · name', onPress: this.props.onEdit },
+      { label: 'Remove place', note: 'cannot be undone', onPress: () => this.setState({ confirming: true }) }
+    ];
+    return Object.assign(base, {
+      menu, menuTitle: 'More for ' + fx.name,
+      title: fx.name + ' · ' + fx.place,
+      // radiusKm overrides the fixture so an edit's aftermath can show the NEW
+      // value: a notice saying "now covers 15 km" beside a header still reading
+      // 3 km is the screen contradicting itself.
+      subtitle: fx.coords + ' · ' + (this.props.radiusKm || fx.radius) + ' km',
+      ageMin: stale ? 34 : fx.age,
+      hasReading: !v.blind,
+      showCoverage: v.blind || v.partial,
+      actions: this.props.actions ?? [],
+      removeLabel: 'Remove ' + fx.name,
+      confirmTitle: 'Remove ' + fx.name + '?',
+      confirmBody: 'This deletes the place and its last saved answer from this device. byge has no account and no sync, so there is nothing to restore it from.',
+      confirmDetail: fx.place + ' · ' + fx.coords + ' · ' + fx.radius + ' km',
+      doRemove: () => { this.setState({ confirming: false }); if (this.props.onRemove) this.props.onRemove(); }
+    });
+  }
+}
+
+</script>
+</body>
+</html>

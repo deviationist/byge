@@ -89,6 +89,33 @@ void main() {
 }`;
 
 /**
+ * How much of a step is spent cross-fading.
+ *
+ * A CROSS-FADE IS THE WRONG TECHNIQUE FOR THIS DATA and this narrows the damage
+ * rather than pretending otherwise. Frames are five minutes apart; a band moving
+ * 50 km/h travels four whole cells between them, and alpha-blending two fields
+ * displaced by four cells does not read as motion — it reads as the band being
+ * faintly in two places at once. Held at 50/50 for the middle of every step,
+ * that ghost is what the eye actually tracks.
+ *
+ * So the blend is compressed into the last quarter of each step: three quarters
+ * of the time exactly one frame is on screen, and the change happens quickly
+ * enough to read as a change rather than as a dissolve. It is a mitigation. The
+ * real answer is to ADVECT frame A toward B along MET's own
+ * `rev_u_displacement`/`rev_v_displacement`, which ship in the same file and are
+ * how the nowcast moves the field in the first place.
+ */
+const BLEND_WINDOW = 0.25;
+
+function blend(t: number): number {
+  const x = (t - (1 - BLEND_WINDOW)) / BLEND_WINDOW;
+  if (x <= 0) return 0;
+  if (x >= 1) return 1;
+  // Smoothstep, so the short fade has no visible corners at either end.
+  return x * x * (3 - 2 * x);
+}
+
+/**
  * A vertex every MESH_STEP cells. The mesh carries only the PROJECTION WARP,
  * which is smooth — LCC and Mercator differ by a slow rotation, and over eight
  * kilometres the discrepancy is far below a pixel. Per-cell accuracy lives in
@@ -143,7 +170,7 @@ export function RadarTilesGL({
     gl.viewport(0, 0, canvas.width, canvas.height);
 
     const ia = Math.max(0, Math.floor(frame));
-    const t = Math.min(1, Math.max(0, frame - ia));
+    const t = blend(frame - ia);
 
     // biome-ignore lint/correctness/useHookAtTopLevel: WebGL's useProgram, not a React hook — the rule matches on the `use` prefix alone.
     gl.useProgram(s.program);
@@ -174,10 +201,24 @@ export function RadarTilesGL({
       // state — see TileStore.depth — but "we could not look" is the only safe
       // thing to say about a square we do not have.
       const a = tileStore.get(tile, ia) ?? MISSING_TILE;
-      const b = tileStore.get(tile, ia + 1) ?? a;
+      // The frame ahead, or NOTHING — never a silent fallback to `a`.
+      //
+      // It used to fall back, and that was the "back and forth": the slot then
+      // recorded frameB = ia + 1 while texB actually held frame ia's cells, so
+      // one step later the recycle path swapped that texture into A and trusted
+      // the label. The map showed the previous frame, every other step.
+      const ahead = tileStore.get(tile, ia + 1);
+
+      // With no frame ahead there is nothing to fade toward, so both samplers
+      // read the same cells and `u_t` blends A with A — a still, which is the
+      // honest picture of "this is the last frame we hold".
+      const b = ahead ?? a;
+      const bIndex = ahead ? ia + 1 : ia;
 
       // Recycle on advance: the frame that was ahead becomes the frame behind.
-      if (slot.frameB === ia && slot.frameA !== ia) {
+      // Guarded on the DATA as well as the index, so a slot whose B was a
+      // stand-in can never be promoted as if it were the real next frame.
+      if (slot.frameB === ia && slot.frameA !== ia && slot.dataB) {
         const spare = slot.texA;
         slot.texA = slot.texB;
         slot.texB = spare;
@@ -191,9 +232,9 @@ export function RadarTilesGL({
         slot.frameA = ia;
         slot.dataA = a;
       }
-      if (slot.frameB !== ia + 1 || slot.dataB !== b) {
+      if (slot.frameB !== bIndex || slot.dataB !== b) {
         upload(gl, slot.texB, b);
-        slot.frameB = ia + 1;
+        slot.frameB = bIndex;
         slot.dataB = b;
       }
 

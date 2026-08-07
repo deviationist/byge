@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root, [data-theme="light"] { --bg:#F6F4F0; --surface:#FFF; --ink:#15181B; --ink2:rgba(21,24,27,.62); --ink3:rgba(21,24,27,.40); --line:rgba(21,24,27,.10); --line2:rgba(21,24,27,.18); }
+  [data-theme="dark"] { --bg:#0E1113; --surface:#16191C; --ink:#ECEEF0; --ink2:rgba(236,238,240,.60); --ink3:rgba(236,238,240,.38); --line:rgba(236,238,240,.12); --line2:rgba(236,238,240,.20); }
+</style>
+</helmet>
+<sc-if value="{{ shown }}" hint-placeholder-val="{{ true }}">
+  <div data-theme="{{ theme }}" style="width:100%;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:14px 16px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink)">
+    <dc-import name="BrandMark" size="{{ markSize }}" variant="standard" hint-size="32px,32px"></dc-import>
+    <span style="flex:1;min-width:150px;display:flex;flex-direction:column;gap:3px">
+      <span style="font-size:13px;font-weight:500">{{ title }}</span>
+      <span style="font-size:12px;color:var(--ink2);line-height:1.45">{{ body }}</span>
+    </span>
+    <span style="display:flex;gap:8px;flex:none">
+      <button onClick="{{ onDismiss }}" style="cursor:pointer;font:inherit;font-size:12.5px;min-height:44px;padding:0 14px;border-radius:9px;border:1px solid var(--line2);background:transparent;color:var(--ink2)">Not now</button>
+      <button onClick="{{ onInstall }}" style="cursor:pointer;font:inherit;font-size:12.5px;min-height:44px;padding:0 16px;border-radius:9px;border:1px solid var(--ink);background:var(--ink);color:var(--bg)">{{ cta }}</button>
+    </span>
+  </div>
+</sc-if>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:420,&quot;height&quot;:110},&quot;platform&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;android&quot;,&quot;ios&quot;],&quot;default&quot;:&quot;android&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;earned&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;''|'light'|'dark'&quot;},&quot;onInstall&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;onDismiss&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;}}">
+// InstallPrompt — never on first load. It appears on a second visit, or once a
+// place has been saved, because before either of those there is nothing worth
+// installing. Dismissal is remembered; it does not come back a third time.
+class Component extends DCLogic {
+  state = {};
+  componentDidMount() {
+    try {
+      const dismissed = localStorage.getItem('byge.install.dismissed') === '1';
+      const visits = Number(localStorage.getItem('byge.visits') || '0') + 1;
+      localStorage.setItem('byge.visits', String(visits));
+      this.setState({ dismissed, visits });
+    } catch (e) { this.setState({ visits: 2 }); }
+  }
+  renderVals() {
+    const ios = (this.props.platform ?? 'android') === 'ios';
+    const earned = this.props.earned ?? true;      // second visit, or a place saved
+    return {
+      theme: this.props.theme ?? '', markSize: 32,
+      shown: earned && !this.state.dismissed,
+      title: 'Keep byge one tap away',
+      body: ios
+        ? 'Share → Add to Home Screen. It then opens full-screen and answers from cache, even with no signal.'
+        : 'Add it to your home screen — it opens full-screen and answers from cache, even with no signal.',
+      cta: ios ? 'Show me how' : 'Add to home screen',
+      onInstall: this.props.onInstall,
+      onDismiss: () => { this.setState({ dismissed: true }); try { localStorage.setItem('byge.install.dismissed', '1'); } catch (e) {} if (this.props.onDismiss) this.props.onDismiss(); }
+    };
+  }
+}
+
+</script>
+</body>
+</html>

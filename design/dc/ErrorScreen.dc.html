@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200;0,6..72,300;0,6..72,400&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root, [data-theme="light"] { --bg:#F6F4F0; --surface:#FFF; --sunk:#EFEDE8; --ink:#15181B; --ink2:rgba(21,24,27,.62); --ink3:rgba(21,24,27,.40); --line:rgba(21,24,27,.10); --line2:rgba(21,24,27,.18); }
+  [data-theme="dark"] { --bg:#0E1113; --surface:#16191C; --sunk:#1B1F22; --ink:#ECEEF0; --ink2:rgba(236,238,240,.60); --ink3:rgba(236,238,240,.38); --line:rgba(236,238,240,.12); --line2:rgba(236,238,240,.20); }
+</style>
+</helmet>
+<div data-theme="{{ theme }}" style="width:100%;min-height:100%;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif;padding:{{ pad }};display:flex;flex-direction:column">
+
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;max-width:{{ measure }}px">
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.09em;color:var(--ink3);margin-bottom:18px">{{ code }}</span>
+
+    <h1 style="margin:0;font-family:Newsreader,serif;font-size:{{ titleSize }}px;font-weight:300;line-height:1.12;letter-spacing:-.015em;text-wrap:pretty">{{ title }}</h1>
+
+    <p style="margin:16px 0 0;font-size:{{ bodySize }}px;line-height:1.6;color:var(--ink2);text-wrap:pretty">{{ body }}</p>
+
+    <sc-if value="{{ hasDetail }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-top:20px;border-left:2px solid var(--line2);padding:2px 0 2px 14px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;line-height:1.7;color:var(--ink3);word-break:break-all">{{ detail }}</div>
+    </sc-if>
+
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:28px">
+      <sc-for list="{{ actions }}" as="a" hint-placeholder-count="2">
+        <button onClick="{{ a.press }}" style="cursor:pointer;font:inherit;font-size:13.5px;min-height:46px;padding:0 18px;border-radius:11px;border:1px solid {{ a.border }};background:{{ a.bg }};color:{{ a.fg }}" style-hover="opacity:.86" style-focus="outline:2px solid var(--ink);outline-offset:2px">{{ a.label }}</button>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="margin-top:36px;padding-top:16px;border-top:1px solid var(--line)">
+    <dc-import name="Attribution" density="line" theme="{{ theme }}" hint-size="100%,20px"></dc-import>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:700},&quot;kind&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;notFound&quot;,&quot;deleted&quot;,&quot;offline&quot;,&quot;crash&quot;],&quot;default&quot;:&quot;notFound&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;name&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Cabin&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;path&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;reference&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;device&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;phone&quot;,&quot;tablet&quot;,&quot;desktop&quot;],&quot;default&quot;:&quot;phone&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;insetTop&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:0,&quot;min&quot;:0,&quot;max&quot;:80,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Safe area&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;''|'light'|'dark'&quot;},&quot;onPrimary&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;onSecondary&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;}}">
+// ErrorScreen — one component for every dead end, because they differ only in
+// what they can honestly say.
+//
+// The rule: name what happened, in the same voice the verdict uses, and offer the
+// one route that actually helps. No apology copy, no illustration, no "oops".
+// A dead end is information too, and byge's whole claim is that it tells you what
+// it knows — including that it does not have this.
+//
+// The four cases and why they are not one:
+//   deleted   — the deep link was valid and the place is gone. This is the only
+//               one that names a cause, because we know it: the reader (or
+//               whoever shared the link) removed it. Offering to re-add it would
+//               be guessing a coordinate we no longer hold, so the route is the
+//               list.
+//   notFound  — no such route. Says so plainly and shows the path, because a
+//               mistyped or truncated shared link is the likely cause and the
+//               path is the evidence.
+//   offline   — nothing is broken and nothing is lost. Different in kind from a
+//               404: the answer exists, we just cannot reach it right now, so
+//               the action is retry and the tone is not failure.
+//   crash     — an unexpected fault. The one case where we cannot explain, so we
+//               do not pretend to; it shows the reference and does not blame the
+//               reader.
+// Attribution rides along, because MET's licence does not lapse on an error page.
+class Component extends DCLogic {
+  renderVals() {
+    const kind = this.props.kind ?? 'notFound';
+    const dev = this.props.device ?? 'phone';
+    const phone = dev === 'phone';
+    const name = this.props.name ?? 'that place';
+
+    const copy = {
+      deleted: {
+        code: 'NOTHING HERE · 404',
+        title: 'That place is gone.',
+        body: 'The link pointed at ' + name + ', which has since been removed from this device. byge keeps places locally and has no copy of it — so there is nothing to restore, only something to add again.',
+        detail: this.props.path ?? '',
+        actions: [{ label: 'Your places', primary: true }, { label: 'Add it again', primary: false }]
+      },
+      notFound: {
+        code: 'NOTHING HERE · 404',
+        title: 'There is no page at that address.',
+        body: 'Either the link was mistyped, or it was cut short somewhere between being shared and being opened.',
+        detail: this.props.path ?? '/location/7f2a9/mapp',
+        actions: [{ label: 'Your places', primary: true }]
+      },
+      offline: {
+        code: 'NO CONNECTION',
+        title: 'You are offline, so this is the last thing we knew.',
+        body: 'Nothing is lost. Saved places and their most recent readings are on this device; a fresh radar run needs a connection. What you are seeing is not wrong, only old — and the age is on the reading itself.',
+        detail: '',
+        actions: [{ label: 'Try again', primary: true }, { label: 'Your places', primary: false }]
+      },
+      crash: {
+        code: 'SOMETHING FAILED',
+        title: 'Something went wrong at our end.',
+        body: 'This is not your doing and nothing you saved is affected. Reloading usually clears it. If it does not, the reference below is what tells us where it broke.',
+        detail: this.props.reference ?? 'ref 9f31-c20a · ' + new Date().toISOString().slice(0, 16).replace('T', ' '),
+        actions: [{ label: 'Reload', primary: true }, { label: 'Your places', primary: false }]
+      }
+    }[kind];
+
+    const handlers = [this.props.onPrimary, this.props.onSecondary];
+    return {
+      theme: this.props.theme ?? '',
+      pad: (phone ? (22 + (this.props.insetTop ?? 0)) : (56 + (this.props.insetTop ?? 0))) + 'px ' + (phone ? '22px 26px' : '64px 40px'),
+      measure: phone ? 420 : 520,
+      titleSize: phone ? 34 : 44,
+      bodySize: phone ? 14.5 : 16,
+      code: copy.code, title: copy.title, body: copy.body,
+      detail: copy.detail, hasDetail: !!copy.detail,
+      actions: copy.actions.map((a, i) => ({
+        label: a.label, press: handlers[i],
+        bg: a.primary ? 'var(--ink)' : 'transparent',
+        fg: a.primary ? 'var(--bg)' : 'var(--ink)',
+        border: a.primary ? 'var(--ink)' : 'var(--line2)'
+      }))
+    };
+  }
+}
+
+</script>
+</body>
+</html>

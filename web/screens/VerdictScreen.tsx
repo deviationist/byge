@@ -113,14 +113,17 @@ export function VerdictScreen({ id: idProp, showBack = true }: VerdictScreenProp
   const blind = verdict ? isBlindVerdict(verdict) : false;
   const hasReading = !!verdict && !blind;
 
-  // The design's vertical rhythm, measured off the specimen. It is deliberately
+  // The design's vertical rhythm, from VerdictScreen.dc.html. It is deliberately
   // NOT uniform: the argument is answer → what it feels like → how sure → shape
   // of the next two hours, and the gaps widen down the page so each block reads
   // as a further step away from the headline rather than as another paragraph
   // of it. A single `gap` on Screen would flatten exactly that.
-  const gapAfterHead = phone ? 26 : 40;
-  const gapAfterHeadline = phone ? 26 : 34;
-  const gapAfterBadge = phone ? 30 : 42;
+  //
+  // They were 26/40, 26/34 and 30/42, which is round ONE. The shape of the
+  // argument is unchanged; the desktop steps simply tightened.
+  const gapAfterHead = phone ? 26 : 36;
+  const gapAfterHeadline = phone ? 26 : 32;
+  const gapAfterBadge = phone ? 28 : 36;
 
   return (
     <Screen measure={phone ? null : 620} pad={pagePadFor(width)}>
@@ -217,7 +220,12 @@ export function VerdictScreen({ id: idProp, showBack = true }: VerdictScreenProp
                   flexDirection: "row",
                   flexWrap: "wrap",
                   alignItems: "center",
-                  gap: 12,
+                  // `12px 22px` in the design — the badge and the confidence
+                  // bars sit far apart on one line and close together when they
+                  // wrap. A single `gap` gave the wrapped case 22 px of air it
+                  // does not want.
+                  rowGap: 12,
+                  columnGap: 22,
                 }}
               >
                 <PrecipitationLevelCard verdict={verdict} theme={theme} />
