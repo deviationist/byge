@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200;0,6..72,300;0,6..72,400&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root, [data-theme="light"] { --bg:#F6F4F0; --surface:#FFF; --sunk:#EFEDE8; --ink:#15181B; --ink2:rgba(21,24,27,.62); --ink3:rgba(21,24,27,.40); --line:rgba(21,24,27,.10); --line2:rgba(21,24,27,.18); --scrim:rgba(21,24,27,.34); }
+  [data-theme="dark"] { --bg:#0E1113; --surface:#16191C; --sunk:#1B1F22; --ink:#ECEEF0; --ink2:rgba(236,238,240,.60); --ink3:rgba(236,238,240,.38); --line:rgba(236,238,240,.12); --line2:rgba(236,238,240,.20); --scrim:rgba(0,0,0,.58); }
+  @keyframes byge-rise { from { transform: translateY(12px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
+</style>
+</helmet>
+<sc-if value="{{ open }}" hint-placeholder-val="{{ true }}">
+  <div data-theme="{{ theme }}" style="position:absolute;inset:0;z-index:80;display:flex;align-items:{{ align }};justify-content:center;background:var(--scrim);padding:20px">
+    <div style="width:100%;max-width:400px;background:var(--surface);border:1px solid var(--line2);border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:16px;box-shadow:0 24px 60px -18px rgba(0,0,0,.5);animation:byge-rise 160ms cubic-bezier(.2,.7,.3,1)">
+      <div style="font-family:Newsreader,serif;font-weight:300;font-size:26px;line-height:1.15;letter-spacing:-.012em;color:var(--ink)">{{ title }}</div>
+      <div style="font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:13.5px;line-height:1.6;color:var(--ink2)">{{ body }}</div>
+      <sc-if value="{{ hasDetail }}" hint-placeholder-val="{{ false }}">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;line-height:1.7;color:var(--ink3);background:var(--sunk);border-radius:9px;padding:11px 13px">{{ detail }}</div>
+      </sc-if>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;padding-top:2px">
+        <button onClick="{{ onConfirm }}" style="cursor:pointer;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14.5px;font-weight:500;min-height:48px;padding:0 20px;border-radius:11px;border:1px solid var(--ink);background:var(--ink);color:var(--bg)" style-hover="filter:brightness(1.08)" style-focus="outline:2px solid var(--ink);outline-offset:2px">{{ confirmLabel }}</button>
+        <button onClick="{{ onCancel }}" style="cursor:pointer;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14.5px;min-height:48px;padding:0 20px;border-radius:11px;border:1px solid var(--line2);background:transparent;color:var(--ink)" style-focus="outline:2px solid var(--ink);outline-offset:2px">Keep it</button>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:440,&quot;height&quot;:320},&quot;open&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;title&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Remove Cabin?&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;body&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;This deletes the place and its saved answer from this device. There is no account and no sync, so it cannot be brought back.&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;detail&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Hemsedal · 60.8620, 8.5560 · 3 km&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;confirmLabel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Remove Cabin&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;align&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;center&quot;,&quot;flex-end&quot;],&quot;default&quot;:&quot;center&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;''|'light'|'dark'&quot;},&quot;onConfirm&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;onCancel&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;}}">
+// ConfirmSheet — for the one action in byge that cannot be undone.
+//
+// There is no account, no sync and no undo, so the honesty has to sit BEFORE the
+// action rather than in a toast after it: the sheet names the place, says what is
+// lost, and puts the plain word on the button ("Remove Hemsedal", not "OK").
+// Cancel is "Keep it" so both buttons describe outcomes and neither is a shrug.
+// The destructive button is not red — nothing else in byge uses alarm colour, and
+// a lone red button in a calm app reads as an error rather than a choice. It is
+// the primary-weight button because it is what you came here to do; the wording
+// carries the weight instead.
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      theme: this.props.theme ?? '',
+      open: this.props.open ?? true,
+      align: this.props.align ?? 'center',
+      title: this.props.title ?? 'Remove this place?',
+      body: this.props.body ?? '',
+      detail: this.props.detail ?? '', hasDetail: !!(this.props.detail ?? ''),
+      confirmLabel: this.props.confirmLabel ?? 'Remove',
+      onConfirm: this.props.onConfirm, onCancel: this.props.onCancel
+    };
+  }
+}
+
+</script>
+</body>
+</html>

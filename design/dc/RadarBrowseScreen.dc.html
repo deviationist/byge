@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200;0,6..72,300;0,6..72,400&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="foundation.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root, [data-theme="light"] { --bg:#F6F4F0; --surface:#FFF; --sunk:#EFEDE8; --ink:#15181B; --ink2:rgba(21,24,27,.62); --ink3:rgba(21,24,27,.40); --line:rgba(21,24,27,.10); --line2:rgba(21,24,27,.18); --nodata:#FFF; }
+  [data-theme="dark"] { --bg:#0E1113; --surface:#16191C; --sunk:#1B1F22; --ink:#ECEEF0; --ink2:rgba(236,238,240,.60); --ink3:rgba(236,238,240,.38); --line:rgba(236,238,240,.12); --line2:rgba(236,238,240,.20); --nodata:#2A2E31; }
+</style>
+</helmet>
+<div data-theme="{{ theme }}" style="width:100%;height:{{ rootH }};min-height:{{ rootH }};display:flex;flex-direction:column;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif;overflow:hidden">
+
+  <div ref="{{ paneRef }}" style="flex:1;min-height:0;position:relative">
+    <dc-import name="MapCanvas" fill="{{ true }}" basemap="{{ basemap }}" showRadar="{{ true }}" scenario="{{ scenario }}" frameIndex="{{ frameIndex }}" cellSize="{{ cellSize }}" showMask="{{ showMask }}" maskWidth="{{ maskWidth }}" offBasemapWidth="{{ offBasemapWidth }}" credit="{{ credit }}" theme="{{ theme }}" hint-size="100%,100%"></dc-import>
+
+    <div style="position:absolute;left:0;right:0;top:0;padding:{{ headPad }};display:flex;align-items:flex-start;gap:12px;pointer-events:none">
+      <div style="pointer-events:auto;display:flex;flex-direction:column;gap:3px;background:var(--surface);border:1px solid var(--line2);box-shadow:0 0 0 2px var(--bg);border-radius:11px;padding:9px 13px 10px">
+        <span style="font-family:Newsreader,serif;font-size:{{ titleSize }}px;font-weight:300;line-height:1.1">Radar</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;line-height:1.5;color:var(--ink3);letter-spacing:.03em;max-width:30ch">{{ standfirst }}</span>
+      </div>
+
+      <button onClick="{{ onExit }}" title="Back to your places" style="pointer-events:auto;margin-left:auto;cursor:pointer;font:inherit;font-size:13px;min-height:44px;padding:0 15px;border-radius:11px;border:1px solid var(--line2);background:var(--surface);box-shadow:0 0 0 2px var(--bg);color:var(--ink);display:flex;align-items:center;gap:9px" style-hover="background:var(--sunk)" style-focus="outline:2px solid var(--ink);outline-offset:2px">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink3)">‹</span>
+        <span>{{ exitLabel }}</span>
+      </button>
+    </div>
+
+    <div style="position:absolute;left:0;right:0;bottom:0;padding:{{ chromePad }};display:flex;flex-direction:{{ chromeDir }};align-items:{{ chromeAlign }};justify-content:space-between;gap:{{ chromeGap }}px;pointer-events:none">
+      <div style="pointer-events:auto;display:flex;flex-direction:column;gap:10px;align-items:flex-start;min-width:0">
+        <sc-if value="{{ hasReadout }}" hint-placeholder-val="{{ false }}">
+          <dc-import name="CellReadout" rate="{{ cellRate }}" covered="{{ cellCovered }}" frameMinutes="{{ frameMinutes }}" coords="{{ cellCoords }}" placement="above" width="{{ readoutW }}" onClose="{{ onCloseReadout }}" onSave="{{ onSavePoint }}" theme="{{ theme }}" hint-size="268px,250px"></dc-import>
+        </sc-if>
+        <sc-if value="{{ showSwitcher }}" hint-placeholder-val="{{ true }}">
+          <span style="position:relative;display:inline-flex">
+            <button onClick="{{ toggleLayers }}" title="Choose a basemap" aria-haspopup="menu" aria-expanded="{{ layersOpen }}" style="cursor:pointer;font:inherit;font-size:12px;min-height:44px;padding:0 13px;border-radius:11px;border:1px solid var(--line2);background:var(--surface);box-shadow:0 0 0 2px var(--bg);color:var(--ink);display:flex;align-items:center;gap:10px" style-hover="background:var(--sunk)" style-focus="outline:2px solid var(--ink);outline-offset:2px">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.06em;color:var(--ink3)">LAYER</span>
+              <span>{{ basemapLabel }}</span>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink3)">{{ layersCaret }}</span>
+            </button>
+            <dc-import name="DropdownMenu" open="{{ layersOpen }}" items="{{ layerItems }}" label="Basemap" align="left" direction="up" offset-bottom="{{ 52 }}" min-width="{{ 208 }}" onClose="{{ closeLayers }}" theme="{{ theme }}" hint-size="208px,0px"></dc-import>
+          </span>
+        </sc-if>
+      </div>
+
+      <div style="pointer-events:auto;display:flex;flex-direction:column;gap:10px;align-items:flex-end;align-self:{{ legendSelf }}">
+        <dc-import name="MapLegend" density="{{ legendDensity }}" theme="{{ theme }}" hint-size="186px,220px"></dc-import>
+      </div>
+    </div>
+  </div>
+
+  <div style="flex:none;border-top:1px solid var(--line);background:var(--surface);padding:{{ barPad }};display:flex;flex-direction:column;gap:13px">
+    <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+      <dc-import name="PlaybackControl" frameCount="{{ frameCount }}" frameIndex="{{ frameIndex }}" onFrame="{{ onFrame }}" openEnded="{{ openEnded }}" theme="{{ theme }}" hint-size="300px,44px"></dc-import>
+
+      <button onClick="{{ toggleBar }}" title="{{ barTitle }}" aria-expanded="{{ barFull }}" style="margin-left:auto;cursor:pointer;font:inherit;font-size:12px;min-height:44px;padding:0 13px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--ink2);display:flex;align-items:center;gap:9px" style-hover="color:var(--ink);border-color:var(--line2)" style-focus="outline:2px solid var(--ink);outline-offset:2px">
+        <span>{{ barLabel }}</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink3)">{{ barCaret }}</span>
+      </button>
+    </div>
+
+    <dc-import name="PrecipitationGraph" scenario="{{ scenario }}" density="expanded" subject="viewport" height="{{ graphH }}" frameIndex="{{ frameIndex }}" onFrame="{{ onScrub }}" showCaption="{{ showCaption }}" theme="{{ theme }}" hint-size="100%,120px"></dc-import>
+
+    <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:baseline;border-top:1px solid var(--line);padding-top:12px">
+      <sc-if value="{{ barFull }}" hint-placeholder-val="{{ true }}">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;line-height:1.65;color:var(--ink3);max-width:64ch">{{ footnote }}</span>
+      </sc-if>
+      <div style="margin-left:auto">
+        <dc-import name="Attribution" density="line" theme="{{ theme }}" hint-size="220px,20px"></dc-import>
+      </div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1100,&quot;height&quot;:900},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;s1&quot;,&quot;s2&quot;,&quot;s3&quot;,&quot;s4&quot;,&quot;s8&quot;,&quot;s9&quot;,&quot;partial&quot;,&quot;edge&quot;],&quot;default&quot;:&quot;s1&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;device&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;phone&quot;,&quot;tablet&quot;,&quot;desktop&quot;],&quot;default&quot;:&quot;desktop&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;barDensity&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;full&quot;,&quot;lean&quot;],&quot;default&quot;:&quot;full&quot;,&quot;tsType&quot;:&quot;'full'|'lean'&quot;},&quot;height&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:0,&quot;min&quot;:0,&quot;max&quot;:1200,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;basemap&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;muted&quot;,&quot;terrain&quot;,&quot;detailed&quot;,&quot;nautical&quot;],&quot;default&quot;:&quot;muted&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;showReadout&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;cellRate&quot;:{&quot;editor&quot;:&quot;float&quot;,&quot;default&quot;:4.2,&quot;min&quot;:0,&quot;max&quot;:40,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;mm/h&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;cellCovered&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;cellCoords&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;59.913 N, 10.752 E&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;showMask&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;maskWidth&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:12,&quot;min&quot;:0,&quot;max&quot;:60,&quot;unit&quot;:&quot;%&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;offBasemapWidth&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:0,&quot;min&quot;:0,&quot;max&quot;:50,&quot;unit&quot;:&quot;%&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;openEnded&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;''|'light'|'dark'&quot;},&quot;onExit&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;},&quot;onSavePoint&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;() =&gt; void&quot;}}">
+// RadarBrowseScreen — the design for /map, and the ruling the brief asked for.
+//
+// IT SHIPS, reachable from a quiet text row at the foot of the list and from
+// About — option (c), with the framing from (d). Reasons, in order:
+//   1. It answers a question the anchored map cannot: "where is the weather",
+//      for someone whose place is moving. The maritime case is the strongest
+//      version of that, and the nautical chart plus the coverage boundary are
+//      exactly what that reader needs. A saved coordinate cannot serve them.
+//   2. Refusing to ship it because it is engaging would be the wrong lesson from
+//      the right worry. The risk is not that the map exists; it is that the map
+//      becomes the FRONT DOOR.
+// So the guards are structural, not tonal:
+//   - never a tab bar, never a landing view, and the launcher always opens the
+//     list. The app must not remember the map as "where I was".
+//   - it is framed as an INSTRUMENT, not as byge's view of your day: the header
+//     says Radar and, underneath, that it makes no claim about you. A screen with
+//     no place cannot produce a verdict, and it says so rather than implying it.
+//   - the exit is the sentence. Tapping a cell offers "save this point as a
+//     place", which converts browsing into the thing byge actually does.
+//   - the list entry is a line of TEXT, like "See why — radar map →" on the
+//     verdict. Not a card, not an icon, not a promoted tile.
+//
+// TIME. One time component still, not two: the strip is the same
+// PrecipitationGraph in its expanded density, with subject="viewport" — bar
+// height is the share of the VISIBLE MAP under rain. That is a real, computable
+// quantity, so the graph stays meaningful with no saved circle, and no third
+// control gets invented. PlaybackControl adds motion; the graph's playhead is
+// where you scrub. Playing pauses the moment you touch the strip.
+class Component extends DCLogic {
+  state = {};
+  componentDidMount() {
+    if (!window.BYGE) this._t = setInterval(() => { if (window.BYGE) { clearInterval(this._t); this.forceUpdate(); } }, 40);
+    // The mount host between this screen and MapCanvas is an auto-height block,
+    // so a percentage height inside it has nothing to resolve against and the map
+    // collapses to its own floor. Rather than depend on a parent's stretch
+    // behaviour reaching through that host, measure the pane and pass the height
+    // down as a number -- the same measure-then-size pattern MapCanvas already
+    // uses for its square cells.
+    try { const v = localStorage.getItem('byge.radarbar.full'); if (v !== null) this.setState({ barFull: v === '1' }); } catch (e) {}
+    const el = this._pane;
+    if (el && window.ResizeObserver) {
+      this._ro = new ResizeObserver(() => {
+        const h = Math.round(el.getBoundingClientRect().height);
+        if (h && Math.abs(h - (this.state.paneH || 0)) > 1) this.setState({ paneH: h });
+      });
+      this._ro.observe(el);
+    }
+  }
+  componentWillUnmount() { clearInterval(this._t); if (this._ro) this._ro.disconnect(); }
+  renderVals() {
+    const B = window.BYGE, theme = this.props.theme ?? '';
+    const dev = this.props.device ?? 'desktop';
+    const phone = dev === 'phone';
+    const i = this.state.frame ?? 0;
+    const basemap = this.state.basemap ?? (this.props.basemap ?? 'muted');
+    const open = this.state.readout ?? (this.props.showReadout ?? false);
+    const layersOpen = this.state.layersOpen ?? false;
+    const full = this.state.barFull ?? (this.props.barDensity ? this.props.barDensity === 'full' : !phone);
+    const paneH = this.state.paneH || (this.props.height ? this.props.height - (phone ? 300 : 320) : 420);
+
+    return {
+      theme, basemap, scenario: this.props.scenario ?? 's1',
+      // An explicit height when the host mount is auto-height (a specimen frame):
+      // the map region is flex:1, so without a resolved root height it collapses
+      // to MapCanvas's own min-height and the floating chrome escapes upward.
+      rootH: this.props.height ? this.props.height + 'px' : '100%',
+      paneRef: (el) => { this._pane = el; },
+      paneH,
+      // The strip's caption is the first thing to go on a phone: the footnote
+      // below already states the resolution, so it would be saying it twice in a
+      // bar that is competing with the map for height.
+      showCaption: full && !phone,
+      frameIndex: i, frameMinutes: i * 5, frameCount: 24,
+      openEnded: this.props.openEnded ?? true,
+      cellSize: phone ? 22 : 26,
+      showMask: this.props.showMask ?? true,
+      maskWidth: this.props.maskWidth ?? 12,
+      offBasemapWidth: this.props.offBasemapWidth ?? 0,
+      credit: basemap === 'nautical' ? '© Kartverket sjøkart' : '© Kartverket',
+      headPad: phone ? '12px 12px' : '16px 18px',
+      chromePad: phone ? '12px' : '18px',
+      barPad: phone ? '14px 16px 18px' : '16px 22px 20px',
+      titleSize: phone ? 21 : 25,
+      // The standfirst is the guard rail in words: this screen shows readings,
+      // and it is not going to pretend otherwise however engaging it is.
+      standfirst: 'A reading of the radar. No place, so no verdict.',
+      exitLabel: phone ? 'Places' : 'Your places',
+      // TWO DENSITIES, and the time control survives both. Lean keeps the same
+      // PrecipitationGraph at strip height with its playhead intact and drops the
+      // caption and the footnote; it never removes the scrubber, because a radar
+      // animation you cannot position yourself in is decoration. Collapsing is
+      // therefore a density change, not a hide toggle -- there is no state where
+      // the screen has motion and no way to steer it.
+      barFull: full,
+      graphH: full ? (phone ? 60 : 78) : (phone ? 26 : 30),
+      barLabel: full ? 'Less' : 'More',
+      barCaret: full ? '\u2013' : '+',
+      barTitle: full ? 'Collapse the strip to a scrubber' : 'Show coverage over time',
+      toggleBar: () => { const n = !full; this.setState({ barFull: n }); try { localStorage.setItem('byge.radarbar.full', n ? '1' : '0'); } catch (e) {} },
+      switcherFull: phone,
+      showSwitcher: !(phone && open),
+      // Phone stacks the floating chrome instead of sharing a row: the switcher's
+      // four segments have a min-content floor (each column is at least its label
+      // wide), so on a 390 px map it cannot shrink into the space left beside the
+      // legend -- it would overflow under it and clip "nautical". Legend first,
+      // then the full-width switcher beneath it.
+      chromeDir: phone ? 'column-reverse' : 'row',
+      chromeAlign: phone ? 'stretch' : 'flex-end',
+      chromeGap: phone ? 10 : 14,
+      // Layers are a MENU, not four buttons: a segmented control of four labels is
+      // ~320 px of chrome permanently parked over the map, and switching basemap is
+      // a rare, deliberate act. One 44 px trigger states the current layer and
+      // gives the rest of the width back to the thing being read. It opens UPWARD
+      // because it lives at the foot of the map.
+      layersOpen: layersOpen, layersCaret: layersOpen ? '\u2013' : '\u2304',
+      basemapLabel: ({ muted: 'Muted', terrain: 'Terrain', detailed: 'Detailed', nautical: 'Nautical' })[basemap],
+      layerItems: [
+        { key: 'muted', label: 'Muted', note: 'greyscale topo · quietest under the overlay' },
+        { key: 'terrain', label: 'Terrain', note: 'shaded relief' },
+        { key: 'detailed', label: 'Detailed', note: 'scanned 1:50 000' },
+        { key: 'nautical', label: 'Nautical', note: 'official sea charts' }
+      ].map(o => ({
+        label: o.label,
+        note: o.key === basemap ? o.note + ' · showing' : o.note,
+        onPress: () => this.setState({ basemap: o.key })
+      })),
+      toggleLayers: () => this.setState({ layersOpen: !layersOpen }),
+      closeLayers: () => this.setState({ layersOpen: false }),
+      legendSelf: phone ? 'flex-end' : 'auto',
+      // Density follows the MEASURED pane, not the device label: a full legend is
+      // ~240 px, so on any pane under ~520 px it would push the floating stack up
+      // into the header. Short pane, spine; tall pane, words.
+      legendDensity: (phone || paneH < 520) ? 'compact' : 'full', // phone always spine: 240 px of key over a 390 px map covers what it explains
+      basemaps: [
+        { key: 'muted', label: 'muted', title: 'Greyscale topographic — the quietest layer under an overlay' },
+        { key: 'terrain', label: 'terrain', title: 'Shaded relief' },
+        { key: 'detailed', label: 'detailed', title: 'Scanned 1:50 000' },
+        { key: 'nautical', label: 'nautical', title: 'Official sea charts' }
+      ],
+      hasReadout: open,
+      cellRate: this.props.cellRate ?? 4.2,
+      cellCovered: this.props.cellCovered ?? true,
+      cellCoords: this.props.cellCoords ?? '59.913 N, 10.752 E',
+      readoutW: phone ? 250 : 268,
+      footnote: 'Every square is one radar measurement cell: 1 km, five minutes apart, now to +115 min, drawn at full resolution at every zoom. Where the mosaic does not reach, the map says so rather than showing dry ground — those are different claims.',
+      onBasemap: (v) => this.setState({ basemap: v }),
+      onFrame: (n) => this.setState({ frame: n }),
+      // Scrubbing is an interruption, so it stops playback rather than fighting it.
+      onScrub: (min, n) => this.setState({ frame: Math.max(0, n - 17) }),
+      onCloseReadout: () => this.setState({ readout: false }),
+      onSavePoint: this.props.onSavePoint,
+      onExit: this.props.onExit
+    };
+  }
+}
+
+</script>
+</body>
+</html>

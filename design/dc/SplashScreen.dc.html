@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root, [data-theme="light"] { --bg:#F6F4F0; --ink3:rgba(21,24,27,.40); }
+  [data-theme="dark"] { --bg:#0E1113; --ink3:rgba(236,238,240,.38); }
+</style>
+</helmet>
+<div data-theme="{{ theme }}" style="width:100%;height:100%;min-height:{{ minH }}px;background:var(--bg);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden">
+  <dc-import name="BrandMark" size="{{ markSize }}" variant="standard" cut="standard" hint-size="{{ markHint }}"></dc-import>
+  <sc-if value="{{ showSpec }}" hint-placeholder-val="{{ false }}">
+    <span style="position:absolute;bottom:14px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ink3);letter-spacing:.03em">{{ spec }}</span>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:844},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'light'|'dark'&quot;},&quot;width&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:390,&quot;min&quot;:320,&quot;max&quot;:1366,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;height&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:844,&quot;min&quot;:480,&quot;max&quot;:1366,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;markRatio&quot;:{&quot;editor&quot;:&quot;float&quot;,&quot;default&quot;:0.185,&quot;min&quot;:0.08,&quot;max&quot;:0.4,&quot;step&quot;:0.005,&quot;tsType&quot;:&quot;number&quot;},&quot;showSpec&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+// SplashScreen — the artwork, as a component, so the iOS PNG set and the Android
+// background_color are generated from one source rather than drawn twice.
+//
+// A doorway, not a wait. byge answers from cache immediately, so this exists only
+// to prevent iOS's white flash before that render: the mark, centred, on the
+// theme background, and gone. No wordmark, no animation to finish, no progress
+// indicator, and never splash -> spinner -> content. If it reads as a brand
+// moment it has already been on screen too long.
+//
+// The mark is sized as a share of the shorter edge, not a fixed pixel value, so
+// one composition covers every device class — the template IS the design, and
+// each apple-touch-startup-image is a render of it at that device's size.
+// It always requests BrandMark's STANDARD cut: the small cut is a 16 px icon
+// rule, and a scaled-down comp must not show a different mark than the asset it
+// stands for.
+// background_color in the manifest is the same value as this background, which is
+// what makes the Android/PWA splash agree with the iOS one instead of being
+// picked separately.
+class Component extends DCLogic {
+  renderVals() {
+    const w = this.props.width ?? 390;
+    const h = this.props.height ?? 844;
+    const mark = Math.round(Math.min(w, h) * (this.props.markRatio ?? 0.185));
+    return {
+      theme: this.props.theme ?? 'light',
+      minH: h, markSize: mark, markHint: mark + 'px,' + mark + 'px',
+      showSpec: this.props.showSpec ?? false,
+      spec: w + '×' + h + ' · mark ' + mark + 'px (' + Math.round((this.props.markRatio ?? 0.185) * 100) + '% of short edge)'
+    };
+  }
+}
+
+</script>
+</body>
+</html>

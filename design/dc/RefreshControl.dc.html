@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root, [data-theme="light"] {
+    --surface:#FFF; --sunk:#EFEDE8; --ink:#15181B; --ink2:rgba(21,24,27,.62); --ink3:rgba(21,24,27,.40);
+    --line:rgba(21,24,27,.10); --line2:rgba(21,24,27,.18);
+  }
+  [data-theme="dark"] {
+    --surface:#16191C; --sunk:#1B1F22; --ink:#ECEEF0; --ink2:rgba(236,238,240,.60); --ink3:rgba(236,238,240,.38);
+    --line:rgba(236,238,240,.12); --line2:rgba(236,238,240,.20);
+  }
+  @keyframes byge-spin { to { transform: rotate(360deg) } }
+  @keyframes byge-sweep { from { transform: translateX(-100%) } to { transform: translateX(300%) } }
+  @keyframes byge-fade { 0% { opacity: 0 } 12% { opacity: 1 } 80% { opacity: 1 } 100% { opacity: 0 } }
+</style>
+</helmet>
+<div data-theme="{{ theme }}" style="width:100%;display:flex;flex-direction:column;gap:10px;font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink)">
+
+  <div style="display:flex;align-items:center;gap:12px;min-height:44px">
+    <button onClick="{{ onRefresh }}" style="cursor:pointer;font:inherit;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.03em;color:var(--ink2);background:transparent;border:1px solid var(--line2);border-radius:9px;padding:0 14px;height:44px;display:flex;align-items:center;gap:9px" style-hover="color:var(--ink)">
+      <span style="width:9px;height:9px;border-radius:50%;border:1.5px solid currentColor;border-top-color:transparent;animation:{{ spin }}"></span>
+      <span>{{ buttonLabel }}</span>
+    </button>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink3);letter-spacing:.03em">{{ ageLabel }}</span>
+  </div>
+
+  <sc-if value="{{ busy }}" hint-placeholder-val="{{ false }}">
+    <div style="height:2px;border-radius:2px;background:var(--line);overflow:hidden">
+      <span style="display:block;width:34%;height:100%;background:var(--ink2);animation:byge-sweep 1.1s cubic-bezier(.4,0,.2,1) infinite"></span>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasMessage }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;gap:11px;align-items:flex-start;border:1px solid {{ msgBorder }};background:var(--sunk);border-radius:10px;padding:11px 13px;animation:byge-fade 6s ease forwards">
+      <span style="flex:none;margin-top:5px;width:6px;height:6px;border-radius:50%;background:var(--ink2)"></span>
+      <span style="display:flex;flex-direction:column;gap:3px">
+        <span style="font-size:12.5px;line-height:1.4">{{ message }}</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink3);line-height:1.5">{{ messageMeta }}</span>
+      </span>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ showHint }}" hint-placeholder-val="{{ false }}">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ink3);letter-spacing:.03em">Pull down to refresh · keyboard: R</div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:420,&quot;height&quot;:170},&quot;outcome&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;idle&quot;,&quot;busy&quot;,&quot;updated&quot;,&quot;same&quot;,&quot;failed&quot;],&quot;default&quot;:&quot;idle&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;nextOutcome&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;same&quot;,&quot;updated&quot;,&quot;failed&quot;],&quot;default&quot;:&quot;same&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;ageMin&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:3,&quot;min&quot;:0,&quot;max&quot;:60,&quot;unit&quot;:&quot;min&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;showHint&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;''|'light'|'dark'&quot;}}">
+// RefreshControl — three honest outcomes, all designed:
+//   updated   a newer analysis existed and the verdict changed in place
+//   same      MET publishes every 5 min with 0–11 min of lag, so a manual
+//             refresh usually finds the file we already have. We SAY that
+//             rather than faking a change or resolving a spinner into nothing.
+//   failed    we are online and the request failed. The old verdict stays and
+//             is labelled; this is not the offline banner.
+// Pull-to-refresh on phone, plus this button — pull alone is not keyboard
+// reachable. The existing verdict never leaves the screen: this is a refresh of
+// live content, not a page load.
+class Component extends DCLogic {
+  state = {};
+  renderVals() {
+    const theme = this.props.theme ?? '';
+    const outcome = this.state.outcome ?? (this.props.outcome ?? 'idle');
+    const busy = this.state.busy ?? (outcome === 'busy');
+    const age = this.props.ageMin ?? 3;
+    const msgs = {
+      updated: { message: 'Updated — a newer reading just landed.', meta: 'radar 0 min old · the answer above moved with it' },
+      same: { message: 'Already the latest — radar ' + age + ' min old.', meta: 'MET publishes every 5 min, 0–11 min behind. Nothing new to fetch yet.' },
+      failed: { message: 'Could not reach MET just now. Showing the reading from ' + age + ' min ago.', meta: 'You are online — this is their end, or the request. Try again in a moment.' }
+    };
+    const m = msgs[outcome];
+    return {
+      theme, busy,
+      buttonLabel: busy ? 'Checking radar…' : 'Refresh',
+      spin: busy ? 'byge-spin 900ms linear infinite' : 'none',
+      ageLabel: busy ? 'fetching · about 1.3 s' : 'radar ' + age + ' min old',
+      hasMessage: !!m && !busy, message: m ? m.message : '', messageMeta: m ? m.meta : '',
+      msgBorder: outcome === 'failed' ? 'var(--line2)' : 'var(--line)',
+      showHint: this.props.showHint ?? true,
+      onRefresh: () => {
+        this.setState({ busy: true, outcome: 'busy' });
+        clearTimeout(this._d);
+        this._d = setTimeout(() => this.setState({ busy: false, outcome: this.props.nextOutcome ?? 'same' }), 1300);
+      }
+    };
+  }
+  componentWillUnmount() { clearTimeout(this._d); }
+}
+
+</script>
+</body>
+</html>

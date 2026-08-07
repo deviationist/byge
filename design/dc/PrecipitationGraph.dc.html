@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200;0,6..72,300;0,6..72,400;1,6..72,300&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="foundation.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root, [data-theme="light"] {
+    --bg:#F6F4F0; --surface:#FFF; --sunk:#EFEDE8; --ink:#15181B; --ink2:rgba(21,24,27,.62); --ink3:rgba(21,24,27,.40);
+    --line:rgba(21,24,27,.10); --line2:rgba(21,24,27,.18); --dry:rgba(21,24,27,.07); --nodata:#FFF; --nodata-line:rgba(21,24,27,.28);
+  }
+  [data-theme="dark"] {
+    --bg:#0E1113; --surface:#16191C; --sunk:#1B1F22; --ink:#ECEEF0; --ink2:rgba(236,238,240,.60); --ink3:rgba(236,238,240,.38);
+    --line:rgba(236,238,240,.12); --line2:rgba(236,238,240,.20); --dry:rgba(236,238,240,.07); --nodata:#2A2E31; --nodata-line:rgba(236,238,240,.30);
+  }
+</style>
+</helmet>
+<div data-theme="{{ theme }}" style="display:flex;flex-direction:column;color:var(--ink);width:100%">
+
+  <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:9px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ink3);letter-spacing:.05em">
+    <span>{{ title }}</span>
+    <span style="color:{{ readoutColor }};text-align:right">{{ readout }}</span>
+  </div>
+
+  <div ref="{{ stripRef }}" onPointerDown="{{ onDown }}" onPointerMove="{{ onMove }}" onPointerUp="{{ onUp }}" style="position:relative;display:flex;align-items:flex-end;gap:{{ gap }}px;height:{{ h }}px;touch-action:{{ touch }}">
+    <sc-for list="{{ cells }}" as="c" hint-placeholder-count="24">
+      <span onClick="{{ c.pick }}" style="flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;cursor:{{ cursor }};border-radius:2px;background:{{ c.colBg }};position:relative">
+        <sc-if value="{{ c.selected }}" hint-placeholder-val="{{ false }}">
+          <span style="position:absolute;left:0;right:0;top:0;height:2px;background:var(--ink);border-radius:1px"></span>
+        </sc-if>
+        <span style="height:{{ c.uh }}%;min-height:{{ c.uMin }};background:var(--nodata);background-image:{{ c.hatch }};background-size:4px 4px;opacity:.7;border-radius:2px 2px 0 0"></span>
+        <span style="height:{{ c.h }}%;min-height:3px;background:{{ c.bg }};opacity:{{ c.op }};border-radius:{{ c.radius }}"></span>
+      </span>
+    </sc-for>
+    <sc-if value="{{ runsPast }}" hint-placeholder-val="{{ false }}">
+      <span style="flex:none;width:{{ fadeW }}px;height:100%;background:{{ fade }};border-radius:2px 2px 0 0"></span>
+    </sc-if>
+    <sc-if value="{{ hasSplit }}" hint-placeholder-val="{{ false }}">
+      <span style="position:absolute;top:-4px;bottom:-4px;left:{{ splitAt }};width:1px;background:var(--line2)"></span>
+    </sc-if>
+
+    <sc-if value="{{ hasPlayhead }}" hint-placeholder-val="{{ false }}">
+      <span style="position:absolute;top:-9px;bottom:-5px;left:{{ playAt }};width:1.5px;background:var(--ink);pointer-events:none">
+        <span style="position:absolute;top:-4px;left:-5.25px;width:12px;height:12px;border-radius:50%;background:var(--ink);box-shadow:0 0 0 2px var(--surface)"></span>
+        <span style="position:absolute;top:0px;left:-16px;width:12px;height:12px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink3)">‹</span>
+        <span style="position:absolute;top:0px;left:9px;width:12px;height:12px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink3)">›</span>
+      </span>
+    </sc-if>
+  </div>
+
+  <div style="height:1px;background:var(--line2);margin-top:2px"></div>
+
+  <div style="display:flex;justify-content:space-between;margin-top:7px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ink3);letter-spacing:.03em">
+    <sc-for list="{{ ticks }}" as="t" hint-placeholder-count="5">
+      <span>{{ t.label }}</span>
+    </sc-for>
+  </div>
+
+  <sc-if value="{{ showCaption }}" hint-placeholder-val="{{ true }}">
+    <div style="margin-top:9px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;line-height:1.6;color:var(--ink3);max-width:52ch">{{ caption }}</div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:520,&quot;height&quot;:170},&quot;scenario&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;s1&quot;,&quot;s2&quot;,&quot;s3&quot;,&quot;s4&quot;,&quot;s5&quot;,&quot;s8&quot;,&quot;s9&quot;,&quot;partial&quot;,&quot;edge&quot;,&quot;s6&quot;],&quot;default&quot;:&quot;s1&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;density&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;compact&quot;,&quot;expanded&quot;],&quot;default&quot;:&quot;compact&quot;,&quot;tsType&quot;:&quot;'compact'|'expanded'&quot;},&quot;height&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:46,&quot;min&quot;:28,&quot;max&quot;:140,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;showPlayhead&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;showCaption&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;''|'light'|'dark'&quot;},&quot;frameIndex&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;number&quot;},&quot;onFrame&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(minutes:number,i:number)=&gt;void&quot;}}">
+// PrecipitationGraph — ONE component, two densities.
+//   compact  (MVP)     24 forecast frames, non-interactive, reads as finished
+//   expanded (phase 2) 40 frames (85 min observed + 115 forecast), scrubbable,
+//                      drives the map frame
+//
+// Height and colour no longer both encode rate (FEEDBACK-01 §7): height is now
+// COVERAGE — how much of your circle is under rain — and colour is the palette
+// band of the rate. Two channels, two quantities, stated in the caption. That
+// also makes the sqrt-saturation problem moot: coverage is bounded at 1.0.
+// Where part of the circle is unobserved, that share is stacked on top in the
+// hatched no-data fill: not counted wet, not counted dry.
+class Component extends DCLogic {
+  state = {};
+  componentDidMount() { if (!window.BYGE) this._t = setInterval(() => { if (window.BYGE) { clearInterval(this._t); this.forceUpdate(); } }, 40); }
+  componentWillUnmount() { clearInterval(this._t); }
+
+  renderVals() {
+    const B = window.BYGE;
+    const expanded = (this.props.density ?? 'compact') === 'expanded';
+    const theme = this.props.theme ?? '';
+    const h = this.props.height ?? (expanded ? 68 : 46);
+    if (!B) return { theme, h, cells: [], ticks: [], title: 'NEXT 2 HOURS', readout: '', gap: 2 };
+    const th = theme === 'dark' ? 'dark' : 'light';
+    const fx = B.FIXTURES[this.props.scenario ?? 's1'], v = B.verdict(fx);
+    // SUBJECT keeps this ONE component when there is no saved place: on the
+    // general radar screen the quantity is the share of the VISIBLE MAP under
+    // rain, which is real and computable, rather than a circle nobody defined.
+    // Same encoding, same two channels, different subject — not a third control.
+    const viewport = (this.props.subject ?? 'circle') === 'viewport';
+    const subjectWord = viewport ? 'the view' : 'circle';
+
+    // observed past — measured, not forecast. Reconstructed here for the design;
+    // the app has the real frames back to −85 min.
+    const past = [
+      { r: 0.4, c: 0.10 }, { r: 0.9, c: 0.18 }, { r: 1.8, c: 0.29 }, { r: 2.6, c: 0.38 },
+      { r: 3.4, c: 0.47 }, { r: 4.2, c: 0.58 }, { r: 5.1, c: 0.66 }, { r: 5.8, c: 0.74 },
+      { r: 6.4, c: 0.82 }, { r: 6.9, c: 0.88 }, { r: 7.2, c: 0.91 }, { r: 6.8, c: 0.87 },
+      { r: 6.1, c: 0.80 }, { r: 5.4, c: 0.72 }, { r: 4.6, c: 0.64 }, { r: 3.9, c: 0.56 }, { r: 3.1, c: 0.48 }
+    ];
+    const nPast = expanded ? past.length : 0;
+    const frames = (expanded ? past.map((p, i) => ({ minutes: (i - past.length) * 5, rate: p.r, coverage: p.c, observed: v.observed, obs: true })) : [])
+      .concat(v.frames.map(f => ({ minutes: f.minutes, rate: f.rate, coverage: f.coverage, observed: f.observed, obs: false })));
+
+    // frameIndex lets a parent (playback) drive the strip; local drag wins once
+    // the reader touches it, which is why the control pauses on scrub.
+    const cur = this.props.frameIndex !== undefined && this.state.i === undefined
+      ? Math.min(frames.length - 1, nPast + this.props.frameIndex)
+      : (this.state.i === undefined ? nPast : this.state.i);
+    const cell = frames[Math.min(cur, frames.length - 1)];
+    const band = B.bandOf(cell.rate);
+
+    const cells = frames.map((f, i) => {
+      const wet = f.rate >= B.NOTICEABLE;
+      const unobs = Math.round((1 - f.observed) * 100);
+      return {
+        h: v.blind ? 0 : Math.max(wet ? 6 : 0, Math.round(f.coverage * (100 - unobs))),
+        uh: unobs, uMin: unobs > 0 ? '3px' : '0px', hatch: unobs > 0 ? B.HATCH : 'none',
+        bg: v.blind ? 'var(--nodata)' : (wet ? B.colorOf(f.rate, th) : 'var(--dry)'),
+        op: v.blind ? '.7' : (wet ? '1' : (B.bandOf(f.rate) ? '.9' : '1')),
+        radius: v.blind ? '2px' : (f.coverage > 0.02 ? '2px 2px 0 0' : '2px'),
+        // Selection is DRAWN — a 2 px ink cap plus a tinted column — not a CSS
+        // outline. React Native has no outline property, so an outline-based
+        // focus ring would simply not exist on native, and this indicator is
+        // load-bearing: without it the scrubber has no visible position.
+        selected: expanded && i === cur,
+        colBg: expanded && i === cur ? 'var(--sunk)' : 'transparent',
+        pick: expanded ? () => { this.setState({ i: i }); if (this.props.onFrame) this.props.onFrame(f.minutes, i); } : undefined
+      };
+    });
+    if (v.blind) cells.forEach(c => { c.h = 0; c.uh = 100; c.hatch = B.HATCH; c.uMin = '3px'; });
+
+    const openTail = v.spells.length ? v.spells[v.spells.length - 1].open : false;
+    const readout = v.blind ? 'not observed'
+      : expanded ? (cell.minutes === 0 ? 'now' : (cell.minutes > 0 ? '+' + cell.minutes : cell.minutes) + ' min') +
+          ' · ' + (band ? band.label + ' ' + cell.rate.toFixed(1) + ' mm/h' : 'dry') +
+          ' · ' + Math.round(cell.coverage * 100) + '% of ' + subjectWord + (cell.minutes > 0 ? '' : ' · observed')
+      : (openTail ? 'runs past the horizon' : v.spells.length > 1 ? 'two bands, a clear gap' : v.raining_now ? 'easing' : v.next ? 'one band' : 'clear');
+
+    const setFrame = (i) => {
+      const n = Math.max(0, Math.min(frames.length - 1, i));
+      if (n === cur) return;
+      this.setState({ i: n });
+      if (this.props.onFrame) this.props.onFrame(frames[n].minutes, n);
+    };
+    const idxAt = (clientX) => {
+      const el = this._strip; if (!el) return cur;
+      const r = el.getBoundingClientRect();
+      return Math.floor(((clientX - r.left) / Math.max(1, r.width)) * frames.length);
+    };
+
+    return {
+      theme, h, gap: expanded ? 2 : 2, cursor: expanded ? 'grab' : 'default',
+      touch: expanded ? 'none' : 'auto',
+      stripRef: (el) => { this._strip = el; },
+      hasPlayhead: expanded && (this.props.showPlayhead ?? true),
+      playAt: ((cur + 0.5) / frames.length * 100).toFixed(2) + '%',
+      onDown: expanded ? (e) => { this._drag = true; setFrame(idxAt(e.clientX)); if (e.currentTarget.setPointerCapture) e.currentTarget.setPointerCapture(e.pointerId); } : undefined,
+      onMove: expanded ? (e) => { if (this._drag) setFrame(idxAt(e.clientX)); } : undefined,
+      onUp: expanded ? () => { this._drag = false; } : undefined,
+      title: expanded ? 'OBSERVED  ·  FORECAST' : 'NEXT 2 HOURS',
+      readout, readoutColor: expanded ? 'var(--ink)' : 'var(--ink3)',
+      cells,
+      runsPast: openTail && !v.blind, fadeW: expanded ? 20 : 26,
+      fade: th === 'dark' ? 'linear-gradient(90deg,rgba(236,238,240,.16),rgba(236,238,240,0))' : 'linear-gradient(90deg,rgba(21,24,27,.13),rgba(21,24,27,0))',
+      hasSplit: expanded, splitAt: (nPast / frames.length * 100).toFixed(1) + '%',
+      ticks: expanded
+        ? [{ label: '−85' }, { label: '−40' }, { label: 'now' }, { label: '+40' }, { label: openTail ? '+115 ⇥' : '+115' }]
+        : [{ label: 'now' }, { label: '+30' }, { label: '+60' }, { label: '+90' }, { label: openTail ? '+115 ⇥' : '+115' }],
+      showCaption: this.props.showCaption ?? true,
+      caption: v.blind
+        ? 'Nothing to plot — this coordinate is off the radar mosaic, so every frame is unobserved rather than dry.'
+        : 'Bar height = share of ' + (viewport ? 'the visible map' : 'your ' + v.radius_km + ' km circle') + ' under rain. Colour = intensity band.' +
+          (v.partial ? ' Hatched cap = the ' + Math.round((1 - v.observed) * 100) + '% we cannot see, counted neither way.' : '')
+    };
+  }
+}
+
+</script>
+</body>
+</html>

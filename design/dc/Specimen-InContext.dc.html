@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200;0,6..72,300;0,6..72,400&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="foundation.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; background: #C9C5BD; }
+  a { color: #15181B; } a:hover { opacity: .7; }
+</style>
+</helmet>
+<div style="font-family:'IBM Plex Sans',system-ui,sans-serif;color:#15181B;padding:44px 48px 90px;display:flex;flex-direction:column;gap:44px">
+
+  <header style="display:flex;flex-direction:column;gap:10px;max-width:74ch">
+    <div style="font-family:Newsreader,serif;font-size:34px;font-weight:300">In context</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.7;color:rgba(21,24,27,.62)">The first fifteen seconds of owning byge, in a real frame: the icon among other icons, the splash, then the answer. Every screen here is the shipping component at true phone size — nothing redrawn for the mockup — so the colours, the mark and the type sizes are the ones that ship.</div>
+  </header>
+
+  <section style="display:flex;flex-direction:column;gap:14px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;color:rgba(21,24,27,.5)">1 · THE ICON, AMONG OTHER ICONS — WHERE IT HAS TO HOLD ITS OWN AT 60 PX</div>
+    <div style="display:flex;gap:38px;flex-wrap:wrap;align-items:flex-start">
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" width="{{ deviceW }}" height="{{ deviceH }}" hint-size="402px,874px">
+        <div style="width:100%;height:100%;background:linear-gradient(165deg,#41535C,#1D272C 55%,#141A1E);padding:74px 28px 0;display:flex;flex-direction:column;gap:28px">
+          <sc-for list="{{ iconRows }}" as="r" hint-placeholder-count="3">
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:26px 16px">
+              <sc-for list="{{ r.icons }}" as="i" hint-placeholder-count="4">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+                  <sc-if value="{{ i.isByge }}" hint-placeholder-val="{{ false }}">
+                    <dc-import name="BrandMark" size="{{ iconSize }}" variant="standard" cut="standard" hint-size="60px,60px"></dc-import>
+                  </sc-if>
+                  <sc-if value="{{ i.isPlaceholder }}" hint-placeholder-val="{{ true }}">
+                    <span style="width:{{ iconSize }}px;height:{{ iconSize }}px;border-radius:14px;background:rgba(255,255,255,.09);background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.06) 0 3px,transparent 3px 7px)"></span>
+                  </sc-if>
+                  <span style="font-size:10.5px;color:{{ i.color }};letter-spacing:.01em;text-shadow:0 1px 2px rgba(0,0,0,.4)">{{ i.label }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-for>
+        </div>
+      </x-import>
+
+      <div style="max-width:34ch;display:flex;flex-direction:column;gap:14px;padding-top:10px">
+        <div style="font-family:Newsreader,serif;font-size:22px;font-weight:300;line-height:1.35">A band crossing a point, at the only size that matters.</div>
+        <div style="font-size:13px;line-height:1.65;color:rgba(21,24,27,.72)">On a home screen the mark competes with everything else, at 60 px, usually against a dark wallpaper. Two solid shapes and a dot survive that; a cloud with a droplet would not. The deep blue ground reads as weather without being another blue-gradient weather icon — and it is the only place byge uses a saturated field, because inside the app that colour belongs to the rain.</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.7;color:rgba(21,24,27,.5)">Neighbours are blank placeholders on purpose: the question is whether ours holds up, not what it sits next to.</div>
+      </div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:14px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;color:rgba(21,24,27,.5)">2 · TAP · THE SPLASH — A DOORWAY, NOT A WAIT</div>
+    <div style="display:flex;gap:38px;flex-wrap:wrap;align-items:flex-start">
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" width="{{ deviceW }}" height="{{ deviceH }}" hint-size="402px,874px">
+        <dc-import name="SplashScreen" theme="light" width="{{ deviceW }}" height="{{ deviceH }}" hint-size="100%,100%"></dc-import>
+      </x-import>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" width="{{ deviceW }}" height="{{ deviceH }}" dark="{{ true }}" hint-size="402px,874px">
+        <dc-import name="SplashScreen" theme="dark" width="{{ deviceW }}" height="{{ deviceH }}" hint-size="100%,100%"></dc-import>
+      </x-import>
+      <div style="max-width:34ch;display:flex;flex-direction:column;gap:14px;padding-top:10px">
+        <div style="font-family:Newsreader,serif;font-size:22px;font-weight:300;line-height:1.35">On screen for a few hundred milliseconds, and never longer.</div>
+        <div style="font-size:13px;line-height:1.65;color:rgba(21,24,27,.72)">This exists only to stop iOS flashing white before the cached verdict paints, so it holds nothing that needs finishing: no wordmark, no animation, no progress bar. The background is the app's own background — which is why the next frame does not feel like a page load. The field stays, the mark leaves, the answer arrives.</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.7;color:rgba(21,24,27,.5)">Same values as manifest background_color, per scheme: #F6F4F0 and #0E1113.</div>
+      </div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:14px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;color:rgba(21,24,27,.5)">3 · THE ANSWER · THE PAIR THAT MUST NEVER LOOK ALIKE</div>
+    <div style="display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start">
+      <sc-for list="{{ verdicts }}" as="v" hint-placeholder-count="4">
+        <div style="display:flex;flex-direction:column;gap:10px;width:{{ deviceW }}px">
+          <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" width="{{ deviceW }}" height="{{ deviceH }}" dark="{{ v.dark }}" hint-size="402px,874px">
+            <div style="width:100%;height:100%;overflow:hidden">
+              <dc-import name="VerdictScreen" scenario="{{ v.key }}" device="phone" insetTop="{{ insetTop }}" theme="{{ v.theme }}" hint-size="100%,100%"></dc-import>
+            </div>
+          </x-import>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.65;color:rgba(21,24,27,.58)">{{ v.label }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:14px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;color:rgba(21,24,27,.5)">4 · THE LIST · ONE GLANCE, WHICH OF MY PLACES IS WET</div>
+    <div style="display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start">
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" width="{{ deviceW }}" height="{{ deviceH }}" hint-size="402px,874px">
+        <div style="width:100%;height:100%;overflow:auto">
+          <dc-import name="LocationsScreen" device="phone" selected="s1" insetTop="{{ insetTop }}" theme="light" hint-size="100%,100%"></dc-import>
+        </div>
+      </x-import>
+      <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" width="{{ deviceW }}" height="{{ deviceH }}" dark="{{ true }}" hint-size="402px,874px">
+        <div style="width:100%;height:100%;overflow:auto">
+          <dc-import name="LocationsScreen" device="phone" selected="s1" insetTop="{{ insetTop }}" theme="dark" hint-size="100%,100%"></dc-import>
+        </div>
+      </x-import>
+      <div style="max-width:34ch;display:flex;flex-direction:column;gap:14px;padding-top:10px">
+        <div style="font-family:Newsreader,serif;font-size:22px;font-weight:300;line-height:1.35">Colour only where it carries meaning.</div>
+        <div style="font-size:13px;line-height:1.65;color:rgba(21,24,27,.72)">In a frame you can see how little colour there is: warm off-white or near-black, ink, and then the precipitation blues doing all of the signalling. The swatch column is the only saturated thing on screen, which is what makes it readable at arm's length — filled means raining now, outlined means on the way, hatched means we cannot see.</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.7;color:rgba(21,24,27,.5)">Dark uses the second ramp: luminance rises with intensity, so heavy rain is bright rather than dim.</div>
+      </div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:14px;border-top:1px solid rgba(21,24,27,.15);padding-top:28px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;color:rgba(21,24,27,.5)">5 · THE REST, IN FRAME</div>
+    <div style="display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start">
+      <sc-for list="{{ others }}" as="o" hint-placeholder-count="5">
+        <div style="display:flex;flex-direction:column;gap:10px;width:{{ deviceW }}px">
+          <x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" width="{{ deviceW }}" height="{{ deviceH }}" dark="{{ o.dark }}" hint-size="402px,874px">
+            <div style="width:100%;height:100%;overflow:auto">
+              <sc-if value="{{ o.isAdd }}" hint-placeholder-val="{{ false }}">
+                <dc-import name="AddLocationScreen" mode="{{ o.mode }}" scenario="{{ o.key }}" device="phone" insetTop="{{ insetTop }}" theme="{{ o.theme }}" hint-size="100%,100%"></dc-import>
+              </sc-if>
+              <sc-if value="{{ o.isMap }}" hint-placeholder-val="{{ false }}">
+                <dc-import name="RadarMap" scenario="{{ o.key }}" insetTop="{{ insetTop }}" theme="{{ o.theme }}" hint-size="100%,100%"></dc-import>
+              </sc-if>
+              <sc-if value="{{ o.isAbout }}" hint-placeholder-val="{{ false }}">
+                <dc-import name="AboutScreen" device="phone" themeChoice="system" insetTop="{{ insetTop }}" theme="{{ o.theme }}" hint-size="100%,100%"></dc-import>
+              </sc-if>
+              <sc-if value="{{ o.isEmpty }}" hint-placeholder-val="{{ false }}">
+                <dc-import name="LocationsScreen" device="phone" empty="{{ true }}" insetTop="{{ insetTop }}" emptyReason="{{ o.reason }}" lastRemoved="{{ o.lastRemoved }}" theme="{{ o.theme }}" hint-size="100%,100%"></dc-import>
+              </sc-if>
+            </div>
+          </x-import>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;line-height:1.65;color:rgba(21,24,27,.58)">{{ o.label }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <div style="display:flex;flex-wrap:wrap;gap:10px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;padding-top:6px">
+    <a href="byge.dc.html" style="border:1px solid rgba(21,24,27,.2);border-radius:8px;padding:8px 12px;text-decoration:none">The app, with the harness →</a>
+    <a href="Library.dc.html" style="border:1px solid rgba(21,24,27,.2);border-radius:8px;padding:8px 12px;text-decoration:none">Component index →</a>
+    <a href="Specimen-Foundation.dc.html" style="border:1px solid rgba(21,24,27,.2);border-radius:8px;padding:8px 12px;text-decoration:none">Palette, type, install kit →</a>
+    <a href="Specimen-Precipitation.dc.html" style="border:1px solid rgba(21,24,27,.2);border-radius:8px;padding:8px 12px;text-decoration:none">All eleven states →</a>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() { if (!window.BYGE) this._t = setInterval(() => { if (window.BYGE) { clearInterval(this._t); this.forceUpdate(); } }, 40); }
+  componentWillUnmount() { clearInterval(this._t); }
+  renderVals() {
+    const W = 402, H = 874;
+    const ph = (label) => ({ isPlaceholder: true, isByge: false, label: label || '', color: 'rgba(255,255,255,.68)' });
+    const byge = { isPlaceholder: false, isByge: true, label: 'byge', color: '#fff' };
+    return {
+      deviceW: W, deviceH: H, iconSize: 60,
+      // iOS safe-area-inset-top for these device classes
+      insetTop: 46,
+      iconRows: [
+        { icons: [ph(), ph(), ph(), ph()] },
+        { icons: [ph(), byge, ph(), ph()] },
+        { icons: [ph(), ph(), ph(), ph()] }
+      ],
+      verdicts: [
+        { key: 's1', theme: 'light', dark: false, label: 'STATE 1 · raining, end visible. A number and a full stop — the strip falls away to nothing well before the horizon.' },
+        { key: 's2', theme: 'light', dark: false, label: 'STATE 2 · raining, no end in sight. Different grammar, dotted bound, superscript arrow, a footnote, and the strip runs off its own right edge.' },
+        { key: 's8', theme: 'dark', dark: true, label: 'STATE 8 · eases, then a second band. The first spell keeps the headline; the second sits beneath at 0.46× with the clear gap named.' },
+        { key: 's6', theme: 'dark', dark: true, label: 'STATE 6 · outside radar coverage. No badge, no strip, no confidence — there is no claim to rate. Hatched, never dry.' }
+      ],
+      others: [
+        { isAdd: true, mode: 'add', key: 's1', theme: 'light', dark: false, label: 'ADD A PLACE · centre-pinned picker, radius ring, coverage caught before saving' },
+        { isAdd: true, mode: 'edit', key: 's2', theme: 'light', dark: false, label: 'EDIT · the same component, prefilled, with Remove at the foot' },
+        { isMap: true, key: 's1', theme: 'light', dark: false, label: 'PHASE 2 · the radar map, reached from “See why”. Confirmation, never the landing view.' },
+        { isEmpty: true, reason: 'cleared', lastRemoved: 'Cabin', theme: 'light', dark: false, label: 'CLEARED · after removing the last place. No mark, no pitch — it confirms what you did.' },
+        { isAbout: true, theme: 'dark', dark: true, label: 'ABOUT · what byge is, Appearance, and attribution in full' }
+      ]
+    };
+  }
+}
+
+</script>
+</body>
+</html>

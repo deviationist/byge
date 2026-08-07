@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200;0,6..72,300;0,6..72,400&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="foundation.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; background: #DCD9D2; }
+  a { color: #15181B; } a:hover { opacity: .7; }
+  [data-pane="light"] { background: #F6F4F0; color: #15181B; }
+  [data-pane="dark"] { background: #0E1113; color: #ECEEF0; }
+</style>
+</helmet>
+<div style="font-family:'IBM Plex Sans',system-ui,sans-serif;padding:40px 44px 80px;display:flex;flex-direction:column;gap:34px">
+
+  <header style="display:flex;flex-direction:column;gap:10px;max-width:74ch">
+    <div style="font-family:Newsreader,serif;font-size:34px;font-weight:300">Precipitation components</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.7;color:rgba(21,24,27,.62)">Every state at once, both themes, in the same order the build will consume them. Nothing here is drawn by hand: each number is derived from a frames array in <a href="foundation.js">foundation/byge.js</a> — the one palette and the one spell model. Change a fixture and the copy, the swatch, the bars and the confidence all move together.</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.7;color:rgba(21,24,27,.62)">States 8 and 9 are new (rain that stops and returns). States 10 and 11 are new: partially observed, and rain inside a wide circle but not on you.</div>
+  </header>
+
+  <section style="display:flex;flex-direction:column;gap:12px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;color:rgba(21,24,27,.5)">SWATCH · THREE SHAPES SO COLOUR IS NEVER THE ONLY CARRIER</div>
+    <div style="display:flex;gap:0;border-radius:12px;overflow:hidden;width:920px">
+      <div data-pane="light" style="flex:1;padding:22px 24px;display:flex;flex-direction:column;gap:16px">
+        <sc-for list="{{ swatchRows }}" as="s" hint-placeholder-count="4">
+          <div style="display:flex;align-items:center;gap:13px">
+            <dc-import name="Swatch" mode="{{ s.mode }}" rate="{{ s.rate }}" size="{{ s.size }}" theme="light" hint-size="20px,20px"></dc-import>
+            <span style="font-size:13px">{{ s.label }}</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(21,24,27,.4);margin-left:auto">{{ s.note }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div data-pane="dark" style="flex:1;padding:22px 24px;display:flex;flex-direction:column;gap:16px">
+        <sc-for list="{{ swatchRows }}" as="s" hint-placeholder-count="4">
+          <div style="display:flex;align-items:center;gap:13px">
+            <dc-import name="Swatch" mode="{{ s.mode }}" rate="{{ s.rate }}" size="{{ s.size }}" theme="dark" hint-size="20px,20px"></dc-import>
+            <span style="font-size:13px">{{ s.label }}</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(236,238,240,.38);margin-left:auto">{{ s.note }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <sc-for list="{{ states }}" as="st" hint-placeholder-count="10">
+    <section style="display:flex;flex-direction:column;gap:11px">
+      <div style="display:flex;align-items:baseline;gap:12px">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:500;background:#1A1C1E;color:#E9E7E2;border-radius:4px;padding:3px 7px">STATE {{ st.num }}</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(21,24,27,.62)">{{ st.tag }}</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(21,24,27,.4);margin-left:auto">{{ st.where }}</span>
+      </div>
+      <div style="display:flex;gap:0;border-radius:14px;overflow:hidden;width:1000px">
+        <div data-pane="light" style="flex:1;padding:30px 32px 26px;display:flex;flex-direction:column;gap:24px">
+          <dc-import name="LocationStatusText" scenario="{{ st.key }}" size="{{ st.size }}" theme="light" hint-size="100%,150px"></dc-import>
+          <div style="display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center">
+            <dc-import name="PrecipitationLevelCard" scenario="{{ st.key }}" theme="light" hint-size="300px,44px"></dc-import>
+            <dc-import name="PrecipitationConfidence" scenario="{{ st.key }}" theme="light" hint-size="240px,20px"></dc-import>
+          </div>
+          <dc-import name="PrecipitationGraph" scenario="{{ st.key }}" theme="light" hint-size="100%,110px"></dc-import>
+        </div>
+        <div data-pane="dark" style="flex:1;padding:30px 32px 26px;display:flex;flex-direction:column;gap:24px">
+          <dc-import name="LocationStatusText" scenario="{{ st.key }}" size="{{ st.size }}" theme="dark" hint-size="100%,150px"></dc-import>
+          <div style="display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center">
+            <dc-import name="PrecipitationLevelCard" scenario="{{ st.key }}" theme="dark" hint-size="300px,44px"></dc-import>
+            <dc-import name="PrecipitationConfidence" scenario="{{ st.key }}" theme="dark" hint-size="240px,20px"></dc-import>
+          </div>
+          <dc-import name="PrecipitationGraph" scenario="{{ st.key }}" theme="dark" hint-size="100%,110px"></dc-import>
+        </div>
+      </div>
+    </section>
+  </sc-for>
+
+  <section style="display:flex;flex-direction:column;gap:11px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;color:rgba(21,24,27,.5)">SAME COMPONENT, EXPANDED DENSITY · PHASE 2 · SCRUBBABLE, DRIVES THE MAP FRAME</div>
+    <div style="display:flex;gap:0;border-radius:14px;overflow:hidden;width:1000px">
+      <div data-pane="light" style="flex:1;padding:26px 30px">
+        <dc-import name="PrecipitationGraph" scenario="s8" density="expanded" height="{{ tall }}" theme="light" hint-size="100%,140px"></dc-import>
+      </div>
+      <div data-pane="dark" style="flex:1;padding:26px 30px">
+        <dc-import name="PrecipitationGraph" scenario="s8" density="expanded" height="{{ tall }}" theme="dark" hint-size="100%,140px"></dc-import>
+      </div>
+    </div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;line-height:1.7;color:rgba(21,24,27,.62);max-width:80ch">Click any bar. Compact and expanded are one file, one props surface — the MVP simply never passes <span style="color:#15181B">density="expanded"</span>. The compact form has no cursor, no readout and no dead affordance: it reads as finished, not as a disabled scrubber.</div>
+  </section>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() { if (!window.BYGE) this._t = setInterval(() => { if (window.BYGE) { clearInterval(this._t); this.forceUpdate(); } }, 40); }
+  componentWillUnmount() { clearInterval(this._t); }
+  renderVals() {
+    const B = window.BYGE;
+    const keys = B ? B.ORDER : [];
+    return {
+      tall: 96,
+      swatchRows: [
+        { mode: 'now', rate: 6.0, size: 20, label: 'Raining on you now', note: 'filled · band colour' },
+        { mode: 'later', rate: 3.1, size: 20, label: 'A spell on the way', note: 'outline · band colour' },
+        { mode: 'dry', rate: 0, size: 20, label: 'Observed dry', note: 'faint fill' },
+        { mode: 'blind', rate: 0, size: 20, label: 'Not observed — we cannot see here', note: 'hatched · never a band' }
+      ],
+      states: keys.map(k => {
+        const fx = B.FIXTURES[k];
+        return { key: k, num: fx.state, tag: fx.tag, where: fx.name + ' · ' + fx.place + ' · ' + fx.radius + ' km', size: 38 };
+      })
+    };
+  }
+}
+
+</script>
+</body>
+</html>

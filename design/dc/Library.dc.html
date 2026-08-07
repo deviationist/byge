@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200;0,6..72,300;0,6..72,400&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; background: #F6F4F0; }
+  a { color: #15181B; text-decoration: none; border-bottom: 1px solid rgba(21,24,27,.25); }
+  a:hover { opacity: .65; }
+</style>
+</helmet>
+<div style="font-family:'IBM Plex Sans',system-ui,sans-serif;color:#15181B;padding:56px 44px 100px;max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:44px">
+
+  <header style="display:flex;flex-direction:column;gap:14px">
+    <div style="font-family:Newsreader,serif;font-size:42px;font-weight:300;letter-spacing:-.015em">byge — component library</div>
+    <div style="font-size:15px;line-height:1.65;color:rgba(21,24,27,.66);max-width:62ch">Round 2. The single file is broken into one file per component, each independently previewable, plus thin screen compositions that arrange them and own almost no markup. Every number any component prints derives from a frames array in <a href="foundation.js">foundation.js</a>, so a fixture change moves the copy, the swatch, the bars and the confidence together.</div>
+    <div style="display:flex;flex-wrap:wrap;gap:9px;font-family:'IBM Plex Mono',monospace;font-size:11px;margin-top:4px">
+      <a href="byge.dc.html" style="border:1px solid rgba(21,24,27,.2);border-radius:8px;padding:8px 12px">The app →</a>
+      <a href="Specimen-Precipitation.dc.html" style="border:1px solid rgba(21,24,27,.2);border-radius:8px;padding:8px 12px">Every state, both themes →</a>
+      <a href="Specimen-Foundation.dc.html" style="border:1px solid rgba(21,24,27,.2);border-radius:8px;padding:8px 12px">Palette, type, mark, install kit →</a>
+      <a href="byge-v1.dc.html" style="border:1px solid rgba(21,24,27,.2);border-radius:8px;padding:8px 12px">Round 1, for reference →</a>
+    </div>
+  </header>
+
+  <section style="display:flex;flex-direction:column;gap:16px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;color:rgba(21,24,27,.5)">WHAT TAPS GET YOU HERE FROM A COLD START</div>
+    <div style="border:1px solid rgba(21,24,27,.12);border-radius:12px;overflow:hidden">
+      <sc-for list="{{ reach }}" as="r" hint-placeholder-count="14">
+        <div style="display:grid;grid-template-columns:190px 1fr 92px;gap:18px;padding:12px 16px;background:{{ r.bg }};border-bottom:1px solid rgba(21,24,27,.08);align-items:baseline">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px">{{ r.name }}</span>
+          <span style="font-size:12.5px;line-height:1.5;color:rgba(21,24,27,.7)">{{ r.path }}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:rgba(21,24,27,.45);text-align:right">{{ r.phase }}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="font-size:13px;line-height:1.7;color:rgba(21,24,27,.66);max-width:74ch">No screen hangs off legal text any more. About is a 44 px nav-bar action on Locations, and it is a functional destination because Appearance lives there. Attribution is still on every screen — as an obligation, not a route. Back always returns where you came from: a verdict opened from the map goes back to the map, and the nav bar labels it.</div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:16px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;color:rgba(21,24,27,.5)">AFTER EVERY CHANGE · WHAT THE APP LOOKS LIKE ONE MOMENT LATER</div>
+    <div style="border:1px solid rgba(21,24,27,.12);border-radius:12px;overflow:hidden">
+      <div style="display:grid;grid-template-columns:150px 1fr 1fr;gap:18px;padding:11px 16px;background:#EFEDE8;border-bottom:1px solid rgba(21,24,27,.1)">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.05em;color:rgba(21,24,27,.5)">CHANGE</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.05em;color:rgba(21,24,27,.5)">PHONE — ONE COLUMN</span>
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.05em;color:rgba(21,24,27,.5)">TABLET / DESKTOP — TWO PANE</span>
+      </div>
+      <sc-for list="{{ mutations }}" as="m" hint-placeholder-count="7">
+        <div style="display:grid;grid-template-columns:150px 1fr 1fr;gap:18px;padding:13px 16px;background:#fff;border-bottom:1px solid rgba(21,24,27,.07)">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.5">{{ m.what }}</span>
+          <span style="font-size:12.5px;line-height:1.55;color:rgba(21,24,27,.72)">{{ m.phone }}</span>
+          <span style="font-size:12.5px;line-height:1.55;color:rgba(21,24,27,.72)">{{ m.two }}</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="font-size:13px;line-height:1.7;color:rgba(21,24,27,.66);max-width:76ch">Two rules fall out of filling this in. <strong style="font-weight:500;color:#15181B">The confirmation belongs on the screen that changed</strong> — a line above the list, not on the screen you were leaving, because the list is the thing that is now different. And <strong style="font-weight:500;color:#15181B">no pane is ever left showing something that no longer exists</strong>: in two-pane, deleting re-points the detail pane at the next place down, and only an empty list empties it. The harness in the app file now holds the list in real state, so you can watch it shrink — fixed scenarios are what hid these gaps.</div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:16px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;color:rgba(21,24,27,.5)">THE ANSWERS YOU ASKED FOR</div>
+    <div style="display:flex;flex-direction:column;gap:18px">
+      <sc-for list="{{ answers }}" as="a" hint-placeholder-count="4">
+        <div style="display:grid;grid-template-columns:26px 1fr;gap:16px;align-items:start">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:rgba(21,24,27,.4);margin-top:3px">{{ a.n }}</span>
+          <span style="display:flex;flex-direction:column;gap:7px">
+            <span style="font-family:Newsreader,serif;font-size:21px;font-weight:300;line-height:1.3">{{ a.q }}</span>
+            <span style="font-size:13.5px;line-height:1.65;color:rgba(21,24,27,.7);max-width:76ch">{{ a.a }}</span>
+          </span>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:16px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;color:rgba(21,24,27,.5)">COMPONENTS · ONE FILE EACH</div>
+    <sc-for list="{{ groups }}" as="g" hint-placeholder-count="5">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="font-size:13px;font-weight:500">{{ g.title }} <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(21,24,27,.4);font-weight:400">{{ g.folder }}</span></div>
+        <div style="border:1px solid rgba(21,24,27,.12);border-radius:12px;overflow:hidden">
+          <sc-for list="{{ g.items }}" as="i" hint-placeholder-count="6">
+            <div style="display:grid;grid-template-columns:230px 1fr 56px;gap:16px;padding:11px 16px;background:#fff;border-bottom:1px solid rgba(21,24,27,.07);align-items:baseline">
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px">{{ i.name }}</span>
+              <span style="font-size:12.5px;line-height:1.5;color:rgba(21,24,27,.68)">{{ i.note }}</span>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:rgba(21,24,27,.42);text-align:right">{{ i.phase }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-for>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;line-height:1.8;color:rgba(21,24,27,.55);max-width:82ch">Files are flat rather than foldered here for one mechanical reason: a nested component reference resolves against the open document, so <span style="color:#15181B">components/</span> + <span style="color:#15181B">screens/</span> breaks every component-inside-component reference in the preview. The folder column above is the layout to use in the Expo tree — the names are already the build names, so moving them is a move, not a rewrite.</div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:16px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;color:rgba(21,24,27,.5)">WHAT CHANGED FROM ROUND 1</div>
+    <div style="display:flex;flex-direction:column;gap:11px">
+      <sc-for list="{{ changes }}" as="c" hint-placeholder-count="12">
+        <div style="display:grid;grid-template-columns:74px 1fr;gap:16px;align-items:baseline">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(21,24,27,.42)">{{ c.ref }}</span>
+          <span style="font-size:13px;line-height:1.6;color:rgba(21,24,27,.72)">{{ c.text }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:14px;border-top:1px solid rgba(21,24,27,.12);padding-top:26px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;color:rgba(21,24,27,.5)">STILL OPEN</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <sc-for list="{{ open }}" as="o" hint-placeholder-count="4">
+        <span style="font-size:13px;line-height:1.65;color:rgba(21,24,27,.72);max-width:78ch">— {{ o.text }}</span>
+      </sc-for>
+    </div>
+  </section>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const R = (name, path, phase, mvp) => ({ name, path, phase, bg: mvp === false ? '#F1EFEA' : '#fff' });
+    return {
+      reach: [
+        R('LocationsScreen', 'Launch. Always the landing view — never the map.', 'MVP'),
+        R('VerdictScreen', 'Locations → tap a place. On tablet/desktop it is already in the right pane, so comparing places needs no navigation at all.', 'MVP'),
+        R('AddLocationScreen', 'Locations → “+ Add a place” (56 px dashed row at the end of the list).', 'MVP'),
+        R('AboutScreen', 'Locations → “About” action in the nav bar, 44 px. Holds Appearance, so it is a destination rather than a colophon.', 'MVP'),
+        R('AddLocationScreen · edit', 'Verdict → “Edit” in the nav bar. Same component, prefilled — radius, coordinate and name are all correctable rather than write-once.', 'MVP'),
+        R('ConfirmSheet', 'Verdict → “Remove”, or the Remove block at the foot of the edit screen. The only unrecoverable action in the app, so the sheet names the place and what is lost.', 'MVP'),
+        R('EmptyState · firstRun', 'Locations with nothing saved — the first thing a new install shows.', 'MVP'),
+        R('EmptyState · cleared', 'Locations after removing the last place. Same layout, different voice: no mark, no pitch, states what just happened.', 'MVP'),
+        R('ErrorState · cold', 'First ever open, before any cache exists. A quiet held frame with a ghost graph, ~1.3 s.', 'MVP'),
+        R('ErrorState · error', 'Verdict when the fetch fails AND there is no cached answer for that place. Never dressed as offline.', 'MVP'),
+        R('StaleBanner', 'Verdict and Locations, whenever the shown answer is older than the last publish, or you are offline.', 'MVP'),
+        R('RefreshControl', 'Verdict — pull down, or the 44 px Refresh button. Three outcomes: updated, already-latest, failed.', 'MVP'),
+        R('CoverageNotice · blind', 'Verdict for a place off the mosaic — and in Add, before it can be saved.', 'MVP'),
+        R('CoverageNotice · partial', 'Verdict for a place straddling the coverage edge; live in Add as you pan or widen the radius.', 'MVP'),
+        R('PrecipitationLegend', 'Locations, collapsed, beneath the list. Remembers its state. Absent from Verdict.', 'MVP'),
+        R('RadarMapScreen', 'Verdict → “See why — radar map”. A text link near the bottom, never a tab.', 'phase 2', false),
+        R('SettingsScreen', 'About → “Position & notifications”. Designed; the MVP build omits the screen and its entry point entirely.', 'phase 3', false)
+      ],
+      mutations: [
+        { what: 'Add a place', phone: 'Back to the list. The new row is in place with a real answer already in it (the fetch happens on save, so the row never appears blank), and a line above the list reads “Added Home.”', two: 'Same list change, and the detail pane switches to the place you just added — you asked for it, so it is what you want to see. No navigation happens.' },
+        { what: 'Edit — name only', phone: 'Back to the verdict you came from, its nav-bar title updated. Nothing is refetched, because nothing was asked of MET.', two: 'The row and the pane header both re-title in place. Selection does not move.' },
+        { what: 'Edit — coordinate or radius', phone: 'Back to the verdict, which now shows a fresh reading for the new area. The old answer is replaced rather than adjusted, and the edit screen said so before you saved.', two: 'Same, and the row’s swatch and status can change with it — a wider radius may flip a place from dry to raining. That is the control working, not a glitch.' },
+        { what: 'Remove — not the last', phone: 'Back to the list, one row shorter, with “Removed Cabin.” above it. No undo is offered because there is none; the confirmation came first.', two: 'The list shortens and the detail pane re-points to the next place down — or the previous one, if you removed the last row. The notice names both: “Removed Cabin. Showing Work.”' },
+        { what: 'Remove — the last one', phone: 'The list becomes the cleared empty state: “No places left.” Different in tone from first run — it confirms what you did rather than welcoming you.', two: 'Both panes carry the cleared state, so the detail side is not a void beside an explanation. One route out, in both: “Add a place”.' },
+        { what: 'Change the radius', phone: 'Live, before saving: the ring on the picker resizes, the copy under the slider changes register (about you / a valley / very wide, with the payload), and a coverage warning appears if the circle now reaches past the mosaic.', two: 'Identical — the picker is one component. On save, the row and the pane update together.' },
+        { what: 'Switch theme', phone: 'Immediate, everywhere, no reload and no flash: both ramps are defined, so the swatches and bars re-map rather than re-tint. “System” shows which way the device currently resolves.', two: 'Same. The phase-2 map keeps a light basemap by design — MET has no dark tiles, so it stays a lit window in dark chrome.' },
+        { what: 'Refresh', phone: 'The old answer never leaves the screen. Three outcomes, all designed: updated (the sentence moves in place), already-latest (“radar 3 min old — nothing new to fetch yet”), failed (old answer kept and labelled).', two: 'Same, scoped to the selected place. The list row updates with it, so the two cannot disagree.' }
+      ],
+      answers: [
+        { n: '§3', q: 'Does the second spell get equal billing, or a secondary line?', a: 'Secondary — your instinct is right. The first spell is what you act on, so it keeps the full display size, and the second sits beneath at 0.46× behind a short rule that stands for the gap, with the gap named in monospace (“15 min clear in between”). Equal billing would make every two-band afternoon read as two headlines and force the reader to pick. What the gap does get is the clock time, because “it clears around 19:15” is the sentence people plan around. The second spell also carries the open-ended treatment in its own right: state 8’s second band has no visible end, so it says “no end in sight”, dot-underlined, rather than borrowing the first spell’s certainty.' },
+        { n: '§4.3', q: 'Does “Rain within 8 km” earn its complexity, or is one flat “Raining.” better?', a: 'It earns it, but only as a narrow case — state 11 in the specimens. The boolean stays exactly as you decided (any rain touching the circle is rain here), so the lead only changes when the centre cell is dry and the wet cells are elsewhere: “Rain within 8 km.” plus “Not on you yet — the wet edge of your 15 km circle.” That is the difference between information and a false alarm at wide radii, and it is the one place where a flat “Raining.” would be technically true and practically wrong. At 3 km the case barely occurs, so the default experience is unaffected. The intensity card follows suit with “nearby: moderate rain” instead of “moderate rain”.' },
+        { n: '§7', q: 'Height and colour disagreed above 6 mm/h. Which one moves?', a: 'Neither: height stops encoding rate. Bar height is now COVERAGE — the share of your circle under rain — and colour stays the palette band of the rate. Two channels carrying two different quantities, both labelled in the caption under the strip. That kills the saturation bug (coverage is bounded at 1.0 by definition), makes coverage visible now that it is expressive rather than a gate, and lets the strip show something the sentence cannot: rain arriving over half your valley versus all of it. Where part of the circle is unobserved, that share is stacked on top in the hatched no-data fill — counted neither wet nor dry.' },
+        { n: '§4.4', q: 'The picker pulls MapLibre into the MVP. How is that not a second map?', a: 'There is one map primitive, MapCanvas, and both the picker and the phase-2 radar view mount it. The picker passes no radar layer; the radar view passes the layer, the basemap switcher and the scrubber. So the MVP ships the map component with weather switched off, and phase 2 is additive on top of it — exactly the TimelineStrip/TimeScrubber arrangement, applied to the map.' }
+      ],
+      groups: [
+        { title: 'Primitives', folder: 'components/', items: [
+          { name: 'Button', note: 'primary / secondary / ghost · 48 px minimum, visible focus ring', phase: 'MVP' },
+          { name: 'TextField', note: 'text / search / coord — the coord kind clamps to 4 decimals on input rather than explaining a 403 afterwards', phase: 'MVP' },
+          { name: 'NavBar', note: 'back (44 px, labelled with where it returns to) + title/brand + action slot', phase: 'MVP' },
+          { name: 'SegmentedControl', note: 'Appearance and the basemap switcher — one component, two uses. “System” is a real state with a resolved-value caption.', phase: 'MVP' },
+          { name: 'Swatch', note: 'filled / outline / hatched / dry — the only place that logic lives, used by the row, the card, the popup and the legend', phase: 'MVP' },
+          { name: 'MoreButton', note: 'the ⋮ trigger alone — vertical dots (an item’s own actions; horizontal would mean a section’s). 44 px target, 3.5 px dots, no state of its own.', phase: 'MVP' },
+          { name: 'DropdownMenu', note: 'the popover alone — controlled, 44 px rows, optional monospace note per row, Escape and backdrop close. No scrim: a menu should not dim the answer behind it.', phase: 'MVP' },
+          { name: 'OverflowMenu', note: 'the composer — holds the open state and the positioned ancestor the other two need. NavBar mounts it from a `menu` prop.', phase: 'MVP' },
+          { name: 'SplashScreen', note: 'the splash artwork as a component — mark centred on the theme background, sized as a share of the short edge so one composition renders every iOS device class and matches the manifest background_color', phase: 'MVP' },
+          { name: 'BrandMark', note: 'standard · maskable (redrawn, 68 % inset) · monochrome · favicon light/dark, with a small cut below 40 px', phase: 'MVP' }
+        ] },
+        { title: 'Precipitation', folder: 'components/', items: [
+          { name: 'LocationStatusText', note: 'the answer. Owns the open-ended treatment and the secondary-spell line. Every state visible at once in the specimen.', phase: 'MVP' },
+          { name: 'PrecipitationGraph', note: 'compact 24-frame strip AND the expanded 40-frame scrubber — one file, one props surface, a density prop', phase: 'MVP / 2' },
+          { name: 'PrecipitationLevelCard', note: 'swatch + band label + feels-like + rate. Dry-with-a-trace reads “<0.1 mm/h”, so it cannot contradict its own footnote.', phase: 'MVP' },
+          { name: 'PrecipitationConfidence', note: 'three bars + what the rating is ABOUT (“observed — it is raining” / “arrival predicted +40 min”). Hidden for blind places.', phase: 'MVP' },
+          { name: 'PrecipitationLegend', note: 'collapsed disclosure under the list: three swatch shapes, the intensity ramp, and one sentence on “not observed”', phase: 'MVP' }
+        ] },
+        { title: 'Location', folder: 'components/', items: [
+          { name: 'LocationCard', note: 'list row and map marker popup — placement prop, same swatch, same status sentence', phase: 'MVP / 2' },
+          { name: 'MapCanvas', note: 'the one map primitive: basemap, pan, coverage mask, optional radar layer', phase: 'MVP / 2' },
+          { name: 'MapField', note: 'centre-pinned picker — pan under a fixed crosshair, radius ring, one-shot locate, coverage caught before saving', phase: 'MVP' },
+          { name: 'RadiusField', note: '2–25 km, default 3, monotonic. Copy changes with the value: about you / a valley / very wide + payload.', phase: 'MVP' },
+          { name: 'RadarMap', note: 'confirmation layer: radar over MapCanvas, basemap switcher, palette-driven legend, scrubber driving the frame', phase: '2' }
+        ] },
+        { title: 'State & chrome', folder: 'components/', items: [
+          { name: 'StaleBanner', note: 'cached / offline / refreshing, always with the age', phase: 'MVP' },
+          { name: 'RefreshControl', note: 'updated · already-latest · failed. The “nothing new” outcome is designed, not faked.', phase: 'MVP' },
+          { name: 'CoverageNotice', note: 'blind and partially-observed, in the same hatched language as the swatch and the map', phase: 'MVP' },
+          { name: 'EmptyState', note: 'two reasons, two tones — firstRun welcomes, cleared confirms a deletion. Same layout, different voice.', phase: 'MVP' },
+          { name: 'ConfirmSheet', note: 'the one unrecoverable action: names the place, states what is lost, plain verb on the button. Not red — nothing else in byge uses alarm colour.', phase: 'MVP' },
+          { name: 'ErrorState', note: 'cold load and hard error, deliberately distinct from offline', phase: 'MVP' },
+          { name: 'InstallPrompt', note: 'never on first load — second visit or after a place is saved; dismissal is remembered', phase: 'MVP' },
+          { name: 'Attribution', note: 'MET Norway · NLOD 2.0 / CC BY 4.0, linked, on every screen', phase: 'MVP' }
+        ] },
+        { title: 'Screens', folder: 'screens/ · thin compositions', items: [
+          { name: 'LocationsScreen', note: 'nav bar (brand + About) · cards · add row · legend · install · attribution', phase: 'MVP' },
+          { name: 'VerdictScreen', note: 'answer → level → confidence → strip → map link. Complete with no map present.', phase: 'MVP' },
+          { name: 'AddLocationScreen', note: 'map picker · radius · search · coordinates · name · save — and mode="edit", prefilled, with Remove at the foot. One component, two modes.', phase: 'MVP' },
+          { name: 'AboutScreen', note: 'the mark, what byge is, Appearance, attribution in full', phase: 'MVP' },
+          { name: 'RadarMapScreen', note: 'nav bar + RadarMap — lives inside the app shell', phase: '2' },
+          { name: 'SettingsScreen', note: 'live position + two notification rows. Shell only.', phase: '3' },
+          { name: 'byge (app shell)', note: 'navigation stack, phone/tablet/desktop layout switch, theme, and the review harness', phase: 'MVP' }
+        ] }
+      ],
+      changes: [
+        { ref: '§1', text: 'Confidence follows the observation-vs-forecast rule, and state 5 now makes two claims of different strength: certain for the next half hour, indicative at the far end. The badge stays high; the prose carries the decay.' },
+        { ref: '§2', text: 'State 3 derives its duration from the array (index 12 is wet, so 40 → 65 is a real 25 min). end_min is the first observed dry frame everywhere, and state 4’s “at least 75 min” is computed from horizon − start.' },
+        { ref: '§3', text: 'States 8 and 9 added: raining-then-a-second-band, and dry-then-rain-then-more. Both gaps are three frames or longer, so they survive the sub-10-minute bridging rule.' },
+        { ref: '§4', text: 'Add is now a centre-pinned map picker with a radius ring, a one-shot “use my location” (permission on tap, with the iOS dead-end designed), and coverage warnings before saving.' },
+        { ref: '§4.3', text: 'Radius 2–25 km, default 3, monotonic under the any-touch rule, with the wide end framed as a deliberate choice and its payload named.' },
+        { ref: '§5', text: 'Settings is out of the MVP; Appearance moved into About, which now has a real entry point rather than sitting behind a legal footnote.' },
+        { ref: '§6', text: 'The caps swatch string became PrecipitationLegend: a labelled disclosure below the list, expanding in place, remembering its state, with the intensity ramp folded in. Absent from the verdict screen.' },
+        { ref: '§7', text: 'Manual refresh with all three outcomes, including “already the latest”. Pull-to-refresh plus a 44 px button, and the verdict never leaves the screen.' },
+        { ref: '§8', text: 'EmptyState, cold-load and hard-error states designed, each with a real route in.' },
+        { ref: '§9', text: 'Partial observation designed: the coverage notice states the percentage, the unobserved share stacks on the graph in hatch, and the picker’s radius ring shows the shortfall as a hatched arc.' },
+        { ref: 'small', text: 'theme_color reconciled (light value in the manifest, per-scheme pair in head); manifest gains id, scope and types; the iOS splash set is enumerated in both schemes; every touch target is 44 px or more; install prompt no longer appears on first load; state 5’s badge reads “<0.1 mm/h”.' },
+        { ref: 'edit', text: 'Edit and Remove sit behind one ⋮ menu on the verdict nav bar — split into MoreButton (trigger), DropdownMenu (popover) and OverflowMenu (composer), so a trigger is reusable without a menu and vice versa. Dots are vertical: the actions belong to one saved place. Still a real menu, never swipe-only, which is keyboard-unreachable and meaningless in two-pane. Edit is AddLocationScreen in a second mode, prefilled, so radius, coordinate and name stop being write-once. Remove also sits at the foot of the edit screen, after everything constructive.' },
+        { ref: 'edit', text: 'Two-pane deletion re-points the detail pane at the next place down, or the previous one if you removed the last row, and names it in the notice. Removing the last place puts the cleared empty state in BOTH panes. The shell holds the list in real state, so the harness can no longer hide a list that never mutates.' },
+        { ref: 'late', text: 'Band 6 dark is now #E8BCF4 (lum 0.790, +0.074 over heavy rain), replacing #C77BD6, which dipped 0.144 and reinstated the inversion at the top of the scale. #E0AEEA was rejected: +0.025 passes a test and fails the eye. Purple stays as a categorical marker, but hue is the second signal, never the only one. Both ramps are now monotonic across all six bands — scope the assertion accordingly. Specimen-Foundation charts measured luminance for both ramps so a future palette edit cannot break this quietly.' },
+        { ref: 'build', text: 'The palette must ship as explicit values, never inferred from usage: the bands are read from JS to fill canvas, SVG and inline styles, so no class-name scan can see them and any usage-based tree-shake drops live bands. foundation.js is already the single explicit source (BANDS + NO_DATA, light and dark), which is what @theme static should be generated from.' },
+        { ref: 'a11y', text: 'Intensity is never colour alone — shape (filled/outline/hatched) and height carry it too. Focus rings are explicit on every control. The pale light-mode bands are used as fills behind dark ink only, never as text colour.' }
+      ],
+      open: [
+        { text: 'Clock times appear alongside relative ones (“Stops in about 25 min” + “around 18:15”). Worth checking that reads well in Norwegian, where the relative form may be the natural one and the clock the redundant half.' },
+        { text: 'Bar height as coverage is a real change of meaning from round 1. If you would rather the strip stay a pure intensity shape, say so — it is one function in foundation.js, and the caption is what makes the current choice legible.' },
+        { text: 'Norwegian copy is not written. The strings all live in the model rather than the markup, so it is a string table; the layout was checked against the longest forms (“ingen slutt i sikte innen de neste 2 timene”).' },
+        { text: 'The map is a styled stand-in for MapLibre + Kartverket. Layer order, the pan model, the hatched coverage mask and the legend are the design; the tiles are not.' }
+      ]
+    };
+  }
+}
+
+</script>
+</body>
+</html>

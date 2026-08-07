@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<script src="foundation.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root, [data-theme="light"] {
+    --bg:#F6F4F0; --surface:#FFF; --sunk:#EFEDE8; --ink:#15181B; --ink2:rgba(21,24,27,.62); --ink3:rgba(21,24,27,.40);
+    --line:rgba(21,24,27,.10); --line2:rgba(21,24,27,.18); --dry:rgba(21,24,27,.07); --nodata:#FFF; --nodata-line:rgba(21,24,27,.28);
+  }
+  [data-theme="dark"] {
+    --bg:#0E1113; --surface:#16191C; --sunk:#1B1F22; --ink:#ECEEF0; --ink2:rgba(236,238,240,.60); --ink3:rgba(236,238,240,.38);
+    --line:rgba(236,238,240,.12); --line2:rgba(236,238,240,.20); --dry:rgba(236,238,240,.07); --nodata:#2A2E31; --nodata-line:rgba(236,238,240,.30);
+  }
+</style>
+</helmet>
+<span data-theme="{{ theme }}" title="{{ title }}" style="display:inline-block;flex:none;width:{{ px }}px;height:{{ px }}px;border-radius:{{ radius }}px;background:{{ bg }};border:{{ border }};background-image:{{ hatch }};background-size:{{ hatchSize }}"></span>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:80,&quot;height&quot;:60},&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;now&quot;,&quot;later&quot;,&quot;dry&quot;,&quot;blind&quot;],&quot;default&quot;:&quot;now&quot;,&quot;tsType&quot;:&quot;'now'|'later'|'dry'|'blind'&quot;},&quot;rate&quot;:{&quot;editor&quot;:&quot;float&quot;,&quot;default&quot;:3.4,&quot;min&quot;:0,&quot;max&quot;:30,&quot;step&quot;:0.1,&quot;unit&quot;:&quot;mm/h&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;size&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:13,&quot;min&quot;:8,&quot;max&quot;:48,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;''|'light'|'dark'&quot;}}">
+// Swatch — the list glyph. THREE shapes, so intensity is never carried by
+// colour alone: filled = raining on you now · outline = a spell on the way,
+// in its own band colour · hatched = not observed. Faint grey = observed dry.
+// "Marker" is reserved for map pins; this is a swatch.
+class Component extends DCLogic {
+  componentDidMount() { if (!window.BYGE) this._t = setInterval(() => { if (window.BYGE) { clearInterval(this._t); this.forceUpdate(); } }, 40); }
+  componentWillUnmount() { clearInterval(this._t); }
+  renderVals() {
+    const B = window.BYGE;
+    const px = this.props.size ?? 13;
+    const mode = this.props.mode ?? 'now';           // now | later | dry | blind
+    const rate = this.props.rate ?? 3.4;
+    const theme = this.props.theme ?? '';
+    const col = B ? B.colorOf(rate, theme === 'dark' ? 'dark' : 'light') : 'var(--dry)';
+    const shapes = {
+      now:   { bg: col, border: '1px solid var(--line2)', hatch: 'none', title: 'raining now' },
+      later: { bg: 'transparent', border: Math.max(2, Math.round(px * 0.2)) + 'px solid ' + col, hatch: 'none', title: 'rain on the way' },
+      dry:   { bg: 'var(--dry)', border: '1px solid var(--line2)', hatch: 'none', title: 'observed dry' },
+      blind: { bg: 'var(--nodata)', border: '1px solid var(--nodata-line)', hatch: B ? B.HATCH : 'none', title: 'not observed' }
+    };
+    return Object.assign({ theme, px, radius: Math.max(2, Math.round(px * 0.24)), hatchSize: Math.round(px * 0.4) + 'px ' + Math.round(px * 0.4) + 'px' }, shapes[mode]);
+  }
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200;0,6..72,300;0,6..72,400&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="foundation.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; background: #DCD9D2; }
+  a { color: #15181B; } a:hover { opacity: .7; }
+  :root, [data-theme="light"] { --bg:#F6F4F0; --surface:#FFF; --sunk:#EFEDE8; --ink:#15181B; --ink2:rgba(21,24,27,.62); --ink3:rgba(21,24,27,.40); --line:rgba(21,24,27,.10); --line2:rgba(21,24,27,.18); --dry:rgba(21,24,27,.07); --nodata:#FFF; --nodata-line:rgba(21,24,27,.28); }
+  [data-theme="dark"] { --bg:#0E1113; --surface:#16191C; --sunk:#1B1F22; --ink:#ECEEF0; --ink2:rgba(236,238,240,.60); --ink3:rgba(236,238,240,.38); --line:rgba(236,238,240,.12); --line2:rgba(236,238,240,.20); --dry:rgba(236,238,240,.07); --nodata:#2A2E31; --nodata-line:rgba(236,238,240,.30); }
+</style>
+</helmet>
+<div style="min-height:100vh;background:#DCD9D2;font-family:'IBM Plex Sans',system-ui,sans-serif;padding:0 0 60px">
+
+  <div style="position:sticky;top:0;z-index:60;background:#1A1C1E;color:#E9E7E2;padding:10px 18px;display:flex;flex-wrap:wrap;gap:16px;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:11px">
+    <div style="display:flex;align-items:baseline;gap:8px">
+      <span style="font-family:Newsreader,serif;font-size:17px">byge</span>
+      <span style="color:rgba(233,231,226,.45)">harness · not part of the app</span>
+    </div>
+    <div style="display:flex;gap:4px;align-items:center">
+      <span style="color:rgba(233,231,226,.45)">state</span>
+      <sc-for list="{{ stateChips }}" as="s" hint-placeholder-count="10">
+        <button onClick="{{ s.pick }}" title="{{ s.title }}" style="cursor:pointer;font:inherit;padding:4px 7px;border-radius:4px;border:1px solid {{ s.bd }};background:{{ s.bg }};color:{{ s.fg }}">{{ s.label }}</button>
+      </sc-for>
+    </div>
+    <div style="display:flex;gap:4px;align-items:center">
+      <span style="color:rgba(233,231,226,.45)">viewport</span>
+      <sc-for list="{{ deviceChips }}" as="d" hint-placeholder-count="3">
+        <button onClick="{{ d.pick }}" style="cursor:pointer;font:inherit;padding:4px 9px;border-radius:4px;border:1px solid {{ d.bd }};background:{{ d.bg }};color:{{ d.fg }}">{{ d.label }}</button>
+      </sc-for>
+    </div>
+    <div style="display:flex;gap:4px;align-items:center">
+      <span style="color:rgba(233,231,226,.45)">condition</span>
+      <sc-for list="{{ conditionChips }}" as="c" hint-placeholder-count="4">
+        <button onClick="{{ c.pick }}" title="{{ c.title }}" style="cursor:pointer;font:inherit;padding:4px 9px;border-radius:4px;border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }}">{{ c.label }}</button>
+      </sc-for>
+    </div>
+    <button onClick="{{ toggleTheme }}" style="cursor:pointer;font:inherit;padding:4px 10px;border-radius:4px;border:1px solid rgba(233,231,226,.28);background:transparent;color:#E9E7E2">{{ themeLabel }}</button>
+    <button onClick="{{ resetList }}" title="Put the removed places back — harness only, the app has no undo" style="cursor:pointer;font:inherit;padding:4px 10px;border-radius:4px;border:1px solid rgba(233,231,226,.28);background:transparent;color:rgba(233,231,226,.72)">restore list ({{ placeCount }})</button>
+    <span style="margin-left:auto;color:rgba(233,231,226,.45)">{{ caption }}</span>
+  </div>
+
+  <div style="display:flex;justify-content:center;padding:32px 20px 0">
+    <div data-theme="{{ theme }}" style="width:{{ frameW }}px;max-width:100%;height:{{ frameH }}px;background:var(--bg);color:var(--ink);border-radius:{{ frameR }}px;overflow:hidden;box-shadow:0 24px 60px -20px rgba(0,0,0,.35),0 0 0 1px rgba(0,0,0,.10);display:flex;flex-direction:column;position:relative">
+
+      <sc-if value="{{ isPhone }}" hint-placeholder-val="{{ true }}">
+        <div style="flex:none;height:26px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink3);letter-spacing:.04em">
+          <span>09:41</span><span>{{ networkGlyph }}</span>
+        </div>
+      </sc-if>
+
+      <div style="flex:1;min-height:0;display:flex;overflow:hidden">
+
+        <sc-if value="{{ twoPane }}" hint-placeholder-val="{{ false }}">
+          <aside style="flex:none;width:{{ listW }}px;border-right:1px solid var(--line);overflow:auto;background:var(--surface)">
+            <dc-import name="LocationsScreen" device="tablet" places="{{ places }}" selected="{{ scenario }}" stale="{{ stale }}" emptyReason="{{ emptyReason }}" lastRemoved="{{ lastRemoved }}" notice="{{ notice }}" showInstall="{{ showInstall }}" platform="{{ platform }}" onOpen="{{ onOpen }}" onAdd="{{ goAdd }}" actions="{{ listActions }}" theme="{{ theme }}" hint-size="100%,100%"></dc-import>
+          </aside>
+        </sc-if>
+
+        <main style="flex:1;min-width:0;overflow:auto;display:flex;flex-direction:column">
+          <sc-if value="{{ showLocations }}" hint-placeholder-val="{{ false }}">
+            <dc-import name="LocationsScreen" device="{{ device }}" places="{{ places }}" selected="{{ scenario }}" stale="{{ stale }}" emptyReason="{{ emptyReason }}" lastRemoved="{{ lastRemoved }}" notice="{{ notice }}" showInstall="{{ showInstall }}" platform="{{ platform }}" onOpen="{{ onOpen }}" onAdd="{{ goAdd }}" actions="{{ listActions }}" theme="{{ theme }}" hint-size="100%,100%"></dc-import>
+          </sc-if>
+          <sc-if value="{{ showPaneEmpty }}" hint-placeholder-val="{{ false }}">
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:{{ statePad }}">
+              <dc-import name="EmptyState" reason="{{ emptyReason }}" lastRemoved="{{ lastRemoved }}" onAdd="{{ goAdd }}" theme="{{ theme }}" hint-size="100%,340px"></dc-import>
+            </div>
+          </sc-if>
+          <sc-if value="{{ showVerdict }}" hint-placeholder-val="{{ true }}">
+            <dc-import name="VerdictScreen" scenario="{{ scenario }}" device="{{ device }}" stale="{{ stale }}" staleMode="{{ staleMode }}" onBack="{{ onBack }}" backTitle="{{ backTitle }}" onMap="{{ goMap }}" onEdit="{{ goEdit }}" onRemove="{{ removeCurrent }}" actions="{{ verdictActions }}" theme="{{ theme }}" hint-size="100%,100%"></dc-import>
+          </sc-if>
+          <sc-if value="{{ showAdd }}" hint-placeholder-val="{{ false }}">
+            <dc-import name="AddLocationScreen" mode="{{ addMode }}" scenario="{{ scenario }}" device="{{ device }}" permission="{{ permission }}" onBack="{{ onBack }}" onSave="{{ onSave }}" onRemove="{{ removeCurrent }}" onLocate="{{ onLocate }}" theme="{{ theme }}" hint-size="100%,100%"></dc-import>
+          </sc-if>
+          <sc-if value="{{ showMap }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-direction:column;height:100%;min-height:0">
+              <div style="flex:none;padding:14px 20px 12px;border-bottom:1px solid var(--line);background:var(--bg)">
+                <dc-import name="NavBar" title="{{ mapTitle }}" subtitle="RADAR MAP · WHY THE ANSWER SAYS THAT" onBack="{{ onBack }}" backTitle="Back to the answer" theme="{{ theme }}" hint-size="100%,52px"></dc-import>
+              </div>
+              <div style="flex:1;min-height:0">
+                <dc-import name="RadarMap" scenario="{{ scenario }}" theme="{{ theme }}" hint-size="100%,100%"></dc-import>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ showAbout }}" hint-placeholder-val="{{ false }}">
+            <dc-import name="AboutScreen" device="{{ device }}" themeChoice="{{ themeChoice }}" systemIsDark="{{ systemIsDark }}" showSettings="{{ showPhase3 }}" onTheme="{{ onTheme }}" onBack="{{ onBack }}" backTitle="{{ backTitle }}" onSettings="{{ goSettings }}" theme="{{ theme }}" hint-size="100%,100%"></dc-import>
+          </sc-if>
+          <sc-if value="{{ showSettings }}" hint-placeholder-val="{{ false }}">
+            <dc-import name="SettingsScreen" device="{{ device }}" onBack="{{ onBack }}" theme="{{ theme }}" hint-size="100%,100%"></dc-import>
+          </sc-if>
+          <sc-if value="{{ showCold }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:{{ statePad }}">
+              <dc-import name="ErrorState" mode="{{ errorMode }}" onRetry="{{ onRetry }}" onBack="{{ onBack }}" theme="{{ theme }}" hint-size="100%,320px"></dc-import>
+            </div>
+          </sc-if>
+        </main>
+      </div>
+
+      <sc-if value="{{ isPhone }}" hint-placeholder-val="{{ true }}">
+        <div style="flex:none;height:22px;display:flex;align-items:center;justify-content:center">
+          <span style="width:110px;height:4px;border-radius:3px;background:var(--line2)"></span>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+
+  <div style="max-width:900px;margin:24px auto 0;padding:0 20px;display:flex;flex-direction:column;gap:14px">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;line-height:1.8;color:rgba(21,24,27,.55)">{{ note }}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;font-family:'IBM Plex Mono',monospace;font-size:10.5px">
+      <a href="Specimen-Precipitation.dc.html" style="border:1px solid rgba(21,24,27,.18);border-radius:7px;padding:7px 11px;text-decoration:none">Precipitation specimens →</a>
+      <a href="Specimen-Foundation.dc.html" style="border:1px solid rgba(21,24,27,.18);border-radius:7px;padding:7px 11px;text-decoration:none">Foundation, icons, splash →</a>
+      <a href="Library.dc.html" style="border:1px solid rgba(21,24,27,.18);border-radius:7px;padding:7px 11px;text-decoration:none">Component index, reachability &amp; after-every-change →</a>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;device&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;phone&quot;,&quot;tablet&quot;,&quot;desktop&quot;],&quot;default&quot;:&quot;phone&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+// byge — the app shell. Owns navigation and the list, and nothing else.
+//
+// The list is real state here, not a fixture read, because the harness's fixed
+// scenarios are exactly what hid the missing mutations: you cannot see a list
+// change if nothing can change it. Add, edit and remove all go through it.
+//
+// Two-pane deletion, the case that needed a real answer: the detail pane is
+// showing the place you just removed, so it cannot simply stay. Selection moves
+// to the NEXT place down (or the previous one, if you deleted the last row) —
+// the nearest thing to where your attention already was, and it keeps the pane
+// answering byge's question instead of going blank. If that was the only place
+// left, the pane shows the cleared empty state, matching the list beside it.
+// Nothing is ever left showing a deleted place, and no pane is ever empty while
+// the other one has content.
+class Component extends DCLogic {
+  state = { stack: ['verdict'], scenario: 's1' };
+  componentDidMount() { if (!window.BYGE) this._t = setInterval(() => { if (window.BYGE) { clearInterval(this._t); this.forceUpdate(); } }, 40); }
+  componentWillUnmount() { clearInterval(this._t); }
+
+  get screen() { const s = this.state.stack; return s[s.length - 1]; }
+  get places() { return this.state.places ?? (window.BYGE ? window.BYGE.LIST.slice() : []); }
+  push(name) { this.setState({ stack: this.state.stack.concat([name]) }); }
+  pop() { const s = this.state.stack.slice(0, -1); this.setState({ stack: s.length ? s : ['locations'] }); }
+  notify(text) {
+    clearTimeout(this._n);
+    this.setState({ notice: text });
+    this._n = setTimeout(() => this.setState({ notice: '' }), 5000);
+  }
+
+  remove(key, twoPane) {
+    const B = window.BYGE;
+    const list = this.places, i = list.indexOf(key);
+    const next = list.filter(k => k !== key);
+    const name = B ? B.FIXTURES[key].name : 'that place';
+    // neighbour: the one below, or the one above if this was the last row
+    const heir = next.length ? next[Math.min(i, next.length - 1)] : null;
+    this.setState({
+      places: next,
+      scenario: heir || key,
+      lastRemoved: name,
+      emptyReason: next.length ? 'firstRun' : 'cleared',
+      // phone goes back to the list; two-pane stays put and re-points the pane
+      stack: twoPane ? ['locations'] : ['locations']
+    });
+    this.notify(next.length
+      ? 'Removed ' + name + '.' + (twoPane && heir ? ' Showing ' + B.FIXTURES[heir].name + '.' : '')
+      : '');
+  }
+
+  renderVals() {
+    const B = window.BYGE;
+    const theme = this.state.theme ?? 'light';
+    const dev = this.state.device ?? 'phone';
+    const phone = dev === 'phone', two = dev !== 'phone';
+    const screen = this.screen;
+    const condition = this.state.condition ?? 'live';
+    const stale = condition === 'offline';
+    const list = condition === 'empty' ? [] : this.places;
+    const empty = list.length === 0;
+    const chip = (on) => ({ bg: on ? '#E9E7E2' : 'transparent', fg: on ? '#1A1C1E' : 'rgba(233,231,226,.72)', bd: on ? '#E9E7E2' : 'rgba(233,231,226,.28)' });
+    const key = this.state.scenario;
+    const fx = B ? B.FIXTURES[key] : null;
+    const prev = this.state.stack[this.state.stack.length - 2];
+    const backTitles = { map: 'Back to the map', locations: 'Back to places', verdict: 'Back to the answer', about: 'Back to about' };
+    const listActions = [{ label: 'About', title: 'About byge, and appearance', onPress: () => this.push('about') }];
+
+    return {
+      theme, themeChoice: this.state.themeChoice ?? 'light', systemIsDark: false,
+      themeLabel: theme === 'dark' ? 'dark ●' : 'light ○',
+      toggleTheme: () => this.setState({ theme: theme === 'dark' ? 'light' : 'dark', themeChoice: theme === 'dark' ? 'light' : 'dark' }),
+      onTheme: (k) => this.setState({ themeChoice: k, theme: k === 'dark' ? 'dark' : 'light' }),
+      placeCount: list.length,
+      resetList: () => this.setState({ places: B ? B.LIST.slice() : [], scenario: 's1', notice: '', lastRemoved: '', emptyReason: 'firstRun', condition: 'live', stack: ['verdict'] }),
+
+      stateChips: (B ? B.ORDER : []).map(k => Object.assign({
+        label: String(B.FIXTURES[k].state), title: B.FIXTURES[k].tag + ' — ' + B.FIXTURES[k].name,
+        pick: () => this.setState({ scenario: k, stack: ['verdict'], places: this.places.indexOf(k) < 0 ? this.places.concat([k]) : this.places })
+      }, chip(k === key))),
+      deviceChips: [['phone', 'phone'], ['tablet', 'tablet'], ['desktop', 'desktop']].map(([k, label]) =>
+        Object.assign({ label, title: label, pick: () => this.setState({ device: k }) }, chip(k === dev))),
+      conditionChips: [['live', 'live', 'fresh reading'], ['offline', 'offline · state 7', 'cached verdict, offline'], ['empty', 'first run', 'no places saved yet'], ['cold', 'cold / error', 'no cache, and MET unreachable']]
+        .map(([k, label, title]) => Object.assign({ label, title, pick: () => this.setState({ condition: k, emptyReason: 'firstRun', notice: '', stack: k === 'empty' ? ['locations'] : k === 'cold' ? ['cold'] : ['verdict'] }) }, chip(k === condition))),
+
+      frameW: phone ? 390 : dev === 'tablet' ? 900 : 1320,
+      frameH: phone ? 844 : dev === 'tablet' ? 720 : 830,
+      frameR: phone ? 34 : 12,
+      isPhone: phone, twoPane: two && screen !== 'cold', listW: dev === 'tablet' ? 320 : 380,
+      networkGlyph: stale ? 'offline ⌁' : '⌁ ▮',
+
+      device: dev, scenario: key, places: list, stale, staleMode: 'offline',
+      emptyReason: this.state.emptyReason ?? 'firstRun',
+      lastRemoved: this.state.lastRemoved ?? '',
+      notice: this.state.notice ?? '',
+      permission: this.state.permission ?? 'unknown',
+      platform: 'ios', showInstall: !empty, showPhase3: true,
+      statePad: phone ? '30px 24px' : '56px 64px',
+      errorMode: 'error',
+      addMode: this.state.addMode ?? 'add',
+
+      showLocations: screen === 'locations' && !two,
+      // in two-pane the right side keeps answering; when the list is empty it
+      // carries the same cleared state as the pane beside it rather than a void
+      showPaneEmpty: two && empty && (screen === 'locations' || screen === 'verdict'),
+      showVerdict: !empty && (screen === 'verdict' || (two && screen === 'locations')),
+      showAdd: screen === 'add', showMap: screen === 'map',
+      showAbout: screen === 'about', showSettings: screen === 'settings',
+      showCold: screen === 'cold',
+      mapTitle: fx ? fx.name + ' · ' + fx.place : '',
+      backTitle: backTitles[prev] || 'Back to places',
+
+      onOpen: (k) => { this.setState({ scenario: k, notice: '' }); if (!two) this.push('verdict'); },
+      onBack: (screen === 'verdict' && two) ? undefined : () => this.pop(),
+      goAdd: () => { this.setState({ addMode: 'add', notice: '' }); this.push('add'); },
+      goEdit: () => { this.setState({ addMode: 'edit', notice: '' }); this.push('add'); },
+      goMap: () => this.push('map'), goSettings: () => this.push('settings'),
+      onSave: () => {
+        const editing = (this.state.addMode ?? 'add') === 'edit';
+        const name = fx ? fx.name : 'the place';
+        this.setState({ stack: two ? ['locations'] : ['locations'] });
+        this.notify(editing ? 'Saved ' + name + ' — refetching for the new area.' : 'Added ' + name + '.');
+      },
+      removeCurrent: () => this.remove(key, two),
+      onLocate: () => this.setState({ permission: this.state.permission === 'denied' ? 'granted' : 'denied' }),
+      onRetry: () => this.setState({ condition: 'live', stack: ['verdict'] }),
+      listActions, verdictActions: two ? listActions : [],
+
+      caption: empty ? 'no places · ' + (this.state.emptyReason === 'cleared' ? 'cleared' : 'first run')
+        : (fx ? 'state ' + fx.state + ' · ' + fx.tag + (stale ? ' · cached' : '') : ''),
+      note: 'Edit and Remove are nav-bar actions on the verdict — 44 px, labelled, keyboard reachable, identical on phone and desktop. Try removing a place here: the list really shrinks. On phone you land back on the list with a line naming what happened; in two-pane the detail pane re-points to the next place down (or the previous one, if you deleted the last row), so it is never showing something you just deleted and never blank while the list has content. Remove the last place and both panes carry the cleared empty state, which is worded differently from first run. “restore list” above is harness-only — the app has no undo, which is why the confirmation comes first.'
+    };
+  }
+}
+
+</script>
+</body>
+</html>

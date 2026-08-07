@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Text, View } from "react-native";
+import { Text, useWindowDimensions, View } from "react-native";
 import { Button } from "../components/Button";
 import { ConfirmSheet, removeLocationCopy } from "../components/ConfirmSheet";
 import { MapField } from "../components/MapField";
@@ -11,7 +11,7 @@ import { RadiusField } from "../components/RadiusField";
 import { TextField } from "../components/TextField";
 import { useBack } from "../hooks/useBack";
 import { useLocations } from "../hooks/useLocations";
-import { Screen } from "../layouts/Screen";
+import { pagePadFor, Screen } from "../layouts/Screen";
 import { Section } from "../layouts/Section";
 import { reverseGeocode } from "../lib/geocode";
 import { clampCoord } from "../lib/grid";
@@ -38,10 +38,14 @@ const DEFAULT_CENTRE = { lat: 59.9273, lon: 10.7607 };
  * 3 km for a cabin could never widen it, and a pin dropped one valley over
  * would be permanent.
  */
+/** Add's own footer clearance, phone/tablet/desktop. See AddLocationScreen.dc.html. */
+const ADD_BOTTOM: [number, number, number] = [26, 30, 40];
+
 export function AddLocationScreen() {
   const router = useRouter();
   const goBack = useBack("/");
   const { t } = useTranslation();
+  const { width } = useWindowDimensions();
   const theme = useResolvedTheme();
   // `lat`/`lon` arrive from the radar map's "Save this point as a place", which
   // is the one route from browsing back into what byge does. They only seed the
@@ -143,7 +147,11 @@ export function AddLocationScreen() {
     : null;
 
   return (
-    <Screen>
+    // The design's page rhythm, which this screen never asked for: it rendered
+    // at `Screen`'s tight uniform default — the padding the two-pane LIST column
+    // wants — rather than the reading gutter that grows with the viewport. Same
+    // omission the verdict and About screens had; the default is the trap.
+    <Screen gap={22} pad={pagePadFor(width, ADD_BOTTOM)}>
       {/*
         The title sits IN the bar beside the caret, set in the display face —
         the design puts it there, and it was a mono section label reading "ADD A
