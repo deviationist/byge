@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef } from "react";
 import { Pressable, View } from "react-native";
 
 /**
@@ -110,8 +110,64 @@ export function Slider({
   markAt = null,
   testID,
 }: SliderProps) {
-  const [trackWidth, setTrackWidth] = useState(0);
   const span = max - min;
+  const rowRef = useRef<View | null>(null);
+  const dragging = useRef(false);
+
+  // POINTER EVENTS ON THE NODE, not `onPress`.
+  //
+  // It was a Pressable reading `e.nativeEvent.locationX`, which
+  // react-native-web does not put on the press events this receives — so the
+  // value was undefined, the arithmetic produced NaN, and once that was guarded
+  // the control silently did nothing at all. `clientX` against the row's own
+  // rect is the measurement that actually exists, and it is the same approach
+  // MapCanvas uses to pan and the graph uses to scrub.
+  //
+  // It also buys the DRAG, which a slider needs and tap-to-set never gave: move
+  // and up go on the document so a sweep that leaves the row keeps tracking and,
+  // more importantly, still ends.
+  const live = useRef({ min, max, step, span, onChange, value });
+  live.current = { min, max, step, span, onChange, value };
+
+  useEffect(() => {
+    const node = rowRef.current as unknown as HTMLElement | null;
+    if (!node || typeof document === "undefined") return;
+
+    const at = (clientX: number) => {
+      const r = node.getBoundingClientRect();
+      if (r.width <= 0) return null;
+      const L = live.current;
+      const t = Math.min(1, Math.max(0, (clientX - r.left) / r.width));
+      return quantise(L.min + t * L.span, L.min, L.max, L.step, L.value);
+    };
+    const down = (e: PointerEvent) => {
+      dragging.current = true;
+      const next = at(e.clientX);
+      if (next !== null) live.current.onChange(next);
+      node.setPointerCapture?.(e.pointerId);
+      e.preventDefault();
+    };
+    const move = (e: PointerEvent) => {
+      if (!dragging.current) return;
+      const next = at(e.clientX);
+      if (next !== null) live.current.onChange(next);
+    };
+    const up = () => {
+      dragging.current = false;
+    };
+
+    node.addEventListener("pointerdown", down);
+    document.addEventListener("pointermove", move);
+    document.addEventListener("pointerup", up);
+    document.addEventListener("pointercancel", up);
+    return () => {
+      node.removeEventListener("pointerdown", down);
+      document.removeEventListener("pointermove", move);
+      document.removeEventListener("pointerup", up);
+      document.removeEventListener("pointercancel", up);
+    };
+  }, []);
+
   // Same trap one layer up: a NaN value makes the fill's width NaN, and the
   // announced value unreadable to assistive tech.
   const safeValue = Number.isFinite(value) ? value : min;
@@ -127,18 +183,7 @@ export function Slider({
       aria-valuenow={safeValue}
       aria-valuetext={valueText}
       tabIndex={0}
-      onLayout={(e) => setTrackWidth(e.nativeEvent.layout.width)}
-      onPress={(e) => {
-        // Tap-to-set. Without it, crossing the range one arrow at a time is
-        // the only way there, which is why every slider has this.
-        // `locationX` is not on every press event react-native-web produces —
-        // a keyboard-activated press has no position at all — so a press we
-        // cannot locate must do nothing rather than compute from undefined.
-        const x = e.nativeEvent?.locationX;
-        if (trackWidth <= 0 || !Number.isFinite(x)) return;
-        const t = Math.min(1, Math.max(0, x / trackWidth));
-        onChange(quantise(min + t * span, min, max, step, safeValue));
-      }}
+      ref={rowRef}
       {...web({
         onKeyDown: (e) => {
           const next = sliderFromKey(e.key, value, min, max, step);
