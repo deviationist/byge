@@ -90,6 +90,7 @@ describe("locale bundles", () => {
             // name rather than a sentence — the standfirst beneath it carries
             // the prose, and that one differs.
             "map.title",
+            "list.radarShort",
           ].includes(k),
       );
 

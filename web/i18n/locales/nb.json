@@ -47,7 +47,8 @@
     "appearanceSection": "Utseende",
     "version": "Versjon {{version}} · virker uten nett",
     "language": "Språk",
-    "languageSection": "Språk"
+    "languageSection": "Språk",
+    "radarSection": "Radaren"
   },
   "attribution": {
     "dataFrom": "Data fra",
@@ -264,7 +265,8 @@
     "offlineAge": "sist oppdatert for {{age}} min siden · uten nett",
     "checking": "sjekker …",
     "caption": "{{places}} · {{freshness}}",
-    "radarEntry": "Radarkart · se på været, uten et sted knyttet til"
+    "radarEntry": "Radarkart · se på været, uten et sted knyttet til",
+    "radarShort": "Radar"
   },
   "basemap": {
     "label": "Kartstil",
