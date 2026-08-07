@@ -112,7 +112,10 @@ describe("state 1 — raining, end visible", () => {
     // verdict never had a view of.
     const note = text(view(raining).getByTestId("status-note"));
     expect(note).toMatch(/radar run stops/i);
-    expect(note).toContain("2 hours");
+    // The EXACT horizon, never rounded up to "2 hours". MET's run is 115 min,
+    // and a bound that rounds outward claims sky we do not have.
+    expect(note).toContain("1 hour and 55 min");
+    expect(note).not.toContain("2 hours");
   });
 });
 
@@ -121,15 +124,16 @@ describe("state 2 — raining, end unknown", () => {
     expect(headlineOf(rainingOpen).state).toBe("raining-open");
     const h = headline(rainingOpen);
     expect(h).toContain("No end in sight");
-    expect(h).toContain("within the next 2 hours");
+    // Names the RUN, not its length — no number in this headline at all.
+    expect(h).toContain("within the run we can see");
     expect(h).not.toContain("Stops in");
   });
 
   it("NEVER states an end or a duration", () => {
     // The horizon is not a duration. Substituting it — "stops in 115 min" — is
-    // the single most tempting wrong answer this component can give. The only
-    // number allowed in this headline is the window we could NOT see the end
-    // within ("2 hours"), which is a bound on our sight, not on the rain.
+    // the single most tempting wrong answer this component can give. So this
+    // headline carries NO number whatsoever: the tail names the radar run
+    // rather than its length, and the exact horizon lives in the footnote.
     const h = headline(rainingOpen);
     expect(h).not.toMatch(/\d+\s*min/);
     expect(h).not.toMatch(/stops|ends|clears|lasting/i);
@@ -171,6 +175,7 @@ describe("states 1 and 2 are unmistakably different", () => {
     expect(a).toMatch(/Stops in about \d+ min/);
     expect(b).not.toMatch(/Stops in/);
     expect(b).toMatch(/No end in sight/);
+    expect(b).toMatch(/within the run we can see/);
 
     // Three structural signals present in one and absent in the other.
     expect(closed.queryByTestId("status-bound")).toBeNull();
@@ -238,8 +243,10 @@ describe("state 5 — dry, nothing approaching", () => {
     // and we hold 115 minutes of it — a reader looking at the radar map can see
     // a band that will plainly arrive in three hours, and the sentence has to
     // be either false for them or bounded.
-    expect(h).toContain("Nothing approaching within 2 hours.");
+    expect(h).toContain("Nothing approaching within 1 hour and 55 min.");
     expect(h).not.toContain("Nothing approaching.");
+    // Not "2 hours": rounding a bound outward is the same overclaim in miniature.
+    expect(h).not.toContain("2 hours");
   });
 
   it("splits the claim in two: the near term is confident, the tail is not", () => {
@@ -365,7 +372,7 @@ describe("compact variant", () => {
       [rainingOpen, /Raining · no end in sight/],
       [incoming, /Dry · rain in about 40m, about 25m/],
       [incomingOpen, /Dry · rain in about 40m, at least 1h15m/],
-      [clear, /Dry · nothing within 2 hours/],
+      [clear, /Dry · nothing within 1 hour and 55 min/],
       [blind, /No radar coverage — we cannot see here/],
       [edgeOnly, /Rain within 8 km · not on you yet/],
       [twoSpells, /then more from about 40m/],
@@ -550,8 +557,10 @@ describe("no verdict claims more future than we hold", () => {
   it.each(states)("%s names the horizon somewhere on screen", (_name, v) => {
     const rendered = view(v);
     const all = text(rendered.container);
-    // "2 hours", or the exact "1 hour and 55 min" the footnotes use.
-    expect(all).toMatch(/2 hours|1 hour and 55 min/);
+    // The exact horizon. "2 hours" would be a bound rounded outward, which is
+    // the failure this whole group exists to prevent.
+    expect(all).toContain("1 hour and 55 min");
+    expect(all).not.toContain("within 2 hours");
   });
 
   it.each(states)("%s never asserts an empty future without a bound", (_name, v) => {

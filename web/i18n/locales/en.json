@@ -205,7 +205,7 @@
     "clockAround": "around {{time}}",
     "clockRange": "{{from}}-{{to}}",
     "noEndBound": "No end in sight",
-    "noEndTail": " within the next {{horizon}}.",
+    "noEndTail": " within the run we can see.",
     "rainingOpenNote": "Still raining at the last frame we have. The spell outlives the {{horizon}} we can see, so we cannot tell you when it stops — only that it has not by then.",
     "incomingBody": "Rain in about {{start}}, lasting about {{dur}}.",
     "incomingOpenBody": "Rain in about {{start}}, lasting ",
