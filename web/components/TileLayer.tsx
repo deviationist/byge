@@ -65,7 +65,7 @@ export const KARTVERKET_LAYERS = {
  * detail". Kartverket is better over Norway and this is the only thing that
  * works anywhere else.
  */
-const NORDIC_URL = "https://basemaps.cartocdn.com/light_all";
+const BASE_URL = "https://basemaps.cartocdn.com/light_all";
 
 /**
  * No aerial or satellite layer, and not for want of trying. Kartverket's open
@@ -83,7 +83,19 @@ const NORDIC_URL = "https://basemaps.cartocdn.com/light_all";
  * not Kartverket's — but renaming it touches thirty call sites for no gain, and
  * the type is about "which basemap", not about who serves it.
  */
-export type KartverketLayer = keyof typeof KARTVERKET_LAYERS | "nordic";
+/**
+ * The DETAIL sheet, or none.
+ *
+ * The base map is not in this union, and that is the point. It is not one
+ * option among five — it is always drawn, it is global, and naming it in a list
+ * of Norwegian sheets invited exactly the confusion it caused: it was called
+ * "Nordic", which is a name for something that covers the world. A layer the
+ * reader cannot turn off and cannot choose does not belong in the chooser.
+ *
+ * So what a caller picks is which sheet goes ON TOP, and `"none"` is a real
+ * answer — the base alone is a perfectly good map, just a plainer one.
+ */
+export type KartverketLayer = keyof typeof KARTVERKET_LAYERS | "none";
 
 /**
  * Who to credit for a layer's tiles.
@@ -93,14 +105,12 @@ export type KartverketLayer = keyof typeof KARTVERKET_LAYERS | "nordic";
  * hardcoded credit line was correct only while there was a single provider.
  */
 export function creditFor(layer: KartverketLayer): string {
-  // A Kartverket layer is drawn ON TOP of the global base, so both served
-  // tiles and both must be credited. Only the global layer stands alone.
-  return layer === "nordic"
-    ? NORDIC_CREDIT
-    : `© Kartverket · ${NORDIC_CREDIT}`;
+  // The base always served tiles, so its credit is never absent. Kartverket's
+  // is added only when one of their sheets is actually drawn.
+  return layer === "none" ? BASE_CREDIT : `© Kartverket · ${BASE_CREDIT}`;
 }
 
-const NORDIC_CREDIT = "© OpenStreetMap contributors · © CARTO";
+const BASE_CREDIT = "© OpenStreetMap contributors · © CARTO";
 
 /**
  * Which layers stack, and in what order.
@@ -117,14 +127,19 @@ const NORDIC_CREDIT = "© OpenStreetMap contributors · © CARTO";
  * Kartverket's detail with the base filling its water. Nothing has to detect a
  * border, because the tiles already encode where they apply.
  */
-function stackFor(layer: KartverketLayer): KartverketLayer[] {
-  return layer === "nordic" ? ["nordic"] : ["nordic", layer];
+function stackFor(layer: KartverketLayer): (keyof typeof KARTVERKET_LAYERS | "base")[] {
+  return layer === "none" ? ["base"] : ["base", layer];
 }
 
 const TILE = 256;
 
-export function tileUrl(layer: KartverketLayer, z: number, x: number, y: number): string {
-  if (layer === "nordic") return `${NORDIC_URL}/${z}/${x}/${y}.png`;
+export function tileUrl(
+  layer: keyof typeof KARTVERKET_LAYERS | "base",
+  z: number,
+  x: number,
+  y: number,
+): string {
+  if (layer === "base") return `${BASE_URL}/${z}/${x}/${y}.png`;
   // Kartverket's WMTS puts ROW before COLUMN, which is the opposite order to
   // the XYZ convention every other provider uses. Getting it backwards returns
   // a valid tile from the wrong place, which is the worst kind of wrong.

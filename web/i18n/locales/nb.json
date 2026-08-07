@@ -269,7 +269,7 @@
     "radarShort": "Radar"
   },
   "basemap": {
-    "label": "Kartstil",
+    "label": "Lag",
     "grey": "Dempet",
     "greyHint": "Gråtonekart · roligst under laget",
     "topo": "Terreng",
@@ -279,13 +279,14 @@
     "nauticalHint": "Offisielle sjøkart",
     "topoHint": "Terrengskygge",
     "showing": "{{note}} · vises nå",
-    "nordic": "Norden",
-    "nordicHint": "Hele radarområdet · utenfor Norge",
     "radar": "Nedbør",
     "radarOn": "Vises over kartet",
     "radarOff": "Skjult — kartet viser ikke regn uansett",
     "opacity": "Gjennomsiktighet",
-    "opacityValue": "{{pct}} %"
+    "opacityValue": "{{pct}} %",
+    "none": "Av",
+    "noneHint": "Bare det enkle grunnkartet",
+    "sheet": "Kartdetaljer"
   },
   "search": {
     "label": "Søk etter et sted",

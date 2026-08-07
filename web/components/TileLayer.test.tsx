@@ -19,7 +19,7 @@ const grid = (props: Partial<Parameters<typeof TileLayer>[0]> = {}) =>
       // is stacked over the global base, so its image count is doubled — which
       // says nothing about whether the geometry covers the viewport, and would
       // make every count here a puzzle. Stacking has its own tests below.
-      layer="nordic"
+      layer="none"
       {...props}
     />,
   ).container.querySelectorAll("img");
@@ -122,8 +122,8 @@ describe("the basemap that covers the radar", () => {
    * live rain over white nothing for most of its own coverage, and blank ground
    * reads as "the data ended" precisely where the data is fine.
    */
-  it("serves the global layer from a global source", () => {
-    const url = tileUrl("nordic", 5, 17, 9);
+  it("serves the base from a global source", () => {
+    const url = tileUrl("base", 5, 17, 9);
     expect(url).toContain("cartocdn");
     expect(url).not.toContain("kartverket");
   });
@@ -132,7 +132,7 @@ describe("the basemap that covers the radar", () => {
     // Kartverket's WMTS puts row before column, which is the opposite of the
     // XYZ convention. Swapping them returns a valid tile from the wrong place —
     // a map of somewhere else, drawn without error.
-    expect(tileUrl("nordic", 5, 17, 9)).toContain("/5/17/9");
+    expect(tileUrl("base", 5, 17, 9)).toContain("/5/17/9");
     expect(tileUrl("grey", 5, 17, 9)).toContain("/5/9/17");
   });
 
@@ -140,14 +140,14 @@ describe("the basemap that covers the radar", () => {
     // A licence condition, and it varies by layer: ODbL requires the OSM credit
     // to travel with the data, and CARTO requires theirs. One hardcoded line was
     // correct only while there was one provider.
-    expect(creditFor("nordic")).toContain("OpenStreetMap");
-    expect(creditFor("nordic")).toContain("CARTO");
+    expect(creditFor("none")).toContain("OpenStreetMap");
+    expect(creditFor("none")).toContain("CARTO");
     // A Kartverket layer is drawn ON TOP of the global base, so both served
     // tiles and both are credited. Only the global layer stands alone.
     expect(creditFor("grey")).toContain("Kartverket");
     expect(creditFor("grey")).toContain("CARTO");
     expect(creditFor("nautical")).toContain("Kartverket");
-    expect(creditFor("nordic")).not.toContain("Kartverket");
+    expect(creditFor("none")).not.toContain("Kartverket");
   });
 });
 
@@ -176,8 +176,8 @@ describe("stacking", () => {
     expect(u[u.length - 1]).toContain("kartverket");
   });
 
-  it("does not stack the global layer under itself", () => {
-    const u = urls("nordic");
+  it("draws the base alone when no sheet is chosen", () => {
+    const u = urls("none");
     expect(u.every((s) => s.includes("cartocdn"))).toBe(true);
   });
 

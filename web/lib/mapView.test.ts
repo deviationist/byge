@@ -15,8 +15,8 @@ beforeEach(() => {
 
 const MIN = 3;
 const MAX = 16;
-const NAMES = ["nordic", "grey", "topo", "detailed", "nautical"] as const;
-const FALLBACK = { basemap: "nordic", radar: true, radarOpacity: 0.8 };
+const NAMES = ["none", "grey", "topo", "detailed", "nautical"] as const;
+const FALLBACK = { basemap: "grey", radar: true, radarOpacity: 0.8 };
 const load = () => loadMapView(MIN, MAX, NAMES, FALLBACK);
 const view = (over = {}) => ({ lat: 60, lon: 10, zoom: 8, ...FALLBACK, ...over });
 
@@ -88,7 +88,7 @@ describe("saveMapView / loadMapView", () => {
       JSON.stringify({ lat: 59.9, lon: 10.7, zoom: 9, basemap: "satellite", radar: true, radarOpacity: 0.8 }),
     );
     const v = load();
-    expect(v).toMatchObject({ lat: 59.9, lon: 10.7, zoom: 9, basemap: "nordic" });
+    expect(v).toMatchObject({ lat: 59.9, lon: 10.7, zoom: 9, basemap: "grey" });
   });
 
   it("falls back per field rather than all at once", () => {

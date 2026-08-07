@@ -187,15 +187,20 @@ function clampZoom(z: number): number {
  * calls for the map pane to read as a lit window — dark chrome around it, the
  * imagery left as the imagery.
  */
-const BASEMAP: Record<Basemap, string> = {
-  grey: "#e9e6e0",
-  topo: "#eef0e8",
-  detailed: "#f0ece2",
-  nautical: "#dfe8ee",
-  // Positron's own paper colour, so the pane does not flash a different shade
-  // before the first tiles land.
-  nordic: "#e8e6e1",
-};
+/**
+ * The paper colour under the tiles, shown until they load.
+ *
+ * ONE COLOUR, because there is one thing at the bottom of the stack: the base
+ * map, always. It used to be a colour per layer, which was right when the
+ * layers were alternatives and wrong the moment they became a base with sheets
+ * over it.
+ *
+ * It stays LIGHT in dark mode on purpose: MET renders the radar imagery light,
+ * and faking a dark basemap under light data misreports the data. The design
+ * calls for the map pane to read as a lit window — dark chrome around it, the
+ * imagery left as the imagery.
+ */
+const BASE_PAPER = "#e8e6e1";
 
 /**
  * How far a press may travel and still count as a tap.
@@ -405,7 +410,7 @@ export function MapCanvas({
           flex: 1,
           minHeight,
           overflow: "hidden",
-          backgroundColor: BASEMAP.nordic,
+          backgroundColor: BASE_PAPER,
           borderRadius: 12,
           borderWidth: 1,
         },

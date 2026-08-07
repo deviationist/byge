@@ -269,7 +269,7 @@
     "radarShort": "Radar"
   },
   "basemap": {
-    "label": "Map style",
+    "label": "Layers",
     "grey": "Muted",
     "greyHint": "Greyscale topo · quietest under the overlay",
     "topo": "Terrain",
@@ -279,13 +279,14 @@
     "nauticalHint": "Official sea charts",
     "topoHint": "Shaded relief",
     "showing": "{{note}} · showing",
-    "nordic": "Nordic",
-    "nordicHint": "The whole radar area · beyond Norway",
     "radar": "Precipitation",
     "radarOn": "Shown over the map",
     "radarOff": "Hidden — the map shows no rain either way",
     "opacity": "Overlay opacity",
-    "opacityValue": "{{pct}} %"
+    "opacityValue": "{{pct}} %",
+    "none": "Off",
+    "noneHint": "Just the plain base map",
+    "sheet": "Map detail"
   },
   "search": {
     "label": "Search for a place",
