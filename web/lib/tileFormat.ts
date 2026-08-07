@@ -13,7 +13,7 @@ import { TILE, type TileId } from "./tileStore";
  * stream and a run truncated upstream the same case.
  */
 
-const MAGIC = "BYGETIL1";
+const MAGIC = "BYGETIL2";
 
 export type TileFrame = { frame: number; tile: TileId; cells: Uint8Array };
 
@@ -21,11 +21,13 @@ export type TileStreamHeader = {
   /** Frames the server intends to send. */
   expected: number;
   tileSize: number;
+  /** Cells per texel is `1 << level`. Read from the response, never assumed. */
+  level: number;
   tiles: TileId[];
 };
 
 function headerSize(n: number): number {
-  return MAGIC.length + 2 + 2 + 2 + n * 8;
+  return MAGIC.length + 2 + 2 + 2 + 2 + n * 8;
 }
 
 function readHeader(bytes: Uint8Array): TileStreamHeader | null {
@@ -40,7 +42,13 @@ function readHeader(bytes: Uint8Array): TileStreamHeader | null {
   let p = MAGIC.length;
   const expected = view.getUint16(p);
   const tileSize = view.getUint16(p + 2);
-  const count = view.getUint16(p + 4);
+  // THE SERVER'S LEVEL, not ours. It clamps what was asked for, so a client
+  // that asks for a level this deployment does not cut gets a coarser tile
+  // back — and filing that under the fine tile's key would draw a
+  // quarter-scale picture over the right rectangle. Every tile below is
+  // stamped with this, so the cache key is always what actually arrived.
+  const level = view.getUint16(p + 4);
+  const count = view.getUint16(p + 6);
   if (bytes.length < headerSize(count)) return null;
   if (tileSize !== TILE) {
     // The lattice is the shared object. A server that changed its tile size
@@ -48,13 +56,13 @@ function readHeader(bytes: Uint8Array): TileStreamHeader | null {
     // later request would miss.
     throw new Error(`tile size ${tileSize} does not match the client's ${TILE}`);
   }
-  p += 6;
+  p += 8;
   const tiles: TileId[] = [];
   for (let i = 0; i < count; i++) {
-    tiles.push({ row: view.getInt32(p), col: view.getInt32(p + 4) });
+    tiles.push({ row: view.getInt32(p), col: view.getInt32(p + 4), level });
     p += 8;
   }
-  return { expected, tileSize, tiles };
+  return { expected, tileSize, level, tiles };
 }
 
 /**

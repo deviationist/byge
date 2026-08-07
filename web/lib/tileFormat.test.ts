@@ -10,19 +10,20 @@ import { TILE } from "./tileStore";
  * still decode cleanly and would deliver a two-hour animation of one corner.
  */
 
-const MAGIC = "BYGETIL1";
+const MAGIC = "BYGETIL2";
 const PER = TILE * TILE;
-const head = (n: number) => MAGIC.length + 2 + 2 + 2 + n * 8;
+const head = (n: number) => MAGIC.length + 2 + 2 + 2 + 2 + n * 8;
 
-function payload(frames: number, tiles: [number, number][]): Uint8Array {
+function payload(frames: number, tiles: [number, number][], level = 0): Uint8Array {
   const bytes = new Uint8Array(head(tiles.length) + frames * tiles.length * PER);
   const view = new DataView(bytes.buffer);
   for (let i = 0; i < MAGIC.length; i++) bytes[i] = MAGIC.charCodeAt(i);
   let p = MAGIC.length;
   view.setUint16(p, frames);
   view.setUint16(p + 2, TILE);
-  view.setUint16(p + 4, tiles.length);
-  p += 6;
+  view.setUint16(p + 4, level);
+  view.setUint16(p + 6, tiles.length);
+  p += 8;
   for (const [r, c] of tiles) {
     view.setInt32(p, r);
     view.setInt32(p + 4, c);
@@ -122,5 +123,17 @@ describe("readTileStream", () => {
         // nothing should be yielded
       }
     }).rejects.toThrow(/tile size/);
+  });
+
+  it("stamps every tile with the level the SERVER sent", () => {
+    // Not the level that was asked for. The handler clamps, so a client asking
+    // for a level this deployment does not cut gets a coarser tile back; filed
+    // under the fine key it would be drawn at a quarter of the ground it
+    // covers, leaving gaps between the squares.
+    return (async () => {
+      for await (const t of readTileStream(stream([payload(1, [[1, 1]], 2)]))) {
+        expect(t.tile.level).toBe(2);
+      }
+    })();
   });
 });

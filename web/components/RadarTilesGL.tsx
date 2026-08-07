@@ -148,7 +148,7 @@ export function RadarTilesGL({
   // reprojects nothing and a tile seen again at the same zoom reuses its mesh.
   const meshes = useMemo(() => {
     const m = new Map<string, Mesh>();
-    for (const t of tiles) m.set(`${t.row}.${t.col}`, buildTileMesh(t, zoom));
+    for (const t of tiles) m.set(slotKey(t), buildTileMesh(t, zoom));
     return m;
   }, [tiles, zoom]);
 
@@ -195,7 +195,7 @@ export function RadarTilesGL({
 
     const live = new Set<string>();
     for (const tile of tiles) {
-      const key = `${tile.row}.${tile.col}`;
+      const key = slotKey(tile);
       live.add(key);
       const mesh = meshes.get(key);
       if (!mesh) continue;
@@ -386,23 +386,42 @@ function upload(gl: WebGL2RenderingContext, tex: WebGLTexture, cells: Uint8Array
 }
 
 /**
+ * Cache key for a tile's mesh and its texture pair.
+ *
+ * THE LEVEL IS PART OF IT. (4,3) at level 0 and (4,3) at level 2 are different
+ * rectangles on the ground; sharing a key would draw one with the other's mesh
+ * for a frame after every zoom that crosses a level boundary.
+ */
+export function slotKey(t: TileId): string {
+  return `${t.level ?? 0}/${t.row}.${t.col}`;
+}
+
+/**
  * One tile's geometry: grid vertices projected exactly from LCC to Mercator.
  *
  * Depends only on the tile's position in the lattice and the zoom — never on
  * the viewport, never on the frame. That is what makes a fixed lattice cheap to
  * draw as well as cheap to cache.
  */
-function buildTileMesh(t: TileId, zoom: number): Mesh {
+export function buildTileMesh(t: TileId, zoom: number): Mesh {
   const n = Math.ceil(TILE / MESH_STEP);
   const xy = new Float32Array(2 * (n + 1) * (n + 1));
   const uv = new Float32Array(2 * (n + 1) * (n + 1));
-  const row0 = t.row * TILE;
-  const col0 = t.col * TILE;
+  // A COARSE TILE IS THE SAME PICTURE OVER MORE GROUND. The texture is always
+  // 128 x 128, so nothing about the sampling changes; what changes is how many
+  // grid cells one texel spans, and therefore how far the tile reaches. Ignore
+  // the level here and a level-2 tile would be drawn a quarter of the size it
+  // covers, tiling the country with gaps between the squares.
+  const step = 1 << (t.level ?? 0);
+  const row0 = t.row * TILE * step;
+  const col0 = t.col * TILE * step;
 
   for (let i = 0; i <= n; i++) {
-    const cell = Math.min(i * MESH_STEP, TILE);
+    const texRow = Math.min(i * MESH_STEP, TILE);
     for (let j = 0; j <= n; j++) {
-      const col = Math.min(j * MESH_STEP, TILE);
+      const texCol = Math.min(j * MESH_STEP, TILE);
+      const col = texCol * step;
+      const cell = texRow * step;
       // -0.5 because a cell's stated position is its CENTRE, and the mesh wants
       // its corner. Dropping it draws the whole country half a kilometre off.
       const mx = X0 + (col0 + col - 0.5) * DX;
@@ -412,8 +431,8 @@ function buildTileMesh(t: TileId, zoom: number): Mesh {
       const k = 2 * (i * (n + 1) + j);
       xy[k] = p.x;
       xy[k + 1] = p.y;
-      uv[k] = col / TILE;
-      uv[k + 1] = cell / TILE;
+      uv[k] = texCol / TILE;
+      uv[k + 1] = texRow / TILE;
     }
   }
 

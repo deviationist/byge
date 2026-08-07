@@ -224,7 +224,7 @@ func TestGeocodeZoomIsPinnedServerSide(t *testing.T) {
 }
 
 func TestTileListIsParsedAndBounded(t *testing.T) {
-	ok, err := parseTiles("0.0,11.4,16.13")
+	ok, err := parseTiles("0.0,11.4,16.13", 0)
 	if err != nil {
 		t.Fatalf("a valid list was refused: %v", err)
 	}
@@ -234,22 +234,22 @@ func TestTileListIsParsedAndBounded(t *testing.T) {
 
 	// A tile repeated would otherwise multiply the response without the caller
 	// asking for anything more.
-	if dup, _ := parseTiles("5.5,5.5,5.5"); len(dup) != 1 {
+	if dup, _ := parseTiles("5.5,5.5,5.5", 0); len(dup) != 1 {
 		t.Errorf("duplicates were not collapsed: %d tiles", len(dup))
 	}
 
 	// A map panned into the Atlantic legitimately names tiles off the lattice.
 	// Those are dropped, not refused — the domain boundary must not be a wall.
-	mixed, err := parseTiles("0.0,9999.9999")
+	mixed, err := parseTiles("0.0,9999.9999", 0)
 	if err != nil || len(mixed) != 1 {
 		t.Errorf("off-lattice tile was not dropped cleanly: %v, %d tiles", err, len(mixed))
 	}
-	if _, err := parseTiles("9999.9999"); err == nil {
+	if _, err := parseTiles("9999.9999", 0); err == nil {
 		t.Error("a request entirely outside the grid should be a 400")
 	}
 
 	for _, bad := range []string{"", "abc", "1.", "1.2.3", "-1.x"} {
-		if _, err := parseTiles(bad); err == nil {
+		if _, err := parseTiles(bad, 0); err == nil {
 			t.Errorf("parseTiles(%q) was accepted", bad)
 		}
 	}
@@ -266,7 +266,7 @@ func TestTilesEndpointRefusesAnUnboundedList(t *testing.T) {
 		}
 		fmt.Fprintf(&b, "%d.%d", i%16, i%13)
 	}
-	if _, err := parseTiles(b.String()); err == nil {
+	if _, err := parseTiles(b.String(), 0); err == nil {
 		t.Error("an oversized tile list was accepted")
 	}
 
@@ -292,5 +292,22 @@ func TestErrorsNeverEchoTheUpstream(t *testing.T) {
 	body := rec.Body.String()
 	if strings.Contains(body, "thredds") || strings.Contains(body, "http") {
 		t.Errorf("error body leaks the upstream: %q", body)
+	}
+}
+
+func TestTileLatticeShrinksWithTheLevel(t *testing.T) {
+	// A level-2 tile covers four times the ground per side, so the lattice has a
+	// quarter as many rows and columns. A tile that is off the lattice at level
+	// 0 can be perfectly valid at level 2 and vice versa — bounding both against
+	// the level-0 lattice would either refuse real tiles or accept ones whose
+	// cells lie entirely off the grid.
+	if _, err := parseTiles("16.13", 0); err != nil {
+		t.Errorf("16.13 should be on the level-0 lattice: %v", err)
+	}
+	if _, err := parseTiles("16.13", 2); err == nil {
+		t.Error("16.13 is off the level-2 lattice and should be refused")
+	}
+	if _, err := parseTiles("4.3", 2); err != nil {
+		t.Errorf("4.3 should be on the level-2 lattice: %v", err)
 	}
 }
