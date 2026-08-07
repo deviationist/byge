@@ -135,6 +135,11 @@ export function RadarTilesGL({
   theme,
   opacity = 0.82,
 }: RadarTilesGLProps) {
+  // The last gate before a style. A non-finite opacity is rejected by React
+  // outright — "NaN is an invalid value for the opacity css style property" —
+  // which takes the whole map down rather than showing it wrong, so the value
+  // is checked where it is used and not only where it is produced.
+  const alpha = Number.isFinite(opacity) ? Math.min(1, Math.max(0, opacity)) : 0.82;
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const glRef = useRef<GLState | null>(null);
 
@@ -291,7 +296,7 @@ export function RadarTilesGL({
     <View
       testID="radar-tiles-gl"
       pointerEvents="none"
-      style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, opacity }}
+      style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0, opacity: alpha }}
     >
       <canvas ref={canvasRef} style={{ width, height, display: "block" }} />
     </View>

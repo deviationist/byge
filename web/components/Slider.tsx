@@ -42,7 +42,13 @@ const TRACK_H = 6;
 const MIN_TARGET = 44;
 
 /** Snap to the step, so a drag cannot land on 0.6173. */
-function quantise(v: number, min: number, max: number, step: number): number {
+function quantise(v: number, min: number, max: number, step: number, fallback: number): number {
+  // REFUSES NaN FIRST, and this is not defensive padding — it is the fix for a
+  // real crash. `Math.max(0, NaN)` is NaN, not 0, so a clamp built out of
+  // min/max does NOT sanitise a bad input: it passes it straight through. A
+  // press whose event carried no `locationX` produced NaN here, which reached
+  // the overlay as `opacity: NaN` and React rejected outright.
+  if (!Number.isFinite(v)) return Number.isFinite(fallback) ? fallback : min;
   const snapped = min + Math.round((v - min) / step) * step;
   const clamped = Math.min(max, Math.max(min, snapped));
   // Floating-point steps (0.05) accumulate error; round to the step's own
@@ -67,17 +73,19 @@ export function sliderFromKey(
   step: number,
 ): number | null {
   const big = step * 5;
+  // A broken current value must not make every key produce another one.
+  const safe = Number.isFinite(value) ? value : min;
   switch (key) {
     case "ArrowRight":
     case "ArrowUp":
-      return quantise(value + step, min, max, step);
+      return quantise(safe + step, min, max, step, safe);
     case "ArrowLeft":
     case "ArrowDown":
-      return quantise(value - step, min, max, step);
+      return quantise(safe - step, min, max, step, safe);
     case "PageUp":
-      return quantise(value + big, min, max, step);
+      return quantise(safe + big, min, max, step, safe);
     case "PageDown":
-      return quantise(value - big, min, max, step);
+      return quantise(safe - big, min, max, step, safe);
     case "Home":
       return min;
     case "End":
@@ -104,7 +112,10 @@ export function Slider({
 }: SliderProps) {
   const [trackWidth, setTrackWidth] = useState(0);
   const span = max - min;
-  const fraction = span > 0 ? Math.min(1, Math.max(0, (value - min) / span)) : 0;
+  // Same trap one layer up: a NaN value makes the fill's width NaN, and the
+  // announced value unreadable to assistive tech.
+  const safeValue = Number.isFinite(value) ? value : min;
+  const fraction = span > 0 ? Math.min(1, Math.max(0, (safeValue - min) / span)) : 0;
 
   return (
     <Pressable
@@ -113,16 +124,20 @@ export function Slider({
       aria-labelledby={labelledBy}
       aria-valuemin={min}
       aria-valuemax={max}
-      aria-valuenow={value}
+      aria-valuenow={safeValue}
       aria-valuetext={valueText}
       tabIndex={0}
       onLayout={(e) => setTrackWidth(e.nativeEvent.layout.width)}
       onPress={(e) => {
         // Tap-to-set. Without it, crossing the range one arrow at a time is
         // the only way there, which is why every slider has this.
-        if (trackWidth <= 0) return;
-        const t = Math.min(1, Math.max(0, e.nativeEvent.locationX / trackWidth));
-        onChange(quantise(min + t * span, min, max, step));
+        // `locationX` is not on every press event react-native-web produces —
+        // a keyboard-activated press has no position at all — so a press we
+        // cannot locate must do nothing rather than compute from undefined.
+        const x = e.nativeEvent?.locationX;
+        if (trackWidth <= 0 || !Number.isFinite(x)) return;
+        const t = Math.min(1, Math.max(0, x / trackWidth));
+        onChange(quantise(min + t * span, min, max, step, safeValue));
       }}
       {...web({
         onKeyDown: (e) => {
