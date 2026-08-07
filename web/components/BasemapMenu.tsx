@@ -8,7 +8,7 @@ import type { KartverketLayer } from "./TileLayer";
 import type { Theme } from "../theme/useTheme";
 
 /**
- * Which basemap sits under the radar.
+ * The two layers a reader can turn on and off.
  *
  * A DROPDOWN, NOT A ROW OF BOXES. It was a `SegmentedControl` in a card pinned
  * to the top-left of the map, which cost about 340 px of the widest thing on
@@ -78,13 +78,8 @@ export function basemapOptions(): { value: KartverketLayer; label: string; note:
       label: i18next.t("basemap.nautical"),
       note: i18next.t("basemap.nauticalHint"),
     },
-    // Last, because it is the fallback rather than the best: Kartverket is
-    // better over Norway, and this is the only one that works anywhere else.
-    {
-      value: "nordic",
-      label: i18next.t("basemap.nordic"),
-      note: i18next.t("basemap.nordicHint"),
-    },
+    // Not a sheet — the base alone. Last, because it is the plainest.
+    { value: "none", label: i18next.t("basemap.none"), note: i18next.t("basemap.noneHint") },
   ];
 }
 
@@ -110,7 +105,10 @@ export function BasemapMenu({
       menuLabel={t("basemap.label")}
       // The design's trigger reads `LAYER  Muted  ⌄`. The eyebrow and the caret
       // live in MoreButton's labelled shape, so what is passed is the value.
-      triggerText={current.label}
+      // The sheet's name when there is one, the group's name when there is not.
+      // A trigger reading "Off" is ambiguous the moment there are two layers
+      // that can be off — off what?
+      triggerText={value === "none" ? t("basemap.label") : current.label}
       align="start"
       // Upward: the trigger sits at the foot of the map, and a panel opening
       // downward from there is drawn off the bottom of the screen — which reads
@@ -146,9 +144,14 @@ export function BasemapMenu({
         </View>
       }
       items={[
-        // The precipitation layer sits with the others, because it IS one — and
-        // being able to turn it off is the honest version of an opacity that
-        // reaches zero.
+        // BOTH LAYERS ARE OPTIONAL, and only these two are listed. The base map
+        // is not here: it is always drawn, it cannot be chosen and it cannot be
+        // turned off, so putting it in a chooser was an invitation to the exact
+        // confusion it caused — it was called "Nordic", a name for something
+        // that covers the world, sitting in a list of Norwegian sheets.
+        //
+        // What is listed is what is optional: the detail sheet on top of the
+        // base, and the precipitation on top of that.
         {
           key: "radar",
           label: t("basemap.radar"),

@@ -56,10 +56,10 @@ const START_ZOOM = 7;
  * in tenths and a default that is not on the control's own grid shows a slider
  * sitting between its ticks.
  */
-const LAYER_DEFAULTS = { basemap: "nordic", radar: true, radarOpacity: 0.8 } as const;
+const LAYER_DEFAULTS = { basemap: "grey", radar: true, radarOpacity: 0.8 } as const;
 
 /** The layer names this build knows, so a stale saved one is dropped. */
-const BASEMAP_NAMES = ["nordic", "grey", "topo", "detailed", "nautical"] as const;
+const BASEMAP_NAMES = ["none", "grey", "topo", "detailed", "nautical"] as const;
 
 /** Close enough that a 3 km radius ring reads as a ring. */
 const PLACE_ZOOM = 9;
@@ -135,16 +135,12 @@ export function MapScreen({ placeId }: MapScreenProps = {}) {
   const [centre, setCentre] = useState<LatLon>(start);
   const [view, setView] = useState<LatLon>(start);
   const [zoom, setZoom] = useState(place ? PLACE_ZOOM : (saved?.zoom ?? START_ZOOM));
-  // NORDIC BY DEFAULT ON THIS SCREEN, unlike the add-a-place picker.
-  //
-  // This map covers the whole radar footprint — Denmark, Sweden, Finland,
-  // Germany, the Baltics, St Petersburg — and Kartverket serves a blank tile
-  // for all of it. Opening on a basemap that is white everywhere except Norway
-  // makes the app look broken exactly where the radar is working. The picker
-  // opens on Kartverket instead, because a place someone is saving is almost
-  // always in Norway and Kartverket is the better map there.
+  // The DETAIL sheet, on top of a base that is always there. Defaulting to the
+  // muted Kartverket sheet costs nothing outside Norway — it is transparent
+  // there — so there is no longer a reason for this screen and the add-a-place
+  // picker to open on different layers.
   const [basemap, setBasemap] = useState<KartverketLayer>(
-    (saved?.basemap as KartverketLayer) ?? (place ? "grey" : "nordic"),
+    (saved?.basemap as KartverketLayer) ?? LAYER_DEFAULTS.basemap,
   );
   // PRECIPITATION IS A LAYER, so it can be turned off like any other. Off is an
   // explicit state rather than an opacity of zero, which would look exactly
