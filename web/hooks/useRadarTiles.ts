@@ -80,7 +80,9 @@ export function useRadarTiles(req: TileRequest | null, maxFrames = NFRAMES) {
 
   // A stable identity for "the same set of tiles at the same depth", so the
   // effect below does not re-fire on a pan that stays inside the same tiles.
-  const planId = plan ? `${plan.frames}:${plan.level}:${plan.tiles.map(tileKey).join(",")}` : null;
+  const planId = plan
+    ? `${plan.frames}:${plan.level}:${plan.tiles.map(tileKey).join(",")}`
+    : null;
 
   // Read inside the effect without making its identity a trigger.
   const planRef = useRef(plan);
@@ -166,6 +168,8 @@ export function useRadarTiles(req: TileRequest | null, maxFrames = NFRAMES) {
     depth,
     /** Frames this view is aiming for. */
     expected: plan?.frames ?? 0,
+    /** How coarse the tiles are: cells per texel is `1 << level`. For the debug readout. */
+    level: plan?.level ?? 0,
     loading: depth === 0,
     partial: depth > 0 && depth < (plan?.frames ?? 0),
     isError: error,
@@ -225,11 +229,7 @@ export function planTiles(
 
   // Still the last resort, for a viewport so large that even level 2 overruns —
   // and for `maxFrames` of 1, where it never binds at all.
-  const frames = clamp(
-    Math.floor(MAX_TILE_FRAMES / Math.max(1, tiles.length)),
-    1,
-    maxFrames,
-  );
+  const frames = clamp(Math.floor(MAX_TILE_FRAMES / Math.max(1, tiles.length)), 1, maxFrames);
   return { tiles, frames, level };
 }
 
