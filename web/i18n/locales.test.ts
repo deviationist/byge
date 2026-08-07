@@ -86,6 +86,10 @@ describe("locale bundles", () => {
             "about.data",
             "map.attribution",
             "radarMap.attribution",
+            // "Radar" is the same word in Norwegian, and it is the screen's
+            // name rather than a sentence — the standfirst beneath it carries
+            // the prose, and that one differs.
+            "map.title",
           ].includes(k),
       );
 

@@ -1,4 +1,5 @@
 import i18next from "i18next";
+import { useCallback, useEffect, useRef } from "react";
 import type { DimensionValue } from "react-native";
 import { Pressable, Text, View } from "react-native";
 import { isWet } from "../lib/forecast";
@@ -193,6 +194,65 @@ export function PrecipitationGraph({
   const header =
     label ?? i18next.t(density === "compact" ? "graph.headerCompact" : "graph.headerExpanded");
   const selected = selectedIndex !== undefined ? frames[selectedIndex] : undefined;
+
+  // DRAG ACROSS THE WHOLE STRIP, not a click per column.
+  //
+  // Design refused a separate slider on the condition that the graph stop
+  // behaving like a passive readout — one time control, and it has to feel like
+  // one. Tapping a bar still works and is what a keyboard and a screen reader
+  // use; this adds the gesture people actually reach for, which is to sweep
+  // across the two hours and watch the map follow.
+  const stripRef = useRef<View | null>(null);
+  const dragging = useRef(false);
+  const frameCount = frames.length;
+  const indexAt = useCallback(
+    (clientX: number) => {
+      const node = stripRef.current as unknown as HTMLElement | null;
+      if (!node || frameCount === 0) return 0;
+      const r = node.getBoundingClientRect();
+      if (r.width <= 0) return 0;
+      const at = Math.floor(((clientX - r.left) / r.width) * frameCount);
+      return Math.min(frameCount - 1, Math.max(0, at));
+    },
+    [frameCount],
+  );
+  // Bound on the node rather than through props, the same way MapCanvas binds
+  // its pan: react-native-web's synthetic pointer events are not the DOM's, and
+  // this needs `clientX` and `getBoundingClientRect`. Confining it here means
+  // the native build simply has no drag rather than a broken one, and the tap
+  // path below still works everywhere.
+  const scrubRef = useRef(onScrub);
+  scrubRef.current = onScrub;
+  useEffect(() => {
+    const node = stripRef.current as unknown as HTMLElement | null;
+    if (!node || !onScrub || typeof document === "undefined") return;
+
+    const down = (e: PointerEvent) => {
+      dragging.current = true;
+      scrubRef.current?.(indexAt(e.clientX));
+      // Capture, so a sweep that leaves the strip keeps scrubbing rather than
+      // stopping at the edge — which is exactly where somebody drags to.
+      node.setPointerCapture?.(e.pointerId);
+      e.preventDefault();
+    };
+    const move = (e: PointerEvent) => {
+      if (dragging.current) scrubRef.current?.(indexAt(e.clientX));
+    };
+    const up = () => {
+      dragging.current = false;
+    };
+
+    node.addEventListener("pointerdown", down);
+    document.addEventListener("pointermove", move);
+    document.addEventListener("pointerup", up);
+    document.addEventListener("pointercancel", up);
+    return () => {
+      node.removeEventListener("pointerdown", down);
+      document.removeEventListener("pointermove", move);
+      document.removeEventListener("pointerup", up);
+      document.removeEventListener("pointercancel", up);
+    };
+  }, [indexAt, onScrub]);
   const right =
     caption ??
     (selected
@@ -220,6 +280,7 @@ export function PrecipitationGraph({
       </View>
 
       <View
+        ref={stripRef}
         accessibilityLabel={`Rain intensity ${ticks[0]} to ${ticks[ticks.length - 1]} — ${shapeCaptionOf(frames)}`}
         // Only an image when there is nothing to operate. `role="img"` hides
         // descendants from assistive tech, which would swallow the scrub buttons.
@@ -244,15 +305,14 @@ export function PrecipitationGraph({
             ...(bar.backgroundColor ? { backgroundColor: bar.backgroundColor } : null),
             opacity: bar.opacity,
             ...(bar.backgroundImage ? { backgroundImage: bar.backgroundImage } : null),
-            ...(i === selectedIndex ? { outlineWidth: 2, outlineOffset: 1 } : null),
           } as object;
 
-          // The selected bar's outline is ink; the semantic fills (not
-          // observed, dry) are tokens. The band fills are values and stay in
-          // `style` above.
-          const barClass = [bar.className, i === selectedIndex ? "outline-ink" : null]
-            .filter(Boolean)
-            .join(" ");
+          // The selected frame is marked by a CAP AND A TINT, not by an
+          // outline. `outlineWidth`/`outlineOffset` are web-only, so on native
+          // the scrubber had no visible position at all — and Design ruled that
+          // the indicator was load-bearing, not decorative. A 2 px ink cap
+          // above the bar and a `sunk` column behind it both port directly.
+          const barClass = bar.className;
 
           const key = `${f.minutes}`;
           // Non-interactive stays a View, not a disabled Pressable: the compact
@@ -269,6 +329,7 @@ export function PrecipitationGraph({
               style={style}
             >
               {bar.backgroundImage ? <Hatch size={d.stripHeight} /> : null}
+              {i === selectedIndex ? <SelectedCap /> : null}
             </Pressable>
           ) : (
             <View
@@ -282,6 +343,10 @@ export function PrecipitationGraph({
             </View>
           );
         })}
+
+        {onScrub && selectedIndex !== undefined && frames.length > 0 ? (
+          <Playhead index={selectedIndex} count={frames.length} height={d.stripHeight} />
+        ) : null}
 
         {openEnded ? (
           // Runs off the right edge on purpose. A strip that ends flush says the
@@ -327,4 +392,87 @@ export type PrecipitationTimelineProps = Omit<PrecipitationGraphProps, "density"
  */
 export function PrecipitationTimeline(props: PrecipitationTimelineProps) {
   return <PrecipitationGraph {...props} density="expanded" />;
+}
+
+/**
+ * The selected frame's cap.
+ *
+ * A 2 px ink bar across the top of the column, which is what replaced the CSS
+ * `outline`. The outline was web-only, so on native the scrubber had no visible
+ * position at all — and Design ruled the indicator load-bearing rather than
+ * decorative, because without it the strip is a picture rather than a control.
+ */
+function SelectedCap() {
+  return (
+    <View
+      aria-hidden
+      className="bg-ink"
+      style={{ position: "absolute", top: -3, left: 0, right: 0, height: 2, borderRadius: 1 }}
+    />
+  );
+}
+
+/**
+ * Where you are in the run: a full-height rule, a knob, and a hint that it moves.
+ *
+ * ONE TIME CONTROL, MADE TO LOOK LIKE ONE. Design refused a separate slider —
+ * two widgets for one quantity, with the graph demoted to a passive readout —
+ * on the condition that the graph stop looking passive. This is that condition:
+ * the rule says where the playhead is, the knob says it can be grabbed, and the
+ * chevrons say which way. Without them the strip was a row of bars that happened
+ * to respond to taps.
+ *
+ * `pointerEvents="none"` throughout, so it never intercepts a press meant for
+ * the bar underneath it.
+ */
+function Playhead({ index, count, height }: { index: number; count: number; height: number }) {
+  // Centre of the column, as a fraction of the strip.
+  const left = `${(((index + 0.5) / count) * 100).toFixed(2)}%` as DimensionValue;
+  return (
+    <View
+      testID="precip-playhead"
+      aria-hidden
+      pointerEvents="none"
+      className="bg-ink"
+      style={{ position: "absolute", top: -9, height: height + 14, left, width: 1.5 }}
+    >
+      <View
+        className="bg-ink border-surface"
+        style={{
+          position: "absolute",
+          top: -4,
+          left: -5.25,
+          width: 12,
+          height: 12,
+          borderRadius: 6,
+          // The ring is what lifts the knob off a dark band underneath. Design
+          // draws it as a 2 px surface-coloured halo rather than a shadow,
+          // because a shadow is a web-only property.
+          borderWidth: 2,
+        }}
+      />
+      <Cue side="left" />
+      <Cue side="right" />
+    </View>
+  );
+}
+
+function Cue({ side }: { side: "left" | "right" }) {
+  return (
+    <Text
+      aria-hidden
+      className="text-ink3 font-mono"
+      style={{
+        position: "absolute",
+        top: 0,
+        ...(side === "left" ? { left: -16 } : { left: 9 }),
+        width: 12,
+        fontSize: 10,
+        lineHeight: 12,
+        textAlign: "center",
+      }}
+    >
+      {side === "left" ? "\u2039" : "\u203a"}
+    </Text>
+  );
 }
