@@ -389,7 +389,11 @@ export function MapScreen({ placeId }: MapScreenProps = {}) {
           reader just asked for.
         */}
         {phone && picked ? null : (
-          <View style={{ position: "absolute", left: 12, bottom: 12 }}>
+          // zIndex, because react-native-web gives every View `position:
+          // relative; z-index: 0`, which makes each one a stacking context the
+          // menu's own z-index cannot escape. Without it the panel opens
+          // underneath the map it is drawn over. Same trap NavBar documents.
+          <View style={{ position: "absolute", left: 12, bottom: 12, zIndex: 30 }}>
             <BasemapMenu value={basemap} onChange={setBasemap} theme={theme} />
           </View>
         )}

@@ -318,3 +318,28 @@ describe("locationMenuItems", () => {
     expect(edit.hint).toMatch(/radius/i);
   });
 });
+
+describe("which way it opens", () => {
+  /**
+   * A SILENT VISUAL FAILURE, and it shipped. The basemap picker sits at the
+   * foot of the map, so a panel opening downward from it was drawn off the
+   * bottom of the screen: in the DOM, correct by every behavioural test above,
+   * and invisible. The only thing the reader saw was the trigger's own pressed
+   * state, which reads as a control that flickers and refuses to open.
+   */
+  const panel = () => screen.getByRole("menu").getAttribute("style") ?? "";
+
+  it("hangs below the trigger by default", () => {
+    render(<OverflowMenu items={items()} theme="light" />);
+    openMenu();
+    expect(panel()).toContain("top: 100%");
+    expect(panel()).not.toContain("bottom: 100%");
+  });
+
+  it("hangs above it when asked", () => {
+    render(<OverflowMenu items={items()} theme="light" direction="up" />);
+    openMenu();
+    expect(panel()).toContain("bottom: 100%");
+    expect(panel()).not.toContain("top: 100%");
+  });
+});

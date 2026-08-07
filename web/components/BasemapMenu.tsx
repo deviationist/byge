@@ -70,6 +70,10 @@ export function BasemapMenu({ value, onChange, theme }: BasemapMenuProps) {
       // live in MoreButton's labelled shape, so what is passed is the value.
       triggerText={current.label}
       align="start"
+      // Upward: the trigger sits at the foot of the map, and a panel opening
+      // downward from there is drawn off the bottom of the screen — which reads
+      // as a control that flickers and refuses to open.
+      direction="up"
       items={options.map((o) => ({
         key: o.value,
         label: o.label,

@@ -53,6 +53,16 @@ export type OverflowMenuProps = {
   triggerText?: string;
   /** Which edge of the trigger the panel hangs from. */
   align?: "start" | "end";
+  /**
+   * Which way it opens.
+   *
+   * NOT COSMETIC. A menu whose trigger sits near the bottom of the viewport and
+   * opens downward renders off-screen — it looks like a control that flickers
+   * and does nothing, because the only visible effect is the trigger's own
+   * pressed state. The basemap picker lives at the foot of the map, which is
+   * where this was found.
+   */
+  direction?: "down" | "up";
   disabled?: boolean;
 };
 
@@ -65,6 +75,7 @@ export function OverflowMenu({
   menuLabel,
   triggerText,
   align = "end",
+  direction = "down",
   disabled = false,
 }: OverflowMenuProps) {
   const [open, setOpen] = useState(false);
@@ -231,10 +242,11 @@ export function OverflowMenu({
           className="bg-surface border-line2"
           style={{
             position: "absolute",
-            top: "100%",
-            marginTop: 6,
+            ...(direction === "up"
+              ? { bottom: "100%", marginBottom: 6 }
+              : { top: "100%", marginTop: 6 }),
             ...(align === "end" ? { right: 0 } : { left: 0 }),
-            minWidth: 200,
+            minWidth: 208,
             zIndex: 50,
             borderWidth: 1,
             borderRadius: 12,
