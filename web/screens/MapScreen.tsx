@@ -17,6 +17,7 @@ import { useVerdict } from "../hooks/useVerdict";
 import { PrecipitationGraph } from "../components/PrecipitationGraph";
 import { useReducedMotion } from "../hooks/useReducedMotion";
 import { useRadarTiles } from "../hooks/useRadarTiles";
+import { loadMapView, saveMapView } from "../lib/mapView";
 import { Screen } from "../layouts/Screen";
 import { useResolvedTheme } from "../theme/ThemeProvider";
 import { MONO } from "../theme/tokens";
@@ -112,10 +113,14 @@ export function MapScreen({ placeId }: MapScreenProps = {}) {
   // is legible rather than a dot. It is a starting VIEW, not a lock: the map
   // pans and zooms away from it exactly like the unanchored one, because the
   // question "what is coming toward my cabin" is answered by looking around it.
-  const start = place ? { lat: place.lat, lon: place.lon } : START;
+  // The place wins; otherwise where this browser was last looking; otherwise
+  // the default view. Read once via lazy state, so a later save cannot yank the
+  // map back to a stale position mid-session.
+  const [saved] = useState(() => (place ? null : loadMapView(MIN_ZOOM, MAX_ZOOM)));
+  const start = place ? { lat: place.lat, lon: place.lon } : (saved ?? START);
   const [centre, setCentre] = useState<LatLon>(start);
   const [view, setView] = useState<LatLon>(start);
-  const [zoom, setZoom] = useState(place ? PLACE_ZOOM : START_ZOOM);
+  const [zoom, setZoom] = useState(place ? PLACE_ZOOM : (saved?.zoom ?? START_ZOOM));
   // NORDIC BY DEFAULT ON THIS SCREEN, unlike the add-a-place picker.
   //
   // This map covers the whole radar footprint — Denmark, Sweden, Finland,
@@ -298,6 +303,19 @@ export function MapScreen({ placeId }: MapScreenProps = {}) {
     if (settle.current) clearTimeout(settle.current);
     settle.current = setTimeout(() => setView(c), 180);
   }, []);
+
+  // REMEMBER WHERE THIS MAP WAS LOOKING, but only the unanchored one — `/map/<id>`
+  // opens on its place, and restoring a saved viewport there would answer a
+  // question about somewhere else.
+  //
+  // Keyed on the SETTLED view rather than on `centre`, so a drag writes once
+  // when it stops instead of on every pointermove. Design's rule that the app
+  // must not remember the map as "where I was" is about routes, and is
+  // untouched: the launcher still opens the list.
+  useEffect(() => {
+    if (place) return;
+    saveMapView({ lat: view.lat, lon: view.lon, zoom });
+  }, [place, view, zoom]);
   useEffect(
     () => () => {
       if (settle.current) clearTimeout(settle.current);
