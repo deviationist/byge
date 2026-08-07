@@ -125,15 +125,31 @@ const EARTH_CIRCUMFERENCE = 2 * Math.PI * 6378137;
 const RAD = Math.PI / 180;
 
 function worldSize(zoom: number): number {
+  // Every pixel position on the map is a multiple of this.
+  if (!Number.isFinite(zoom)) return TILE;
   return TILE * 2 ** zoom;
 }
 
 export function clampLat(lat: number): number {
+  // NOT A NUMBER IS NOT A LATITUDE, and it has to be refused HERE.
+  //
+  // `Math.min(a, Math.max(b, NaN))` is NaN — a clamp built from min/max does not
+  // sanitise its input, it FORWARDS it. This function feeds `lonLatToPx`, which
+  // places every tile and every mesh vertex, and `metersPerPixel`, which sizes
+  // every radius ring. One NaN reaching it does not misplace something slightly;
+  // it makes the map's geometry NaN, and React rejects those styles outright.
+  //
+  // The same trap cost a crash in the opacity slider. This is the more dangerous
+  // instance of it, because everything on the map goes through here.
+  if (!Number.isFinite(lat)) return 0;
   return Math.min(MAX_LAT, Math.max(-MAX_LAT, lat));
 }
 
 /** Normalise into (-180, 180] so a drag across the antimeridian stays sane. */
 export function wrapLon(lon: number): number {
+  // Same rule as clampLat: the modulo of NaN is NaN, so it is refused rather
+  // than folded.
+  if (!Number.isFinite(lon)) return 0;
   const x = (((lon + 180) % 360) + 360) % 360;
   return x === 0 ? 180 : x - 180;
 }
@@ -142,8 +158,11 @@ export function wrapLon(lon: number): number {
 export function lonLatToPx(c: LatLon, zoom: number): { x: number; y: number } {
   const w = worldSize(zoom);
   const s = Math.sin(clampLat(c.lat) * RAD);
+  // The LONGITUDE went in raw, which meant the guard on `clampLat` protected
+  // half of this function and the other half handed a NaN straight to `x`. A
+  // sanitiser only helps on the path that actually uses it.
   return {
-    x: ((c.lon + 180) / 360) * w,
+    x: ((wrapLon(c.lon) + 180) / 360) * w,
     y: (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * w,
   };
 }
@@ -165,6 +184,10 @@ export function pxToLonLat(x: number, y: number, zoom: number): LatLon {
  * `map.unproject`; keeping it here means the ring's maths does not move on swap.
  */
 export function metersPerPixel(lat: number, zoom: number): number {
+  // Callers DIVIDE by this to size a ring, so a NaN here becomes a NaN width.
+  // Infinity is the honest answer for a zoom that is not a number, and it
+  // yields a ring of zero pixels rather than a crash.
+  if (!Number.isFinite(zoom)) return Number.POSITIVE_INFINITY;
   return (EARTH_CIRCUMFERENCE * Math.cos(clampLat(lat) * RAD)) / worldSize(zoom);
 }
 
