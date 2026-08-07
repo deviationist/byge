@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { KARTVERKET_LAYERS, TileLayer, tileUrl } from "./TileLayer";
+import { KARTVERKET_LAYERS, TileLayer, tileUrl, creditFor } from "./TileLayer";
 
 /**
  * Tile arithmetic fails quietly: a wrong index shows a real map of the wrong
@@ -100,5 +100,40 @@ describe("zoom", () => {
     for (const u of urls) {
       expect(u).toMatch(/webmercator\/6\/\d+\/\d+\.png$/);
     }
+  });
+});
+
+describe("the basemap that covers the radar", () => {
+  /**
+   * MET's mosaic reaches Denmark, Sweden, Finland, Germany, the Baltics and
+   * St Petersburg. Kartverket stops at the Norwegian border — and it does not
+   * stop by failing, it serves an identical 854-byte BLANK tile for every
+   * request outside Norway (verified live across nine cities). So the map drew
+   * live rain over white nothing for most of its own coverage, and blank ground
+   * reads as "the data ended" precisely where the data is fine.
+   */
+  it("serves the global layer from a global source", () => {
+    const url = tileUrl("nordic", 5, 17, 9);
+    expect(url).toContain("cartocdn");
+    expect(url).not.toContain("kartverket");
+  });
+
+  it("uses XYZ order for the global layer and ROW/COL for Kartverket", () => {
+    // Kartverket's WMTS puts row before column, which is the opposite of the
+    // XYZ convention. Swapping them returns a valid tile from the wrong place —
+    // a map of somewhere else, drawn without error.
+    expect(tileUrl("nordic", 5, 17, 9)).toContain("/5/17/9");
+    expect(tileUrl("grey", 5, 17, 9)).toContain("/5/9/17");
+  });
+
+  it("credits whoever actually served the tiles", () => {
+    // A licence condition, and it varies by layer: ODbL requires the OSM credit
+    // to travel with the data, and CARTO requires theirs. One hardcoded line was
+    // correct only while there was one provider.
+    expect(creditFor("nordic")).toContain("OpenStreetMap");
+    expect(creditFor("nordic")).toContain("CARTO");
+    expect(creditFor("grey")).toContain("Kartverket");
+    expect(creditFor("nautical")).toContain("Kartverket");
+    expect(creditFor("grey")).not.toContain("CARTO");
   });
 });

@@ -13,6 +13,7 @@ import {
   metersPerPixel,
 } from "./MapCanvas";
 import { basemapSegments, SegmentedControl } from "./SegmentedControl";
+import { creditFor } from "./TileLayer";
 import type { KartverketLayer } from "./TileLayer";
 import { ZoomControl } from "./ZoomControl";
 
@@ -166,7 +167,7 @@ export function MapField({
           basemap={layer}
           theme={theme}
           label={t("map.pick")}
-          attribution={t("map.attribution")}
+          attribution={creditFor(layer)}
         >
           {/* Ring first so the marker sits on top of it. */}
           <View

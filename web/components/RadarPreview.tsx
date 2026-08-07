@@ -5,6 +5,7 @@ import { useRadarTiles } from "../hooks/useRadarTiles";
 import { MONO } from "../theme/tokens";
 import type { Theme } from "../theme/useTheme";
 import { MapCanvas, metersPerPixel } from "./MapCanvas";
+import { creditFor } from "./TileLayer";
 import { RadarTilesGL } from "./RadarTilesGL";
 
 /**
@@ -133,7 +134,7 @@ export function RadarPreview({
           // the app's own footer credits MET and OSM but not them — the basemap
           // credit travels with the basemap, so a surface that shows tiles has
           // to carry it however small the surface is.
-          attribution={t("radarMap.attribution")}
+          attribution={t("radarMap.attribution", { basemap: creditFor("grey") })}
           overlay={(v) =>
             depth > 0 ? (
               <RadarTilesGL

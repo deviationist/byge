@@ -9,7 +9,7 @@ import { NavBar } from "../components/NavBar";
 import { PlaybackControl } from "../components/PlaybackControl";
 import { RadarTilesGL } from "../components/RadarTilesGL";
 import { BasemapMenu } from "../components/BasemapMenu";
-import type { KartverketLayer } from "../components/TileLayer";
+import { creditFor, type KartverketLayer } from "../components/TileLayer";
 import { ZoomControl } from "../components/ZoomControl";
 import { useBack } from "../hooks/useBack";
 import { useLocations } from "../hooks/useLocations";
@@ -116,7 +116,15 @@ export function MapScreen({ placeId }: MapScreenProps = {}) {
   const [centre, setCentre] = useState<LatLon>(start);
   const [view, setView] = useState<LatLon>(start);
   const [zoom, setZoom] = useState(place ? PLACE_ZOOM : START_ZOOM);
-  const [basemap, setBasemap] = useState<KartverketLayer>("grey");
+  // NORDIC BY DEFAULT ON THIS SCREEN, unlike the add-a-place picker.
+  //
+  // This map covers the whole radar footprint — Denmark, Sweden, Finland,
+  // Germany, the Baltics, St Petersburg — and Kartverket serves a blank tile
+  // for all of it. Opening on a basemap that is white everywhere except Norway
+  // makes the app look broken exactly where the radar is working. The picker
+  // opens on Kartverket instead, because a place someone is saving is almost
+  // always in Norway and Kartverket is the better map there.
+  const [basemap, setBasemap] = useState<KartverketLayer>(place ? "grey" : "nordic");
   const [size, setSize] = useState({ width: 0, height: 0 });
   // THE PLAYHEAD IS FRACTIONAL — 3.4 is 40 % of the way from frame 3 to 4, and
   // RadarGL cross-fades there. Everything that reports a frame to a human reads
@@ -351,7 +359,7 @@ export function MapScreen({ placeId }: MapScreenProps = {}) {
           basemap={basemap}
           theme={theme}
           label={t("map.canvasLabel")}
-          attribution={t("radarMap.attribution")}
+          attribution={t("radarMap.attribution", { basemap: creditFor(basemap) })}
           overlay={(v) =>
             frameCount > 0 ? (
               <RadarTilesGL
