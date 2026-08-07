@@ -266,3 +266,59 @@ describe("one component, two densities", () => {
     expect(viaTimeline.innerHTML).toBe(viaGraph.innerHTML);
   });
 });
+
+describe("the playhead", () => {
+  /**
+   * Selection had only ever been asserted through `aria-selected`, which is why
+   * the visible indicator could be a CSS `outline` — correct to a screen
+   * reader, invisible on native, and untested either way. Design ruled the
+   * indicator load-bearing: without it the strip is a picture rather than a
+   * control.
+   */
+  // Six frames, so the playhead maths is checkable by hand.
+  const f = Array.from({ length: 6 }, (_, i) => frame({ minutes: i * 5 }));
+
+  it("draws a playhead when the strip can be scrubbed", () => {
+    render(
+      <PrecipitationTimeline
+        frames={f}
+        theme="light"
+        onScrub={() => {}}
+        selectedIndex={2}
+      />,
+    );
+    expect(screen.getByTestId("precip-playhead")).toBeInTheDocument();
+  });
+
+  it("puts it over the centre of the selected column", () => {
+    // (2 + 0.5) / 6 = 41.67%. An off-by-half-a-column is the classic version of
+    // this bug and looks almost right.
+    render(
+      <PrecipitationTimeline
+        frames={f}
+        theme="light"
+        onScrub={() => {}}
+        selectedIndex={2}
+      />,
+    );
+    expect(screen.getByTestId("precip-playhead").getAttribute("style")).toContain("41.67%");
+  });
+
+  it("has none when there is nothing to scrub", () => {
+    // The compact strip must read as finished, not as a scrubber turned off.
+    render(<PrecipitationTimeline frames={f} theme="light" />);
+    expect(screen.queryByTestId("precip-playhead")).toBeNull();
+  });
+
+  it("carries no CSS outline, which does not exist off the web", () => {
+    const { container } = render(
+      <PrecipitationTimeline
+        frames={f}
+        theme="light"
+        onScrub={() => {}}
+        selectedIndex={2}
+      />,
+    );
+    expect(container.innerHTML).not.toContain("outline-ink");
+  });
+});

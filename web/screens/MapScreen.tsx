@@ -305,7 +305,7 @@ export function MapScreen({ placeId }: MapScreenProps = {}) {
             <Text
               accessibilityRole="header"
               className="text-ink font-display"
-              style={{ fontSize: 20 }}
+              style={{ fontSize: phone ? 21 : 25, lineHeight: (phone ? 21 : 25) * 1.1 }}
             >
               {place ? place.name : t("map.title")}
             </Text>
@@ -317,7 +317,14 @@ export function MapScreen({ placeId }: MapScreenProps = {}) {
             */}
             <Text
               className="text-ink3"
-              style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: 0.3, marginTop: 2 }}
+              style={{
+                fontFamily: MONO,
+                fontSize: 9.5,
+                lineHeight: 14,
+                letterSpacing: 0.3,
+                marginTop: 3,
+                maxWidth: "30ch" as never,
+              }}
             >
               {place ? t("radarMap.subtitle") : t("map.subtitle")}
             </Text>
