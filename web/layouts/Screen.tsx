@@ -25,30 +25,45 @@ const PAD_V = 24;
 /**
  * The design's page padding, which is nothing like a constant.
  *
- * Measured off the specimen: `18/24/10` on phone, `40/44/26` on tablet,
- * `62/72/34` on desktop. The growth is the point — extra viewport goes to
- * margin, not to a longer line, and a verdict set 24 px from the top of a
- * 1400 px window reads like a document that failed to load rather than like an
- * answer. It pairs with the measure cap: the cap stops the line growing, this
- * stops the page feeling empty because of it.
+ * The growth is the point — extra viewport goes to margin, not to a longer
+ * line, and a verdict set 24 px from the top of a 1400 px window reads like a
+ * document that failed to load rather than like an answer. It pairs with the
+ * measure cap: the cap stops the line growing, this stops the page feeling
+ * empty because of it.
+ *
+ * TOP AND HORIZONTAL ARE SHARED ACROSS THE READING SCREENS; only the bottom
+ * differs, which is why it is a parameter below. Verdict, About and Add all use
+ * `14/30/48` down the top and `22/40/64` at the sides in their own design
+ * files, and then choose their own floor.
+ *
+ * These were `18/24/10 · 40/44/26 · 62/72/34` — round ONE's `padV`, taken from
+ * the only design file that was checked in at the time. Every number moved in a
+ * later round. The reasoning in that commit was right and its source was stale,
+ * which is the failure mode this whole alignment pass exists to clear up.
  *
  * Only the reading screens take this. The two-pane LIST pane is a 350 px column
- * with its own much tighter padding, and 72 px of gutter inside it would leave
+ * with its own much tighter padding, and 64 px of gutter inside it would leave
  * nowhere to put a place name.
  */
 export const PAGE_PAD = {
-  phone: { top: 18, horizontal: 24, bottom: 10 },
-  tablet: { top: 40, horizontal: 44, bottom: 26 },
-  desktop: { top: 62, horizontal: 72, bottom: 34 },
+  phone: { top: 14, horizontal: 22, bottom: 18 },
+  tablet: { top: 30, horizontal: 40, bottom: 26 },
+  desktop: { top: 48, horizontal: 64, bottom: 34 },
 } as const;
 
-export type PagePad = (typeof PAGE_PAD)[keyof typeof PAGE_PAD];
+export type PagePad = { top: number; horizontal: number; bottom: number };
 
-/** Which padding step a viewport width earns. */
-export function pagePadFor(width: number): PagePad {
-  if (width < 768) return PAGE_PAD.phone;
-  if (width < 1100) return PAGE_PAD.tablet;
-  return PAGE_PAD.desktop;
+/**
+ * Which padding step a viewport width earns.
+ *
+ * `bottom` overrides the floor for screens whose design file names a different
+ * one — About sits on `30/34/44`, Add on `26/30/40`. The top and the sides are
+ * not negotiable: they are what make the reading screens feel like one app.
+ */
+export function pagePadFor(width: number, bottom?: [number, number, number]): PagePad {
+  const step = width < 768 ? 0 : width < 1100 ? 1 : 2;
+  const base = [PAGE_PAD.phone, PAGE_PAD.tablet, PAGE_PAD.desktop][step];
+  return bottom ? { ...base, bottom: bottom[step] } : base;
 }
 
 /**

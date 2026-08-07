@@ -31,6 +31,9 @@ function themeOptions(t: TFunction) {
   ] satisfies readonly { value: ThemeChoice; label: string; hint?: string }[];
 }
 
+/** About's own footer clearance, phone/tablet/desktop. See AboutScreen.dc.html. */
+const ABOUT_BOTTOM: [number, number, number] = [30, 34, 44];
+
 /**
  * What byge is, how to change its appearance, and the attribution in full.
  *
@@ -72,7 +75,10 @@ export function AboutScreen() {
     // This is the same omission the verdict screen had. Worth noticing that
     // the default is the trap: a screen that forgets to ask looks broken rather
     // than looking plain.
-    <Screen gap={22} pad={pagePadFor(width)}>
+    //
+    // The bottom floor is About's own — the design gives every reading screen
+    // the same top and sides and lets each pick its own footer clearance.
+    <Screen gap={22} pad={pagePadFor(width, ABOUT_BOTTOM)}>
       <NavBar onBack={goBack} backLabel={t("nav.backToPlaces")}>
         <Text
           accessibilityRole="header"
