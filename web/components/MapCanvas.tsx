@@ -185,6 +185,9 @@ const BASEMAP: Record<Basemap, string> = {
   topo: "#eef0e8",
   detailed: "#f0ece2",
   nautical: "#dfe8ee",
+  // Positron's own paper colour, so the pane does not flash a different shade
+  // before the first tiles land.
+  nordic: "#e8e6e1",
 };
 
 /**

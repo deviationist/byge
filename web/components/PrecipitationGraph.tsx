@@ -186,15 +186,6 @@ export function PrecipitationGraph({
   label,
   caption,
 }: PrecipitationGraphProps) {
-  if (frames.length === 0) return null;
-
-  const d = DENSITY[density];
-  const openEnded = isOpenEndedSeries(frames);
-  const ticks = axisTicks(frames);
-  const header =
-    label ?? i18next.t(density === "compact" ? "graph.headerCompact" : "graph.headerExpanded");
-  const selected = selectedIndex !== undefined ? frames[selectedIndex] : undefined;
-
   // DRAG ACROSS THE WHOLE STRIP, not a click per column.
   //
   // Design refused a separate slider on the condition that the graph stop
@@ -253,6 +244,21 @@ export function PrecipitationGraph({
       document.removeEventListener("pointercancel", up);
     };
   }, [indexAt, onScrub]);
+
+  // AFTER the hooks, never before. React requires every hook to run in the same
+  // order on every render, and an early return above them means a strip that
+  // gains its first frame remounts into a different hook sequence — which
+  // throws rather than degrading. It is exactly the state this component lives
+  // in while a run streams in.
+  if (frames.length === 0) return null;
+
+  const d = DENSITY[density];
+  const openEnded = isOpenEndedSeries(frames);
+  const ticks = axisTicks(frames);
+  const header =
+    label ?? i18next.t(density === "compact" ? "graph.headerCompact" : "graph.headerExpanded");
+  const selected = selectedIndex !== undefined ? frames[selectedIndex] : undefined;
+
   const right =
     caption ??
     (selected

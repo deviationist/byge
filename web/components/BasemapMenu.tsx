@@ -53,6 +53,13 @@ export function basemapOptions(): { value: KartverketLayer; label: string; note:
       label: i18next.t("basemap.nautical"),
       note: i18next.t("basemap.nauticalHint"),
     },
+    // Last, because it is the fallback rather than the best: Kartverket is
+    // better over Norway, and this is the only one that works anywhere else.
+    {
+      value: "nordic",
+      label: i18next.t("basemap.nordic"),
+      note: i18next.t("basemap.nordicHint"),
+    },
   ];
 }
 

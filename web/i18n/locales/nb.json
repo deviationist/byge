@@ -275,7 +275,9 @@
     "nautical": "Sjøkart",
     "nauticalHint": "Offisielle sjøkart",
     "topoHint": "Terrengskygge",
-    "showing": "{{note}} · vises nå"
+    "showing": "{{note}} · vises nå",
+    "nordic": "Norden",
+    "nordicHint": "Hele radarområdet · utenfor Norge"
   },
   "search": {
     "label": "Søk etter et sted",
@@ -348,7 +350,7 @@
     "mmh": "MM/T",
     "subtitle": "FASE 2 · bekreftelseslag — setningen er fortsatt svaret",
     "label": "Radar rundt {{name}}",
-    "attribution": "© Kartverket · radar: MET Norway",
+    "attribution": "{{basemap}} · radar: MET Norway",
     "footnote": "Skravert bakke er utenfor radardekning — ikke opphold, men uobservert. Grensen følger rekkevidden til hver enkelt radar, så den er ujevn og ikke et pent polygon.",
     "darkNote": "Mørk modus: MET lager disse flisene lyse og har ingen mørk variant, så kartet blir stående som et opplyst vindu i mørk ramme i stedet for en tonet versjon av andres data.",
     "unavailable": "Fikk ikke lastet radarfeltet. Svaret over er upåvirket — det var allerede hentet.",

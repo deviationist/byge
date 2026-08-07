@@ -40,6 +40,34 @@ export const KARTVERKET_LAYERS = {
 } as const;
 
 /**
+ * The one layer that covers the whole radar footprint.
+ *
+ * WHY IT HAD TO EXIST. MET's mosaic reaches Denmark, Sweden, Finland, Germany,
+ * the Baltics and St Petersburg. Kartverket stops at the Norwegian border, and
+ * it does not stop by failing — it serves an identical 854-byte BLANK tile for
+ * every request outside Norway, verified across nine cities. So the map drew
+ * live rain over white nothing for most of its own coverage, and blank ground
+ * is itself a claim: it reads as "the data ended" exactly where the data is
+ * fine. That is the same species of confident wrong answer as painting
+ * unobserved cells as dry.
+ *
+ * CARTO POSITRON, for the reason the design gives for preferring muted: "a
+ * basemap under a data overlay should lose every argument with the data". It is
+ * greyscale, it is global, it needs no key, and it is OpenStreetMap underneath
+ * — so the coastlines agree with everyone else's.
+ *
+ * ITS OWN ATTRIBUTION, and that is not optional. ODbL requires the OSM credit
+ * to travel with the data and CARTO requires theirs, so the credit is a
+ * function of the layer rather than a constant on the map — see `creditFor`.
+ *
+ * NOT A SILENT SUBSTITUTION for the Kartverket layers, per the design's ruling:
+ * "it belongs in the switcher as a fifth option, since the two do not agree on
+ * detail". Kartverket is better over Norway and this is the only thing that
+ * works anywhere else.
+ */
+const NORDIC_URL = "https://basemaps.cartocdn.com/light_all";
+
+/**
  * No aerial or satellite layer, and not for want of trying. Kartverket's open
  * WMTS cache advertises exactly four layers, all of them maps; Norge i bilder
  * (the national orthophoto) sits behind a signed agreement, the old
@@ -48,11 +76,35 @@ export const KARTVERKET_LAYERS = {
  * were skipped — they are not available to an app with no vendor account.
  */
 
-export type KartverketLayer = keyof typeof KARTVERKET_LAYERS;
+/**
+ * Every basemap the app offers. Four from Kartverket, one global.
+ *
+ * The name is now a lie of history — `KartverketLayer` covers one layer that is
+ * not Kartverket's — but renaming it touches thirty call sites for no gain, and
+ * the type is about "which basemap", not about who serves it.
+ */
+export type KartverketLayer = keyof typeof KARTVERKET_LAYERS | "nordic";
+
+/**
+ * Who to credit for a layer's tiles.
+ *
+ * A licence condition, and it varies: the Kartverket layers are Kartverket's,
+ * and the global one is OpenStreetMap's data rendered by CARTO. A single
+ * hardcoded credit line was correct only while there was a single provider.
+ */
+export function creditFor(layer: KartverketLayer): string {
+  return layer === "nordic"
+    ? "© OpenStreetMap contributors · © CARTO"
+    : "© Kartverket";
+}
 
 const TILE = 256;
 
 export function tileUrl(layer: KartverketLayer, z: number, x: number, y: number): string {
+  if (layer === "nordic") return `${NORDIC_URL}/${z}/${x}/${y}.png`;
+  // Kartverket's WMTS puts ROW before COLUMN, which is the opposite order to
+  // the XYZ convention every other provider uses. Getting it backwards returns
+  // a valid tile from the wrong place, which is the worst kind of wrong.
   return `https://cache.kartverket.no/v1/wmts/1.0.0/${KARTVERKET_LAYERS[layer]}/default/webmercator/${z}/${y}/${x}.png`;
 }
 

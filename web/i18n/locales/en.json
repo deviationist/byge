@@ -275,7 +275,9 @@
     "nautical": "Nautical",
     "nauticalHint": "Official sea charts",
     "topoHint": "Shaded relief",
-    "showing": "{{note}} · showing"
+    "showing": "{{note}} · showing",
+    "nordic": "Nordic",
+    "nordicHint": "The whole radar area · beyond Norway"
   },
   "search": {
     "label": "Search for a place",
@@ -348,7 +350,7 @@
     "mmh": "MM/H",
     "subtitle": "PHASE 2 · confirmation layer — the sentence is still the answer",
     "label": "Radar around {{name}}",
-    "attribution": "© Kartverket · radar: MET Norway",
+    "attribution": "{{basemap}} · radar: MET Norway",
     "footnote": "Hatched ground is outside radar coverage — not dry, unobserved. The boundary follows individual radar ranges, so it is ragged rather than a tidy polygon.",
     "darkNote": "Dark mode: MET renders these tiles light and has no dark equivalent, so the map stays a lit window inside dark chrome rather than a tinted version of someone else's data.",
     "unavailable": "Could not load the radar field. The verdict above is unaffected — it was already fetched.",
