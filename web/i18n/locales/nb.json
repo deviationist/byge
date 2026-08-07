@@ -190,7 +190,8 @@
     "loadingField": "laster feltet …",
     "sampling": "hver {{km}}. km · {{frames}} bilder",
     "footnote": "Hver rute er én kilometer, uansett zoom — oppløsningen radaren faktisk måler. Et vidt utsnitt betaler med BILDER i stedet for detaljer, så det animerer over færre steg. Skravert bakke er utenfor radardekning: ikke opphold, men uobservert.",
-    "loadingFrames": "1 km · laster resten av bildene …"
+    "loadingFrames": "1 km · laster resten av bildene …",
+    "radarOff": "Nedbørslaget er slått av. Kartet viser ikke regn fordi det er bedt om å la være, ikke fordi det ikke finnes."
   },
   "status": {
     "horizonHours_one": "{{count}} time",
@@ -277,7 +278,12 @@
     "topoHint": "Terrengskygge",
     "showing": "{{note}} · vises nå",
     "nordic": "Norden",
-    "nordicHint": "Hele radarområdet · utenfor Norge"
+    "nordicHint": "Hele radarområdet · utenfor Norge",
+    "radar": "Nedbør",
+    "radarOn": "Vises over kartet",
+    "radarOff": "Skjult — kartet viser ikke regn uansett",
+    "opacity": "Gjennomsiktighet",
+    "opacityValue": "{{pct}} %"
   },
   "search": {
     "label": "Søk etter et sted",

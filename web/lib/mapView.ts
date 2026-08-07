@@ -23,7 +23,31 @@ import { getItem, setItem } from "./kv";
 
 const KEY = "byge.map.view";
 
-export type MapView = { lat: number; lon: number; zoom: number };
+/**
+ * Everything about how someone has set the map up.
+ *
+ * ONE KEY, because these are one decision. Where you are looking, what is under
+ * the radar, and whether the radar is drawn at all are all "how I have this map
+ * set up" — splitting them across keys would mean a half-restored map after a
+ * partial write, which is worse than none.
+ *
+ * PRECIPITATION IS A LAYER, like the basemap and the sheets over it. That is
+ * what makes "off" an explicit, legible state rather than an opacity of zero —
+ * which would be indistinguishable on screen from a clear sky, and is exactly
+ * the confident wrong answer this app exists not to give. The screen says so
+ * while it is off; see MapScreen.
+ */
+export type MapView = {
+  lat: number;
+  lon: number;
+  zoom: number;
+  /** Which map is drawn under the radar. */
+  basemap: string;
+  /** Whether the radar is drawn at all. */
+  radar: boolean;
+  /** How opaque it is when it is. 0..1. */
+  radarOpacity: number;
+};
 
 /**
  * Rounded to four decimals, the same precision the app clamps coordinates to
@@ -37,6 +61,9 @@ export function saveMapView(v: MapView): void {
       lat: Number(v.lat.toFixed(4)),
       lon: Number(v.lon.toFixed(4)),
       zoom: Math.round(v.zoom),
+      basemap: v.basemap,
+      radar: v.radar,
+      radarOpacity: Number(v.radarOpacity.toFixed(2)),
     }),
   );
 }
@@ -51,7 +78,13 @@ export function saveMapView(v: MapView): void {
  * degrading. Anything that is not a plausible coordinate at a real zoom is
  * treated as absent.
  */
-export function loadMapView(min: number, max: number): MapView | null {
+export function loadMapView(
+  min: number,
+  max: number,
+  /** Layer names this build knows. One saved by an older or newer build is dropped. */
+  basemaps: readonly string[],
+  fallback: Omit<MapView, "lat" | "lon" | "zoom">,
+): MapView | null {
   const raw = getItem(KEY);
   if (!raw) return null;
   try {
@@ -70,7 +103,26 @@ export function loadMapView(min: number, max: number): MapView | null {
     ) {
       return null;
     }
-    return { lat: v.lat, lon: v.lon, zoom: Math.min(max, Math.max(min, Math.round(v.zoom))) };
+    return {
+      lat: v.lat,
+      lon: v.lon,
+      zoom: Math.min(max, Math.max(min, Math.round(v.zoom))),
+      // Each layer field falls back on its own, because a view whose BASEMAP is
+      // unrecognised is still a perfectly good position — dropping the whole
+      // thing over one stale field would throw away the part that matters most.
+      basemap:
+        typeof v.basemap === "string" && basemaps.includes(v.basemap)
+          ? v.basemap
+          : fallback.basemap,
+      radar: typeof v.radar === "boolean" ? v.radar : fallback.radar,
+      radarOpacity:
+        typeof v.radarOpacity === "number" &&
+        Number.isFinite(v.radarOpacity) &&
+        v.radarOpacity >= 0 &&
+        v.radarOpacity <= 1
+          ? v.radarOpacity
+          : fallback.radarOpacity,
+    };
   } catch {
     return null;
   }

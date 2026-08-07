@@ -15,32 +15,36 @@ beforeEach(() => {
 
 const MIN = 3;
 const MAX = 16;
+const NAMES = ["nordic", "grey", "topo", "detailed", "nautical"] as const;
+const FALLBACK = { basemap: "nordic", radar: true, radarOpacity: 0.8 };
+const load = () => loadMapView(MIN, MAX, NAMES, FALLBACK);
+const view = (over = {}) => ({ lat: 60, lon: 10, zoom: 8, ...FALLBACK, ...over });
 
 describe("saveMapView / loadMapView", () => {
   it("round-trips a view", () => {
-    saveMapView({ lat: 59.9273, lon: 10.7607, zoom: 9 });
-    expect(loadMapView(MIN, MAX)).toEqual({ lat: 59.9273, lon: 10.7607, zoom: 9 });
+    saveMapView(view({ lat: 59.9273, lon: 10.7607, zoom: 9 }));
+    expect(load()).toEqual(view({ lat: 59.9273, lon: 10.7607, zoom: 9 }));
   });
 
   it("stores nothing finer than four decimals", () => {
     // The same precision the app clamps coordinates to everywhere else — about
     // 11 m, far finer than a 1 km radar cell and coarse enough that this is not
     // a precise record of anywhere.
-    saveMapView({ lat: 59.92734567, lon: 10.76089123, zoom: 9.4 });
-    expect(loadMapView(MIN, MAX)).toEqual({ lat: 59.9273, lon: 10.7609, zoom: 9 });
+    saveMapView(view({ lat: 59.92734567, lon: 10.76089123, zoom: 9.4 }));
+    expect(load()).toEqual(view({ lat: 59.9273, lon: 10.7609, zoom: 9 }));
   });
 
   it("has no view before one is saved", () => {
-    expect(loadMapView(MIN, MAX)).toBeNull();
+    expect(load()).toBeNull();
   });
 
   it("clamps a zoom the map can no longer render", () => {
     // MIN_ZOOM and MAX_ZOOM are ours to change, and a value saved under the old
     // pair must not survive as one the projection will refuse.
-    saveMapView({ lat: 60, lon: 10, zoom: 99 });
-    expect(loadMapView(MIN, MAX)?.zoom).toBe(MAX);
-    saveMapView({ lat: 60, lon: 10, zoom: -5 });
-    expect(loadMapView(MIN, MAX)?.zoom).toBe(MIN);
+    saveMapView(view({ zoom: 99 }));
+    expect(load()?.zoom).toBe(MAX);
+    saveMapView(view({ zoom: -5 }));
+    expect(load()?.zoom).toBe(MIN);
   });
 
   it("treats an impossible coordinate as no view at all", () => {
@@ -53,8 +57,8 @@ describe("saveMapView / loadMapView", () => {
       { lat: Number.NaN, lon: 10, zoom: 8 },
       { lat: 60, lon: 10, zoom: Number.POSITIVE_INFINITY },
     ]) {
-      saveMapView(bad);
-      expect(loadMapView(MIN, MAX)).toBeNull();
+      saveMapView(view(bad));
+      expect(load()).toBeNull();
     }
   });
 
@@ -63,7 +67,35 @@ describe("saveMapView / loadMapView", () => {
     // map must open on the default rather than fail to open.
     for (const junk of ["", "{", "null", '{"lat":"59.9"}', "[1,2,3]", '"hello"']) {
       setItem("byge.map.view", junk);
-      expect(loadMapView(MIN, MAX)).toBeNull();
+      expect(load()).toBeNull();
     }
+  });
+
+  it("keeps the layer settings alongside the position", () => {
+    // One key, because these are one decision — "how I have this map set up".
+    // Split across keys, a partial write leaves a half-restored map, which is
+    // worse than none.
+    saveMapView(view({ basemap: "nautical", radar: false, radarOpacity: 0.3 }));
+    expect(load()).toMatchObject({ basemap: "nautical", radar: false, radarOpacity: 0.3 });
+  });
+
+  it("drops a basemap this build no longer has, and keeps the position", () => {
+    // A layer name from an older or newer build is stale; the COORDINATES are
+    // still perfectly good. Discarding the whole view over one unrecognised
+    // field would throw away the part that matters most.
+    setItem(
+      "byge.map.view",
+      JSON.stringify({ lat: 59.9, lon: 10.7, zoom: 9, basemap: "satellite", radar: true, radarOpacity: 0.8 }),
+    );
+    const v = load();
+    expect(v).toMatchObject({ lat: 59.9, lon: 10.7, zoom: 9, basemap: "nordic" });
+  });
+
+  it("falls back per field rather than all at once", () => {
+    setItem("byge.map.view", JSON.stringify({ lat: 60, lon: 10, zoom: 8, radarOpacity: 12 }));
+    const v = load();
+    expect(v?.radarOpacity).toBe(0.8);
+    expect(v?.radar).toBe(true);
+    expect(v?.lat).toBe(60);
   });
 });

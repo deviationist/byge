@@ -49,6 +49,18 @@ const HORIZON_DWELL_MS = MS_PER_FRAME * 4;
 const START: LatLon = { lat: 60.5, lon: 9.0 };
 const START_ZOOM = 7;
 
+/**
+ * How the layers start, before anyone has chosen.
+ *
+ * 0.8 rather than the 0.82 the overlay was fixed at, because opacity now moves
+ * in tenths and a default that is not on the control's own grid shows a slider
+ * sitting between its ticks.
+ */
+const LAYER_DEFAULTS = { basemap: "nordic", radar: true, radarOpacity: 0.8 } as const;
+
+/** The layer names this build knows, so a stale saved one is dropped. */
+const BASEMAP_NAMES = ["nordic", "grey", "topo", "detailed", "nautical"] as const;
+
 /** Close enough that a 3 km radius ring reads as a ring. */
 const PLACE_ZOOM = 9;
 
@@ -116,7 +128,9 @@ export function MapScreen({ placeId }: MapScreenProps = {}) {
   // The place wins; otherwise where this browser was last looking; otherwise
   // the default view. Read once via lazy state, so a later save cannot yank the
   // map back to a stale position mid-session.
-  const [saved] = useState(() => (place ? null : loadMapView(MIN_ZOOM, MAX_ZOOM)));
+  const [saved] = useState(() =>
+    place ? null : loadMapView(MIN_ZOOM, MAX_ZOOM, BASEMAP_NAMES, LAYER_DEFAULTS),
+  );
   const start = place ? { lat: place.lat, lon: place.lon } : (saved ?? START);
   const [centre, setCentre] = useState<LatLon>(start);
   const [view, setView] = useState<LatLon>(start);
@@ -129,7 +143,16 @@ export function MapScreen({ placeId }: MapScreenProps = {}) {
   // makes the app look broken exactly where the radar is working. The picker
   // opens on Kartverket instead, because a place someone is saving is almost
   // always in Norway and Kartverket is the better map there.
-  const [basemap, setBasemap] = useState<KartverketLayer>(place ? "grey" : "nordic");
+  const [basemap, setBasemap] = useState<KartverketLayer>(
+    (saved?.basemap as KartverketLayer) ?? (place ? "grey" : "nordic"),
+  );
+  // PRECIPITATION IS A LAYER, so it can be turned off like any other. Off is an
+  // explicit state rather than an opacity of zero, which would look exactly
+  // like a clear sky — see the note where the screen says so.
+  const [radar, setRadar] = useState(saved?.radar ?? LAYER_DEFAULTS.radar);
+  const [radarOpacity, setRadarOpacity] = useState(
+    saved?.radarOpacity ?? LAYER_DEFAULTS.radarOpacity,
+  );
   const [size, setSize] = useState({ width: 0, height: 0 });
   // THE PLAYHEAD IS FRACTIONAL — 3.4 is 40 % of the way from frame 3 to 4, and
   // RadarGL cross-fades there. Everything that reports a frame to a human reads
@@ -314,8 +337,8 @@ export function MapScreen({ placeId }: MapScreenProps = {}) {
   // untouched: the launcher still opens the list.
   useEffect(() => {
     if (place) return;
-    saveMapView({ lat: view.lat, lon: view.lon, zoom });
-  }, [place, view, zoom]);
+    saveMapView({ lat: view.lat, lon: view.lon, zoom, basemap, radar, radarOpacity });
+  }, [place, view, zoom, basemap, radar, radarOpacity]);
   useEffect(
     () => () => {
       if (settle.current) clearTimeout(settle.current);
@@ -379,7 +402,7 @@ export function MapScreen({ placeId }: MapScreenProps = {}) {
           label={t("map.canvasLabel")}
           attribution={t("radarMap.attribution", { basemap: creditFor(basemap) })}
           overlay={(v) =>
-            frameCount > 0 ? (
+            radar && frameCount > 0 ? (
               <RadarTilesGL
                 tiles={tiles}
                 version={version}
@@ -392,6 +415,7 @@ export function MapScreen({ placeId }: MapScreenProps = {}) {
                 width={v.width}
                 height={v.height}
                 theme={theme}
+                opacity={radarOpacity}
               />
             ) : null
           }
@@ -427,7 +451,15 @@ export function MapScreen({ placeId }: MapScreenProps = {}) {
           // menu's own z-index cannot escape. Without it the panel opens
           // underneath the map it is drawn over. Same trap NavBar documents.
           <View style={{ position: "absolute", left: 12, bottom: 12, zIndex: 30 }}>
-            <BasemapMenu value={basemap} onChange={setBasemap} theme={theme} />
+              <BasemapMenu
+              value={basemap}
+              onChange={setBasemap}
+              radar={radar}
+              onRadarChange={setRadar}
+              opacity={radarOpacity}
+              onOpacityChange={setRadarOpacity}
+              theme={theme}
+            />
           </View>
         )}
 
@@ -487,7 +519,14 @@ export function MapScreen({ placeId }: MapScreenProps = {}) {
             }}
           />
           <Text className="text-ink3" style={{ fontFamily: MONO, fontSize: 10 }}>
-            {loading
+            {!radar
+              ? // SAYS SO WHEN THE LAYER IS OFF, and this line is the whole
+                // reason "off" is allowed to exist. A map with no overlay looks
+                // exactly like a map with no rain on it; without a sentence
+                // here the app would be showing a confident, legible, wrong
+                // answer — the one thing it is built not to do.
+                t("map.radarOff")
+              : loading
               ? t("map.loadingField")
               : partial
                 ? // Says the animation is still arriving rather than showing a

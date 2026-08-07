@@ -1,5 +1,5 @@
 import i18next from "i18next";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import type { Theme } from "../theme/useTheme";
 import { MoreButton } from "./MoreButton";
@@ -63,6 +63,15 @@ export type OverflowMenuProps = {
    * where this was found.
    */
   direction?: "down" | "up";
+  /**
+   * Rendered below the rows, after a rule.
+   *
+   * For controls that are not actions — the overlay's opacity lives here,
+   * because it belongs to the same question as the layer rows above it ("what
+   * is under the radar, and how much of it can I see") but is a VALUE rather
+   * than a choice, so it cannot be a menuitem without lying about what it does.
+   */
+  footer?: ReactNode;
   disabled?: boolean;
 };
 
@@ -76,6 +85,7 @@ export function OverflowMenu({
   triggerText,
   align = "end",
   direction = "down",
+  footer,
   disabled = false,
 }: OverflowMenuProps) {
   const [open, setOpen] = useState(false);
@@ -298,6 +308,16 @@ export function OverflowMenu({
               ) : null}
             </Pressable>
           ))}
+
+          {footer ? (
+            // Not inside the roving-focus list: it is a control rather than a
+            // row, so arrow keys must reach IT, not step past it to the next
+            // menuitem. The rule above it is what says the two are different
+            // kinds of thing.
+            <View className="border-t-line2" style={{ borderTopWidth: 1, padding: 12 }}>
+              {footer}
+            </View>
+          ) : null}
         </View>
       ) : null}
     </View>
