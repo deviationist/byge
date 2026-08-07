@@ -59,6 +59,15 @@ export type PlaybackControlProps = {
    * and the playhead sitting on it means "caught up", not "finished".
    */
   buffering?: boolean;
+  /**
+   * Step one frame. Negative is back.
+   *
+   * Separate from `onToggle` because it is a different verb: play is "run the
+   * two hours", step is "show me that one". A transport with only play is
+   * unusable for the thing people actually do on a radar map, which is inch
+   * back and forth over the moment a band reaches them.
+   */
+  onStep?: (delta: number) => void;
 };
 
 export function PlaybackControl({
@@ -70,14 +79,28 @@ export function PlaybackControl({
   minutes,
   openEnded = false,
   buffering = false,
+  onStep,
 }: PlaybackControlProps) {
   const { t } = useTranslation();
   // Nothing to play yet — not paused, not ended, just not here.
   const empty = count === 0;
   const ended = !playing && !buffering && count > 0 && index >= count - 1;
 
+  const canBack = !!onStep && !empty && index > 0;
+  const canForward = !!onStep && !empty && index < count - 1;
+
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 13 }}>
+      {onStep ? (
+        <StepButton
+          testID="step-back"
+          label={t("playback.stepBack")}
+          disabled={!canBack}
+          onPress={() => onStep(-1)}
+          glyph="‹"
+        />
+      ) : null}
+
       <Pressable
         testID="playback"
         accessibilityRole="button"
@@ -111,6 +134,16 @@ export function PlaybackControl({
             whose whole job is to be recognised instantly. */}
         {playing ? <PauseIcon /> : ended ? <ReplayIcon /> : <PlayIcon />}
       </Pressable>
+
+      {onStep ? (
+        <StepButton
+          testID="step-forward"
+          label={t("playback.stepForward")}
+          disabled={!canForward}
+          onPress={() => onStep(1)}
+          glyph="›"
+        />
+      ) : null}
 
       <View style={{ gap: 3, minWidth: 0 }}>
         <Text
@@ -164,6 +197,53 @@ export function PlaybackControl({
         </Text>
       ) : null}
     </View>
+  );
+}
+
+/**
+ * One frame back or forward.
+ *
+ * 36 px drawn inside a 44 px row, so the target meets the minimum without the
+ * two of them crowding the play button they flank. The chevrons are the same
+ * marks the design puts either side of the graph's playhead, so the two
+ * controls read as the same instrument.
+ */
+function StepButton({
+  testID,
+  label,
+  glyph,
+  disabled,
+  onPress,
+}: {
+  testID: string;
+  label: string;
+  glyph: string;
+  disabled: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      testID={testID}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      aria-disabled={disabled}
+      disabled={disabled}
+      onPress={onPress}
+      className="border-line2"
+      style={({ pressed }) => ({
+        width: 36,
+        height: 44,
+        borderRadius: 9,
+        borderWidth: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        opacity: disabled ? 0.35 : pressed ? 0.7 : 1,
+      })}
+    >
+      <Text aria-hidden className="text-ink font-mono" style={{ fontSize: 15, lineHeight: 18 }}>
+        {glyph}
+      </Text>
+    </Pressable>
   );
 }
 

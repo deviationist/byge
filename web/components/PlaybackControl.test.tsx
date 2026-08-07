@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { PlaybackControl } from "./PlaybackControl";
 
@@ -55,5 +55,48 @@ describe("PlaybackControl", () => {
     expect(screen.queryByTestId("playback-horizon")).toBeNull();
     rerender(<PlaybackControl {...base} index={23} count={24} openEnded />);
     expect(screen.getByTestId("playback-horizon")).toBeVisible();
+  });
+
+  describe("stepping", () => {
+    it("moves one frame at a time, in both directions", () => {
+      // A different verb from play: "run the two hours" versus "show me that
+      // one". Inching back and forth over the moment a band arrives is the
+      // thing people actually do on a radar map.
+      const onStep = vi.fn();
+      render(<PlaybackControl {...base} index={5} count={24} onStep={onStep} />);
+      fireEvent.click(screen.getByRole("button", { name: "Previous frame" }));
+      fireEvent.click(screen.getByRole("button", { name: "Next frame" }));
+      expect(onStep.mock.calls).toEqual([[-1], [1]]);
+    });
+
+    it("disables the ends rather than wrapping them", () => {
+      // The run loops on its own; an explicit step should never teleport across
+      // the whole two hours.
+      // Scoped to each render's own container: two PlaybackControls in one
+      // document share `screen`, and an unscoped testID finds both.
+      const first = within(
+        render(<PlaybackControl {...base} index={0} count={24} onStep={vi.fn()} />).container,
+      );
+      expect(first.getByTestId("step-back")).toBeDisabled();
+      expect(first.getByTestId("step-forward")).not.toBeDisabled();
+
+      const last = within(
+        render(<PlaybackControl {...base} index={23} count={24} onStep={vi.fn()} />).container,
+      );
+      expect(last.getByTestId("step-forward")).toBeDisabled();
+      expect(last.getByTestId("step-back")).not.toBeDisabled();
+    });
+
+    it("is absent when the caller cannot step", () => {
+      // The transport is shared, and a dead control is worse than no control.
+      render(<PlaybackControl {...base} index={5} count={24} />);
+      expect(screen.queryByTestId("step-back")).toBeNull();
+    });
+
+    it("disables both ends when there is nothing to play", () => {
+      const { getByTestId } = render(<PlaybackControl {...base} count={0} onStep={vi.fn()} />);
+      expect(getByTestId("step-back")).toBeDisabled();
+      expect(getByTestId("step-forward")).toBeDisabled();
+    });
   });
 });

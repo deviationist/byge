@@ -200,6 +200,57 @@ export function MapScreen() {
   // long enough to pause on — so the end of the data is still a moment rather
   // than a seam. The dwell lives in the playback loop above.
 
+  /**
+   * Move the playhead by whole frames, and stop playing.
+   *
+   * Stepping pauses for the same reason scrubbing does: fighting an animation
+   * for control of the thing you are moving is the worst version of both, and
+   * the reader has just said which frame they want. Clamped rather than
+   * wrapped — the run loops on its own, but an explicit step should never
+   * teleport across the whole two hours.
+   */
+  const step = useCallback(
+    (delta: number) => {
+      setPlaying(false);
+      setPlayhead((p) => {
+        const max = Math.max(0, frameCount - 1);
+        return Math.min(max, Math.max(0, Math.round(p) + delta));
+      });
+    },
+    [frameCount],
+  );
+
+  // ARROW KEYS, because a map you can only scrub with a pointer is a map half
+  // the people using it cannot read frame by frame.
+  //
+  // Bound on the window rather than on the canvas: the transport, the graph and
+  // the map are three focusable things for one timeline, and requiring the
+  // right one to be focused first is a puzzle. Guarded so it never steals a
+  // keystroke from a text field — the add-a-place screen shares this app.
+  useEffect(() => {
+    if (frameCount <= 1) return;
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement | null;
+      const tag = el?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || el?.isContentEditable) return;
+      // THE MAP KEEPS ITS ARROWS WHEN IT HAS FOCUS. MapCanvas binds all four for
+      // panning, and both listeners would otherwise fire on one keypress — the
+      // view sliding east while the playhead stepped forward. Focus the map and
+      // the arrows pan, which is what a focused map should do; focus anything
+      // else, or nothing, and they move the timeline.
+      if (el?.closest?.('[aria-roledescription="map"]')) return;
+      if (e.key === "ArrowLeft") step(-1);
+      else if (e.key === "ArrowRight") step(1);
+      else if (e.key === "Home") step(-frameCount);
+      else if (e.key === "End") step(frameCount);
+      else if (e.key === " " || e.key === "k") setPlaying((p) => !p);
+      else return;
+      e.preventDefault();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [step, frameCount]);
+
   // Settles a beat after the gesture stops, so a flick-and-flick-again asks
   // once rather than twice.
   const settle = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -342,6 +393,7 @@ export function MapScreen() {
             count={frameCount}
             expected={expected}
             buffering={partial}
+            onStep={step}
             minutes={frame * 5}
             onToggle={() => {
               // Pressing play while parked at the horizon rewinds, so the

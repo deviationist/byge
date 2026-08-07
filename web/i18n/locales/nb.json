@@ -388,6 +388,10 @@
     "playing": "SPILLER · BILDE {{i}} AV {{n}}",
     "waiting": "HENTER SERIEN…",
     "buffering": "BILDE {{i}} · {{total}} PÅ VEI",
+    "stepBack": "Forrige bilde",
+    "stepForward": "Neste bilde",
+    "toNow": "Hopp til nå",
+    "toHorizon": "Hopp til siste bilde",
     "ended": "SLUTT PÅ SERIEN · SPILL PÅ NYTT",
     "horizon": "Så langt rekker radarserien. Det som fortsatt faller her, har ingen kjent slutt."
   }
