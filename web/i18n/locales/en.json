@@ -47,7 +47,8 @@
     "appearanceSection": "Appearance",
     "version": "Version {{version}} · offline-capable",
     "language": "Language",
-    "languageSection": "Language"
+    "languageSection": "Language",
+    "radarSection": "The radar"
   },
   "attribution": {
     "dataFrom": "Data from",
@@ -264,7 +265,8 @@
     "offlineAge": "last updated {{age}} min ago · offline",
     "checking": "checking…",
     "caption": "{{places}} · {{freshness}}",
-    "radarEntry": "Radar map · look at the weather, no place attached"
+    "radarEntry": "Radar map · look at the weather, no place attached",
+    "radarShort": "Radar"
   },
   "basemap": {
     "label": "Map style",

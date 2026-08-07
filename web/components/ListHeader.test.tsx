@@ -1,5 +1,5 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 import { ListHeader } from "./ListHeader";
 
 /**
@@ -62,5 +62,35 @@ describe("ListHeader", () => {
     const caption = screen.getByTestId("list-caption").textContent ?? "";
     expect(caption).toContain("offline");
     expect(caption).toContain("34 min");
+  });
+
+  describe("the radar as a peer", () => {
+    /**
+     * Design put the radar behind a quiet text line under the legend, and their
+     * reasoning was sound: the risk was never that the map exists, it was that
+     * the map becomes the front door. But quiet turned out to be invisible —
+     * the person who built the app could not find it. So it is promoted to a
+     * PEER of the places rather than to the landing view: the launcher still
+     * opens this list, and byge still answers with a sentence before it offers
+     * a picture.
+     */
+    it("offers the radar from the masthead", () => {
+      const onRadar = vi.fn();
+      render(<ListHeader count={3} onRadar={onRadar} />);
+      fireEvent.click(screen.getByTestId("radar-link"));
+      expect(onRadar).toHaveBeenCalled();
+    });
+
+    it("does not draw a link with nowhere to go", () => {
+      render(<ListHeader count={3} />);
+      expect(screen.queryByTestId("radar-link")).toBeNull();
+    });
+
+    it("keeps the wordmark a heading, not a button", () => {
+      // The masthead is now a junction, and the app's name must not become the
+      // thing you press to leave it.
+      render(<ListHeader count={3} onRadar={() => {}} />);
+      expect(screen.getByTestId("wordmark")).toHaveAttribute("role", "heading");
+    });
   });
 });

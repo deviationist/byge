@@ -1,11 +1,12 @@
 import type { TFunction } from "i18next";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Text, useWindowDimensions, View } from "react-native";
+import { Pressable, Text, useWindowDimensions, View } from "react-native";
 import { Attribution } from "../components/Attribution";
 import { BrandMark } from "../components/BrandMark";
 import { NavBar } from "../components/NavBar";
 import { SegmentedControl } from "../components/SegmentedControl";
+import { useRouter } from "expo-router";
 import { useBack } from "../hooks/useBack";
 import { chooseLanguage, type LanguageChoice, languageChoice } from "../i18n";
 import { pagePadFor, Screen } from "../layouts/Screen";
@@ -42,6 +43,7 @@ const ABOUT_BOTTOM: [number, number, number] = [30, 34, 44];
  * not earn a screen of its own.
  */
 export function AboutScreen() {
+  const router = useRouter();
   const goBack = useBack("/");
   const { t } = useTranslation();
   const { width } = useWindowDimensions();
@@ -148,6 +150,31 @@ export function AboutScreen() {
             setLanguage(next);
           }}
         />
+      </Section>
+
+      {/*
+        The radar's second entry point, which Design asked for in the map
+        response — "the list entry is a line of text… add a matching row in
+        About" — and which was never built. Same weight and same wording as the
+        list's, so the two read as one destination rather than two features.
+      */}
+      <Section title={t("about.radarSection")}>
+        <Pressable
+          testID="about-radar"
+          accessibilityRole="link"
+          accessibilityLabel={t("list.radarEntry")}
+          onPress={() => router.push("/map")}
+          style={({ pressed }) => ({
+            alignSelf: "flex-start",
+            minHeight: 44,
+            justifyContent: "center",
+            opacity: pressed ? 0.6 : 1,
+          })}
+        >
+          <Text className="text-ink2 border-b-line2" style={{ fontSize: 13, paddingBottom: 2 }}>
+            {t("list.radarEntry")} <Text style={{ fontFamily: MONO }}>→</Text>
+          </Text>
+        </Pressable>
       </Section>
 
       <Section title={t("about.howItWorks")}>

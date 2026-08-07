@@ -83,7 +83,12 @@ export function LocationsScreen({ selectedId, onSelect }: LocationsScreenProps =
         lives in the attribution line at the foot where the other legal text is.
         A bar holding one ghost button was furniture around an empty slot.
       */}
-      <ListHeader count={locations.length} ageMin={age} compact={twoPane} />
+      <ListHeader
+        count={locations.length}
+        ageMin={age}
+        compact={twoPane}
+        onRadar={() => router.push("/map")}
+      />
 
       {install.available ? (
         <InstallPrompt theme={theme} onInstall={install.prompt} onDismiss={install.dismiss} />
