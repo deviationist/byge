@@ -12,7 +12,7 @@ import {
   MIN_ZOOM,
   metersPerPixel,
 } from "./MapCanvas";
-import { BASEMAP_OPTIONS, SegmentedControl } from "./SegmentedControl";
+import { basemapSegments, SegmentedControl } from "./SegmentedControl";
 import type { KartverketLayer } from "./TileLayer";
 import { ZoomControl } from "./ZoomControl";
 
@@ -199,7 +199,7 @@ export function MapField({
       <SegmentedControl<KartverketLayer>
         label={t("basemap.label")}
         labelHidden
-        options={BASEMAP_OPTIONS}
+        options={basemapSegments()}
         value={layer}
         onChange={setLayer}
       />

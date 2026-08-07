@@ -8,7 +8,7 @@ import { MapLegend } from "../components/MapLegend";
 import { NavBar } from "../components/NavBar";
 import { PlaybackControl } from "../components/PlaybackControl";
 import { RadarTilesGL } from "../components/RadarTilesGL";
-import { BASEMAP_OPTIONS, SegmentedControl } from "../components/SegmentedControl";
+import { BasemapMenu } from "../components/BasemapMenu";
 import type { KartverketLayer } from "../components/TileLayer";
 import { ZoomControl } from "../components/ZoomControl";
 import { useBack } from "../hooks/useBack";
@@ -329,25 +329,21 @@ export function MapScreen() {
           <ZoomControl zoom={zoom} min={MIN_ZOOM} max={MAX_ZOOM} onChange={setZoom} />
         </MapCanvas>
 
-        <View
-          className="bg-surface border-line"
-          style={{
-            position: "absolute",
-            left: 12,
-            top: 12,
-            borderWidth: 1,
-            borderRadius: 10,
-            padding: 4,
-          }}
-        >
-          <SegmentedControl<KartverketLayer>
-            label={t("basemap.label")}
-            labelHidden
-            options={BASEMAP_OPTIONS}
-            value={basemap}
-            onChange={setBasemap}
-          />
-        </View>
+        {/*
+          Bottom-left, where the design puts it — the top edge belongs to the
+          screen's own name, and a picker up there competed with it.
+
+          ONE FLOATING THING AT A TIME ON A PHONE. The design is explicit: when
+          a readout opens, the basemap switcher yields. On a 390 px screen the
+          readout, the legend and the picker cannot all sit over the map without
+          burying the thing they annotate — and the readout is the one the
+          reader just asked for.
+        */}
+        {phone && picked ? null : (
+          <View style={{ position: "absolute", left: 12, bottom: 12 }}>
+            <BasemapMenu value={basemap} onChange={setBasemap} theme={theme} />
+          </View>
+        )}
 
         {/*
           Bottom-right, and its density follows the MEASURED pane rather than
