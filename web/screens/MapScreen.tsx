@@ -2,23 +2,30 @@ import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Text, useWindowDimensions, View } from "react-native";
+import { BasemapMenu } from "../components/BasemapMenu";
 import { CellReadout } from "../components/CellReadout";
-import { type LatLon, MAX_ZOOM, MapCanvas, metersPerPixel, MIN_ZOOM } from "../components/MapCanvas";
+import {
+  type LatLon,
+  MAX_ZOOM,
+  MapCanvas,
+  MIN_ZOOM,
+  metersPerPixel,
+} from "../components/MapCanvas";
+import { debugRequested, MapDebug } from "../components/MapDebug";
 import { MapLegend } from "../components/MapLegend";
 import { NavBar } from "../components/NavBar";
 import { PlaybackControl } from "../components/PlaybackControl";
+import { PrecipitationGraph } from "../components/PrecipitationGraph";
 import { RadarTilesGL } from "../components/RadarTilesGL";
-import { BasemapMenu } from "../components/BasemapMenu";
 import { creditFor, type KartverketLayer } from "../components/TileLayer";
 import { ZoomControl } from "../components/ZoomControl";
 import { useBack } from "../hooks/useBack";
 import { useLocations } from "../hooks/useLocations";
-import { useVerdict } from "../hooks/useVerdict";
-import { PrecipitationGraph } from "../components/PrecipitationGraph";
-import { useReducedMotion } from "../hooks/useReducedMotion";
 import { useRadarTiles } from "../hooks/useRadarTiles";
-import { loadMapView, saveMapView } from "../lib/mapView";
+import { useReducedMotion } from "../hooks/useReducedMotion";
+import { useVerdict } from "../hooks/useVerdict";
 import { Screen } from "../layouts/Screen";
+import { loadMapView, saveMapView } from "../lib/mapView";
 import { useResolvedTheme } from "../theme/ThemeProvider";
 import { MONO } from "../theme/tokens";
 
@@ -150,6 +157,9 @@ export function MapScreen({ placeId }: MapScreenProps = {}) {
     saved?.radarOpacity ?? LAYER_DEFAULTS.radarOpacity,
   );
   const [size, setSize] = useState({ width: 0, height: 0 });
+  // Read once: the URL cannot change under this screen without a remount, and
+  // re-reading it per render would be a search-string parse on every pan frame.
+  const [debug] = useState(debugRequested);
   // THE PLAYHEAD IS FRACTIONAL — 3.4 is 40 % of the way from frame 3 to 4, and
   // RadarGL cross-fades there. Everything that reports a frame to a human reads
   // the floored value below instead; nobody wants "frame 3.4 of 24".
@@ -160,14 +170,7 @@ export function MapScreen({ placeId }: MapScreenProps = {}) {
   // Only the tiles this tab does not already hold. Frame 0 paints as soon as it
   // lands and the rest arrive behind it; a pan or a zoom fetches the difference
   // rather than the whole viewport. See useRadarTiles.
-  const {
-    tiles,
-    depth,
-    expected,
-    partial,
-    loading,
-    version,
-  } = useRadarTiles(
+  const { tiles, depth, expected, level, partial, loading, version } = useRadarTiles(
     size.width > 0
       ? { lat: view.lat, lon: view.lon, zoom, width: size.width, height: size.height }
       : null,
@@ -432,6 +435,23 @@ export function MapScreen({ placeId }: MapScreenProps = {}) {
         </MapCanvas>
 
         {/*
+          `?debug` only. Top-left is the one corner nothing else claims: the
+          picker is bottom-left, the legend bottom-right, the zoom top-right.
+        */}
+        {debug ? (
+          <MapDebug
+            center={centre}
+            zoom={zoom}
+            level={level}
+            tiles={tiles.length}
+            depth={depth}
+            expected={expected}
+            width={size.width}
+            height={size.height}
+          />
+        ) : null}
+
+        {/*
           Bottom-left, where the design puts it — the top edge belongs to the
           screen's own name, and a picker up there competed with it.
 
@@ -447,7 +467,7 @@ export function MapScreen({ placeId }: MapScreenProps = {}) {
           // menu's own z-index cannot escape. Without it the panel opens
           // underneath the map it is drawn over. Same trap NavBar documents.
           <View style={{ position: "absolute", left: 12, bottom: 12, zIndex: 30 }}>
-              <BasemapMenu
+            <BasemapMenu
               value={basemap}
               onChange={setBasemap}
               radar={radar}
@@ -523,12 +543,12 @@ export function MapScreen({ placeId }: MapScreenProps = {}) {
                 // answer — the one thing it is built not to do.
                 t("map.radarOff")
               : loading
-              ? t("map.loadingField")
-              : partial
-                ? // Says the animation is still arriving rather than showing a
-                  // frame count that is about to change under the reader.
-                  t("map.loadingFrames")
-                : t("map.sampling", { km: 1, frames: frameCount })}
+                ? t("map.loadingField")
+                : partial
+                  ? // Says the animation is still arriving rather than showing a
+                    // frame count that is about to change under the reader.
+                    t("map.loadingFrames")
+                  : t("map.sampling", { km: 1, frames: frameCount })}
           </Text>
         </View>
 
