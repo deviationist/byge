@@ -57,7 +57,7 @@ func TestCutTileFillsOffGridWithNoCoverage(t *testing.T) {
 	}
 
 	// Tile (1,2) starts at row 128, col 256 — its right and bottom hang off.
-	out := CutTile(frame, Tile{Row: 1, Col: 2}, nx, ny)
+	out := CutTile(frame, Tile{Row: 1, Col: 2}, nx, ny, 0)
 	if len(out) != TileSize*TileSize {
 		t.Fatalf("tile is %d bytes, want %d", len(out), TileSize*TileSize)
 	}
@@ -96,7 +96,7 @@ func TestCutTileCopiesTheRightRectangle(t *testing.T) {
 			frame[r*nx+c] = byte(r/TileSize)*3 + byte(c/TileSize)
 		}
 	}
-	out := CutTile(frame, Tile{Row: 2, Col: 3}, nx, ny)
+	out := CutTile(frame, Tile{Row: 2, Col: 3}, nx, ny, 0)
 	want := byte(2)*3 + 3
 	for i, v := range out {
 		if v != want {
@@ -114,5 +114,77 @@ func TestTileHeaderSizeMatchesWhatIsWritten(t *testing.T) {
 		if got := len(EncodeTileHeader(TileHeader{Tiles: tiles})); got != TileHeaderSize(n) {
 			t.Errorf("%d tiles: wrote %d bytes, TileHeaderSize says %d", n, got, TileHeaderSize(n))
 		}
+	}
+}
+
+func TestCutTileDownsamplesByMaxNotMean(t *testing.T) {
+	// AVERAGING WOULD INVENT WEATHER. A block holding one wet cell beside three
+	// dry ones has rain in it, and a mean would report a weaker band that was
+	// never measured. Worse, the symbols are ordered with NoCoverage at the top,
+	// so a mean would drag an unobserved cell DOWN into an intensity — turning
+	// "we could not look here" into "light rain", which is the one
+	// transformation this format exists to prevent.
+	nx, ny := 4*TileSize, 4*TileSize
+	frame := make([]byte, nx*ny)
+	for i := range frame {
+		frame[i] = Dry
+	}
+	// One wet cell in the very first 4x4 block of a level-2 tile.
+	frame[2*nx+2] = 5
+
+	out := CutTile(frame, Tile{Row: 0, Col: 0}, nx, ny, 2)
+	if out[0] != 5 {
+		t.Errorf("block containing rain reported %d, want the max 5", out[0])
+	}
+	if out[1] != Dry {
+		t.Errorf("block of dry ground reported %d, want Dry", out[1])
+	}
+}
+
+func TestCutTileKeepsUnobservedUnobserved(t *testing.T) {
+	// A block that is entirely outside coverage must stay outside coverage: any
+	// intensity here is a claim we never had an observation for.
+	nx, ny := 4*TileSize, 4*TileSize
+	frame := make([]byte, nx*ny)
+	for i := range frame {
+		frame[i] = NoCoverage
+	}
+	out := CutTile(frame, Tile{Row: 0, Col: 0}, nx, ny, 2)
+	for i, v := range out {
+		if v != NoCoverage {
+			t.Fatalf("texel %d = %d, want NoCoverage", i, v)
+		}
+	}
+}
+
+func TestCutTilePrefersAnyObservationOverNone(t *testing.T) {
+	// A block straddling the coverage edge HAS been observed, in part. Reporting
+	// it as unobserved would hide real rain at every radar boundary.
+	nx, ny := 4*TileSize, 4*TileSize
+	frame := make([]byte, nx*ny)
+	for i := range frame {
+		frame[i] = NoCoverage
+	}
+	frame[0] = Dry
+	out := CutTile(frame, Tile{Row: 0, Col: 0}, nx, ny, 2)
+	if out[0] != Dry {
+		t.Errorf("part-observed block = %d, want Dry", out[0])
+	}
+}
+
+func TestTileHeaderCarriesTheLevel(t *testing.T) {
+	// The client files tiles under the level that came BACK, because the handler
+	// clamps what was asked for. Without the echo, a clamped request caches a
+	// 4 km-per-texel picture under a 1 km name and draws it at a quarter scale.
+	out := EncodeTileHeader(TileHeader{Frames: 3, TileSize: TileSize, Level: 2, Tiles: []Tile{{Row: 1, Col: 2}}})
+	got, err := DecodeTileHeader(out)
+	if err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if got.Level != 2 {
+		t.Errorf("level = %d, want 2", got.Level)
+	}
+	if got.Frames != 3 || len(got.Tiles) != 1 || got.Tiles[0] != (Tile{Row: 1, Col: 2}) {
+		t.Errorf("the level displaced another field: %+v", got)
 	}
 }

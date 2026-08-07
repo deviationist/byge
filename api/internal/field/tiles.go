@@ -33,7 +33,7 @@ import (
 // and nothing anywhere else, which is the wrong thing to look at while waiting.
 
 const (
-	tileMagic = "BYGETIL1"
+	tileMagic = "BYGETIL2"
 	// TileSize is fixed rather than negotiable. A tile is the unit of caching on
 	// both sides, so two clients disagreeing about it would share nothing, and a
 	// client that changed its mind mid-session would orphan everything it held.
@@ -47,7 +47,7 @@ const (
 
 // TileHeaderSize is the header for a payload carrying n tiles.
 func TileHeaderSize(n int) int {
-	return len(tileMagic) + 2 + 2 + 2 + n*8
+	return len(tileMagic) + 2 + 2 + 2 + 2 + n*8
 }
 
 // Tile identifies one tile by its position in the tile lattice, NOT in cells.
@@ -62,7 +62,16 @@ type TileHeader struct {
 	// own arithmetic on the bytes — see the note on streaming in handler/tiles.go.
 	Frames   uint16
 	TileSize uint16
-	Tiles    []Tile
+	// Level the tiles were cut at: cells per texel is 1<<Level.
+	//
+	// ECHOED RATHER THAN ASSUMED. The handler clamps the requested level, so a
+	// client asking for a level this server does not cut gets a coarser tile than
+	// it asked for — and a coarse tile filed under a fine tile's name is a
+	// quarter-scale picture drawn over the right rectangle. The client keys its
+	// cache on what came back, not on what it asked for, and the two cannot
+	// disagree.
+	Level uint16
+	Tiles []Tile
 }
 
 // EncodeTileHeader writes the header. The body follows frame-major, each tile
@@ -73,8 +82,9 @@ func EncodeTileHeader(h TileHeader) []byte {
 	p := len(tileMagic)
 	binary.BigEndian.PutUint16(out[p:], h.Frames)
 	binary.BigEndian.PutUint16(out[p+2:], h.TileSize)
-	binary.BigEndian.PutUint16(out[p+4:], uint16(len(h.Tiles)))
-	p += 6
+	binary.BigEndian.PutUint16(out[p+4:], h.Level)
+	binary.BigEndian.PutUint16(out[p+6:], uint16(len(h.Tiles)))
+	p += 8
 	for _, t := range h.Tiles {
 		binary.BigEndian.PutUint32(out[p:], uint32(t.Row))
 		binary.BigEndian.PutUint32(out[p+4:], uint32(t.Col))
@@ -93,12 +103,13 @@ func DecodeTileHeader(b []byte) (TileHeader, error) {
 	h := TileHeader{
 		Frames:   binary.BigEndian.Uint16(b[p:]),
 		TileSize: binary.BigEndian.Uint16(b[p+2:]),
+		Level:    binary.BigEndian.Uint16(b[p+4:]),
 	}
-	n := int(binary.BigEndian.Uint16(b[p+4:]))
+	n := int(binary.BigEndian.Uint16(b[p+6:]))
 	if len(b) < TileHeaderSize(n) {
 		return TileHeader{}, fmt.Errorf("field: tile header claims %d tiles, body is too short", n)
 	}
-	p += 6
+	p += 8
 	h.Tiles = make([]Tile, n)
 	for i := range h.Tiles {
 		h.Tiles[i] = Tile{
@@ -116,13 +127,57 @@ func DecodeTileHeader(b []byte) (TileHeader, error) {
 // NoCoverage rather than left zero: zero is Dry, and a tile at the edge of the
 // domain would otherwise report the open Atlantic as observed and rainless —
 // the exact confusion this entire format exists to prevent.
-func CutTile(frame []byte, t Tile, nx, ny int) []byte {
+func CutTile(frame []byte, t Tile, nx, ny, level int) []byte {
+	step := 1 << level
 	out := make([]byte, TileSize*TileSize)
 	for i := range out {
 		out[i] = NoCoverage
 	}
-	row0 := int(t.Row) * TileSize
-	col0 := int(t.Col) * TileSize
+	// A level-N tile covers step x more ground per texel, so its origin is
+	// scaled by the same factor. The lattice at each level is its own.
+	row0 := int(t.Row) * TileSize * step
+	col0 := int(t.Col) * TileSize * step
+
+	if step > 1 {
+		// MAX OF THE BLOCK, never the mean.
+		//
+		// Averaging a rain band with the dry ground beside it invents a weaker
+		// band that was never measured — and because the symbols are ordered
+		// with NoCoverage at the top, a mean would also drag an unobserved cell
+		// down into an INTENSITY, turning "we could not look here" into "light
+		// rain". Max keeps both: any rain in the block survives, and a block
+		// that is entirely unobserved stays unobserved.
+		for i := 0; i < TileSize; i++ {
+			for j := 0; j < TileSize; j++ {
+				best := NoCoverage
+				seen := false
+				for di := 0; di < step; di++ {
+					r := row0 + i*step + di
+					if r < 0 || r >= ny {
+						continue
+					}
+					for dj := 0; dj < step; dj++ {
+						c := col0 + j*step + dj
+						if c < 0 || c >= nx {
+							continue
+						}
+						v := frame[r*nx+c]
+						if v == NoCoverage {
+							continue
+						}
+						// Any observation at all beats "unobserved".
+						if !seen || v > best {
+							best = v
+							seen = true
+						}
+					}
+				}
+				out[i*TileSize+j] = best
+			}
+		}
+		return out
+	}
+
 	for i := 0; i < TileSize; i++ {
 		r := row0 + i
 		if r < 0 || r >= ny {

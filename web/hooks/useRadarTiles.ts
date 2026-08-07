@@ -48,6 +48,15 @@ const MAX_TILE_FRAMES = 3000;
 /** The API refuses more than this in one request; ask in batches. */
 const TILES_PER_REQUEST = 160;
 
+/**
+ * The coarsest tile the API will cut. Must match `maxTileLevel` in the Go handler.
+ *
+ * Level 2 is 4 km per texel and 512 km per tile, which covers the whole 1694 x
+ * 2134 km domain in 20 tiles — 480 tile-frames, a sixth of the budget. There is
+ * no need for a level 3.
+ */
+const MAX_LEVEL = 2;
+
 export function useRadarTiles(req: TileRequest | null, maxFrames = NFRAMES) {
   const [version, setVersion] = useState(0);
   const [stamp, setStamp] = useState<string | null>(null);
@@ -71,7 +80,7 @@ export function useRadarTiles(req: TileRequest | null, maxFrames = NFRAMES) {
 
   // A stable identity for "the same set of tiles at the same depth", so the
   // effect below does not re-fire on a pan that stays inside the same tiles.
-  const planId = plan ? `${plan.frames}:${plan.tiles.map(tileKey).join(",")}` : null;
+  const planId = plan ? `${plan.frames}:${plan.level}:${plan.tiles.map(tileKey).join(",")}` : null;
 
   // Read inside the effect without making its identity a trigger.
   const planRef = useRef(plan);
@@ -112,6 +121,7 @@ export function useRadarTiles(req: TileRequest | null, maxFrames = NFRAMES) {
             apiUrl("/tiles", {
               stamp: analysis.stamp,
               frames: plan.frames,
+              level: plan.level,
               tiles: batch.map(tileKey).join(","),
             }),
             { signal: ac.signal, headers: apiHeaders() },
@@ -181,23 +191,46 @@ export function planTiles(
    * already there.
    */
   maxFrames = NFRAMES,
-): { tiles: TileId[]; frames: number } {
+): { tiles: TileId[]; frames: number; level: number } {
   const mpp = (156543.03392 * Math.cos((req.lat * Math.PI) / 180)) / 2 ** req.zoom;
   // A margin, so a small pan is covered by tiles already fetched rather than by
   // a new request. Smaller than the old rectangle's 1.5×, because the lattice
   // already rounds outward by up to a tile on each side.
   const cols = Math.ceil((req.width * mpp * 1.2) / 1000);
   const rows = Math.ceil((req.height * mpp * 1.2) / 1000);
-
   const { row, col } = safeCell(req.lat, req.lon);
-  const tiles = tilesFor(row - Math.floor(rows / 2), col - Math.floor(cols / 2), rows, cols);
+  const top = row - Math.floor(rows / 2);
+  const left = col - Math.floor(cols / 2);
 
+  // WHICH LEVEL, and why it is chosen in this order.
+  //
+  // The floor is RESOLUTION: a 1 km cell drawn into a pixel that covers 4 km is
+  // three quarters of a download nobody can see, so the tile is never finer than
+  // the screen can show. `mpp / 1000` is cells per pixel; a level-L texel is
+  // 2^L cells, so log2 of it is the level at which one texel lands on one pixel.
+  //
+  // From there it coarsens until the WHOLE RUN fits in the budget. That
+  // inversion is the entire point of the pyramid: before it, a wide view paid
+  // for area in frames — pan out over the country and the animation silently
+  // dropped from 24 frames to 12, which is not a smaller picture but a shorter
+  // forecast. Area is now bought with detail, which is what the reader was going
+  // to lose to their own screen anyway.
+  const finest = clamp(Math.floor(Math.log2(Math.max(1, mpp / 1000))), 0, MAX_LEVEL);
+  let level = finest;
+  let tiles = tilesFor(top, left, rows, cols, level);
+  while (level < MAX_LEVEL && tiles.length * maxFrames > MAX_TILE_FRAMES) {
+    level++;
+    tiles = tilesFor(top, left, rows, cols, level);
+  }
+
+  // Still the last resort, for a viewport so large that even level 2 overruns —
+  // and for `maxFrames` of 1, where it never binds at all.
   const frames = clamp(
     Math.floor(MAX_TILE_FRAMES / Math.max(1, tiles.length)),
     1,
     maxFrames,
   );
-  return { tiles, frames };
+  return { tiles, frames, level };
 }
 
 /**

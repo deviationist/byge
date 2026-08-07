@@ -27,6 +27,13 @@ const frameFanout = 5
 // URL, which is the other thing a list-shaped parameter can run away with.
 const maxTilesPerRequest = 160
 
+/**
+ * Coarsest pyramid level served. 2 is four grid cells per texel, which puts the
+ * whole national lattice inside about fifteen tiles — a full 24-frame run for
+ * less memory than twelve frames cost at level 0.
+ */
+const maxTileLevel = 2
+
 // tiles serves a LIST of grid-aligned tiles rather than a rectangle.
 //
 // WHY A LIST. This replaced `/field`, which answered with the rectangle you were
@@ -78,7 +85,17 @@ func (h *Handler) tiles(w http.ResponseWriter, r *http.Request) {
 	}
 	count = clamp(count, 1, frames.NFrames)
 
-	list, err := parseTiles(q.Get("tiles"))
+	// The pyramid level. 0 is one texel per grid cell; each level up covers
+	// twice the ground per texel, so a wide view needs quadratically fewer
+	// tiles and can afford the WHOLE RUN. Bounded because the level scales the
+	// read stride and an absurd one would ask for cells far off the grid.
+	level, err := intParam(q.Get("level"))
+	if err != nil {
+		level = 0
+	}
+	level = clamp(level, 0, maxTileLevel)
+
+	list, err := parseTiles(q.Get("tiles"), level)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -152,6 +169,7 @@ func (h *Handler) tiles(w http.ResponseWriter, r *http.Request) {
 	if !push(field.EncodeTileHeader(field.TileHeader{
 		Frames:   uint16(count),
 		TileSize: field.TileSize,
+		Level:    uint16(level),
 		Tiles:    list,
 	})) {
 		return
@@ -178,7 +196,7 @@ func (h *Handler) tiles(w http.ResponseWriter, r *http.Request) {
 		// inside it would cost deflate block boundaries for nothing.
 		buf := make([]byte, 0, len(list)*field.TileSize*field.TileSize)
 		for _, t := range list {
-			buf = append(buf, field.CutTile(results[f].frame, t, frames.NX, frames.NY)...)
+			buf = append(buf, field.CutTile(results[f].frame, t, frames.NX, frames.NY, level)...)
 		}
 		if !push(buf) {
 			return
@@ -216,7 +234,7 @@ func clamp(v, lo, hi int) int {
 // both sides and a client cannot invent a tile that straddles two of them —
 // which would defeat the entire point, since two clients (or the same client
 // after a zoom) would then cache overlapping, non-identical pieces.
-func parseTiles(raw string) ([]field.Tile, error) {
+func parseTiles(raw string, level int) ([]field.Tile, error) {
 	if raw == "" {
 		return nil, errors.New("no tiles requested")
 	}
@@ -228,8 +246,11 @@ func parseTiles(raw string) ([]field.Tile, error) {
 	// would otherwise multiply the response without asking for anything more.
 	seen := make(map[field.Tile]bool, len(parts))
 	out := make([]field.Tile, 0, len(parts))
-	maxRow := (frames.NY + field.TileSize - 1) / field.TileSize
-	maxCol := (frames.NX + field.TileSize - 1) / field.TileSize
+	// The lattice shrinks as the level rises: a level-2 tile covers four times
+	// the ground per side, so there are a quarter as many rows and columns.
+	span := field.TileSize << level
+	maxRow := (frames.NY + span - 1) / span
+	maxCol := (frames.NX + span - 1) / span
 	for _, p := range parts {
 		r, c, ok := strings.Cut(p, ".")
 		if !ok {

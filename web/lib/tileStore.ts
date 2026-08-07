@@ -46,15 +46,33 @@ const CELLS = TILE * TILE;
  */
 const BUDGET_BYTES = 64 * 1024 * 1024;
 
-export type TileId = { row: number; col: number };
+/**
+ * A tile, and how coarse it is.
+ *
+ * LEVEL IS PART OF THE IDENTITY. A level-2 tile at (4,3) covers four times the
+ * ground per side as a level-0 tile at (4,3) and is a different picture
+ * entirely, so it has to be a different cache entry. Sharing a key would serve
+ * a coarse tile where a fine one was asked for, at a quarter scale.
+ */
+export type TileId = { row: number; col: number; level: number };
 
-/** `row.col`, matching the wire syntax the API parses. */
+/** `row.col`, matching the wire syntax the API parses. The level is separate. */
 export function tileKey(t: TileId): string {
   return `${t.row}.${t.col}`;
 }
 
 function cellKey(stamp: string, t: TileId, frame: number): string {
-  return `${stamp}/${t.row}.${t.col}/${frame}`;
+  return `${stamp}/${t.level}/${t.row}.${t.col}/${frame}`;
+}
+
+/**
+ * Grid cells per texel at a level, and the ground a whole tile covers.
+ *
+ * Level 0 is one texel per 1 km cell. Each level up doubles it, so a level-2
+ * tile is 4 km per texel and covers 512 km a side.
+ */
+export function tileStep(level: number): number {
+  return 1 << level;
 }
 
 /**
@@ -175,15 +193,27 @@ export class TileStore {
  * than clamped: a map panned into the Atlantic covers nothing, and inventing an
  * edge tile for it would put the coastline's data in the ocean.
  */
-export function tilesFor(row0: number, col0: number, rows: number, cols: number): TileId[] {
-  const r0 = Math.max(0, Math.floor(row0 / TILE));
-  const c0 = Math.max(0, Math.floor(col0 / TILE));
-  const r1 = Math.min(TILE_ROWS - 1, Math.floor((row0 + rows - 1) / TILE));
-  const c1 = Math.min(TILE_COLS - 1, Math.floor((col0 + cols - 1) / TILE));
+export function tilesFor(
+  row0: number,
+  col0: number,
+  rows: number,
+  cols: number,
+  level = 0,
+): TileId[] {
+  // The lattice shrinks as the level rises — a coarse tile covers more ground,
+  // so there are fewer of them and the bounds move with it.
+  const span = TILE * tileStep(level);
+  const maxRow = Math.ceil(NY / span);
+  const maxCol = Math.ceil(NX / span);
+
+  const r0 = Math.max(0, Math.floor(row0 / span));
+  const c0 = Math.max(0, Math.floor(col0 / span));
+  const r1 = Math.min(maxRow - 1, Math.floor((row0 + rows - 1) / span));
+  const c1 = Math.min(maxCol - 1, Math.floor((col0 + cols - 1) / span));
 
   const out: TileId[] = [];
   for (let r = r0; r <= r1; r++) {
-    for (let c = c0; c <= c1; c++) out.push({ row: r, col: c });
+    for (let c = c0; c <= c1; c++) out.push({ row: r, col: c, level });
   }
   return out;
 }
