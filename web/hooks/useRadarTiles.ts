@@ -143,7 +143,6 @@ export function useRadarTiles(req: TileRequest | null, maxFrames = NFRAMES) {
     };
     // Deliberately NOT `plan`: `planId` is its content, and depending on the
     // object would re-fire this on every render. See the memo above.
-    // biome-ignore lint/correctness/useExhaustiveDependencies: planId is plan's identity
   }, [planId, touch]);
 
   // How much of the run every visible tile can supply. Read fresh on each
